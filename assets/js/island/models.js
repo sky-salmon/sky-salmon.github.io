@@ -145,6 +145,7 @@ function glowTexture() {
   return glowTex;
 }
 
+// Procedural candle body; the flame effect is added at its flame_anchor (same as an authored candle.glb).
 export function makeCandle() {
   const g = new THREE.Group();
   const wax = part(new THREE.CylinderGeometry(0.055, 0.06, 0.46, 14), '#f7f3ea');
@@ -157,14 +158,19 @@ export function makeCandle() {
   const wick = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.06, 6), new THREE.MeshBasicMaterial({ color: '#2a231f' }));
   wick.position.y = 0.49;
   g.add(wick);
+  g.add(empty('flame_anchor', 0, 0.5, 0));
+  return { object: g };
+}
 
+// Flame + glow + flickering light + rising sparks; origin = base of the flame.
+export function makeFlame() {
+  const g = new THREE.Group();
   const flamePts = [];
   for (let i = 0; i <= 10; i++) {
     const t = i / 10;
     flamePts.push(new THREE.Vector2(Math.sin(t * Math.PI) * 0.055 * (1 - t * 0.6), t * 0.2));
   }
   const flame = new THREE.Mesh(new THREE.LatheGeometry(flamePts, 14), new THREE.MeshBasicMaterial({ color: '#ff9b3d' }));
-  flame.position.y = 0.5;
   const core = new THREE.Mesh(new THREE.LatheGeometry(flamePts, 12), new THREE.MeshBasicMaterial({ color: '#fff1c2' }));
   core.scale.setScalar(0.55);
   core.position.y = 0.005;
@@ -174,11 +180,11 @@ export function makeCandle() {
 
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.85 }));
   glow.scale.setScalar(1.1);
-  glow.position.y = 0.6;
+  glow.position.y = 0.1;
   g.add(glow);
 
   const light = new THREE.PointLight('#ffb867', 2.2, 3.5, 1.6);
-  light.position.y = 0.65;
+  light.position.y = 0.15;
   g.add(light);
 
   // rising sparks
@@ -201,7 +207,7 @@ export function makeCandle() {
       for (let i = 0; i < N; i++) {
         const s = seeds[i], k = (t * s.speed + s.phase) % 1;
         sparkPos[i * 3] = Math.sin(k * 9 + i) * 0.05 + s.drift * k;
-        sparkPos[i * 3 + 1] = 0.7 + k * 0.9;
+        sparkPos[i * 3 + 1] = 0.2 + k * 0.9;
         sparkPos[i * 3 + 2] = Math.cos(k * 7 + i) * 0.04;
       }
       sparkGeo.attributes.position.needsUpdate = true;
@@ -310,9 +316,46 @@ export const SHELF_ITEMS = [
   { kind: 'height', label: '身高計算', href: 'height.html' },
   { kind: 'music', label: '樂譜練習', href: 'music.html' },
   { kind: 'events', label: '活動倒數', href: 'events.html' },
-  { kind: 'gallery', label: '光影相簿', href: '#' },
+  { kind: 'gallery', label: '光影相簿', href: 'gallery.html' },
   { kind: 'about', label: '關於這裡', href: '#about' }
 ];
+
+// Put sticker icons + labels on a shelf (procedural or glTF) at its slot_N / label_N
+// empties. Returns the clickable icons and the speech-bubble anchor.
+export function decorateShelf(root) {
+  root.updateMatrixWorld(true);
+  const find = name => { let n = null; root.traverse(o => { if (o.name === name) n = o; }); return n; };
+  const icons = [];
+  SHELF_ITEMS.forEach((item, i) => {
+    const slot = find(`slot_${i + 1}`), labelSlot = find(`label_${i + 1}`);
+    if (!slot) return;
+    const sticker = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.56, 0.56),
+      new THREE.MeshBasicMaterial({ map: stickerTexture(item.kind), transparent: true, alphaTest: 0.05 })
+    );
+    sticker.userData = { item };
+    slot.add(sticker);
+    icons.push(sticker);
+    if (labelSlot) {
+      const label = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.95, 0.21),
+        new THREE.MeshBasicMaterial({ map: labelTexture(item.label), transparent: true })
+      );
+      label.raycast = () => {};
+      labelSlot.add(label);
+    }
+  });
+  let anchor = find('bubble_anchor');
+  if (!anchor) { anchor = empty('bubble_anchor', -0.9, 3.95, 0); root.add(anchor); }
+  const box = new THREE.Box3().setFromObject(root);
+  return { icons, bubbleNode: anchor, height: box.max.y - box.min.y };
+}
+
+function empty(name, x, y, z, rx = 0) {
+  const o = new THREE.Object3D();
+  o.name = name; o.position.set(x, y, z); o.rotation.x = rx;
+  return o;
+}
 
 export function makeShelf() {
   const g = new THREE.Group();
@@ -349,32 +392,15 @@ export function makeShelf() {
   crown.position.y = H - 0.12;
   g.add(crown);
 
-  // stickers + labels
-  const icons = [];
-  SHELF_ITEMS.forEach((item, i) => {
-    const row = Math.floor(i / 2), col = i % 2;
-    const boardY = boardYs[2 - row];
-    const x = (col ? 1 : -1) * 0.58;
-    const sticker = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.56, 0.56),
-      new THREE.MeshBasicMaterial({ map: stickerTexture(item.kind), transparent: true, alphaTest: 0.05 })
-    );
-    sticker.position.set(x, boardY + 0.42, 0.02);
-    sticker.rotation.x = -0.08;
-    sticker.userData = { item, baseScale: 1 };
-    g.add(sticker);
-    icons.push(sticker);
-    const label = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.95, 0.21),
-      new THREE.MeshBasicMaterial({ map: labelTexture(item.label), transparent: true })
-    );
-    label.position.set(x, boardY + 0.005, D / 2 + 0.035);
-    label.raycast = () => {};
-    g.add(label);
-  });
-
+  // the same empties an authored shelf.glb must provide
+  for (let i = 0; i < 6; i++) {
+    const row = Math.floor(i / 2), col = i % 2, boardY = boardYs[2 - row], x = (col ? 1 : -1) * 0.58;
+    g.add(empty(`slot_${i + 1}`, x, boardY + 0.42, 0.02, -0.08));
+    g.add(empty(`label_${i + 1}`, x, boardY + 0.005, D / 2 + 0.035));
+  }
+  g.add(empty('bubble_anchor', -0.9, H + 0.75, 0));
   g.add(blobShadow(3.4, 1.4, 0.3));
-  return { object: g, icons, height: H, bubbleAnchor: new THREE.Vector3(-0.9, H + 0.75, 0) };
+  return { object: g };
 }
 
 // ── book lying on the grass + floating sparkle marker ────────────────────
@@ -387,12 +413,16 @@ export function makeBook() {
   const pages = part(new THREE.BoxGeometry(0.95, 0.1, 0.7), paper);
   pages.position.set(0.015, 0.1, 0);
   g.add(pages);
+  // front cover hinges on the spine (x = -0.5) so the book can open at the end of the scroll
+  const hinge = new THREE.Group();
+  hinge.position.set(-0.5, 0.175, 0);
+  g.add(hinge);
   const top = part(new THREE.BoxGeometry(1.0, 0.05, 0.74), cover);
-  top.position.y = 0.175;
-  g.add(top);
+  top.position.x = 0.5;
+  hinge.add(top);
   const band = part(new THREE.BoxGeometry(0.06, 0.012, 0.745), '#f2c46d', { outline: false });
-  band.position.set(-0.32, 0.205, 0);
-  g.add(band);
+  band.position.set(0.18, 0.03, 0);
+  hinge.add(band);
   g.add(blobShadow(1.5, 1.1, 0.35));
 
   // four-point star marker
@@ -405,20 +435,39 @@ export function makeBook() {
   star.geometry.translate(0, 0, -0.02);
   g.add(star);
 
+  let openAmount = 0;
   return {
     object: g,
+    setOpen(v) { openAmount = v; },
     update(t) {
-      star.position.set(0, 0.75 + Math.sin(t * 2) * 0.08, 0);
+      hinge.rotation.z = openAmount * Math.PI * 0.98;
+      star.position.set(0, 0.75 + Math.sin(t * 2) * 0.08 + openAmount * 0.6, 0);
+      star.scale.setScalar(Math.max(0.001, 1 - openAmount));
       star.rotation.y = t * 1.2;
     }
   };
 }
 
+// The sparkle marker alone, for floating above an authored book.glb.
+export function makeStarMarker() {
+  const s = new THREE.Shape();
+  for (let i = 0; i < 8; i++) {
+    const r = i % 2 ? 0.07 : 0.2, a = i * Math.PI / 4;
+    i ? s.lineTo(Math.cos(a) * r, Math.sin(a) * r) : s.moveTo(r, 0);
+  }
+  const star = part(new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: false }), '#f6cf6e', { emissive: '#7a5a10' });
+  star.geometry.translate(0, 0, -0.02);
+  return star;
+}
+
 // ── floating faceted rocks ───────────────────────────────────────────────
-export function makeRocks(spots) {
+// spots: [x, y, z, size]; authored: optional rock nodes from rocks.glb (cloned round-robin, size ignored)
+export function makeRocks(spots, authored = null) {
   const g = new THREE.Group();
   const rocks = spots.map(([x, y, z, s], i) => {
-    const r = part(new THREE.DodecahedronGeometry(s, 0), '#f1e8d8', { flat: true });
+    const r = authored && authored.length
+      ? authored[i % authored.length].clone()
+      : part(new THREE.DodecahedronGeometry(s, 0), '#f1e8d8', { flat: true });
     r.position.set(x, y, z);
     r.rotation.set(i, i * 2, i * 3);
     r.userData.base = y;

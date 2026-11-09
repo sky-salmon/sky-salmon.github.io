@@ -2,7 +2,8 @@
 import * as THREE from 'three';
 import { outlineUniforms } from './toon.js';
 import { makeIsland, makeGrass, makeFlowers, makePebbles, windUniforms } from './terrain.js';
-import { makeCharacter, makeBench, makeCandle, makeBird, makeShelf, makeBook, makeRocks, makeSun, makeButterflies } from './models.js';
+import { makeCharacter, makeBench, makeCandle, makeFlame, makeBird, makeShelf, decorateShelf, makeBook, makeStarMarker, makeRocks, makeSun, makeButterflies } from './models.js';
+import { loadToonModel, wrapGltf, findNodes, modelStatus } from './gltf.js';
 import { smoothstep, clamp01 } from './util.js';
 
 // canvas-drawn labels need the webfonts first (don't wait forever if they're blocked)
@@ -45,7 +46,27 @@ scene.add(fill);
 // ── assemble the island ─────────────────────────────────────────────────
 const world = new THREE.Group();
 scene.add(world);
-world.add(makeIsland());
+
+// Authored models live in assets/models/<name>.glb; anything missing falls back to the
+// procedural placeholder in models.js / terrain.js.
+async function modelOr(name, fallback, autoplay = ['idle']) {
+  const gltf = await loadToonModel(name);
+  if (!gltf) return fallback();
+  const wrapped = wrapGltf(gltf, autoplay);
+  wrapped.isGlb = true;
+  return wrapped;
+}
+const [islandGltf, characterM, benchM, candleM, birdM, shelfM, bookM, rocksGltf] = await Promise.all([
+  loadToonModel('island'),
+  modelOr('character', makeCharacter),
+  modelOr('bench', makeBench),
+  modelOr('candle', makeCandle),
+  modelOr('bird', makeBird),
+  modelOr('shelf', makeShelf),
+  modelOr('book', makeBook, []),
+  loadToonModel('rocks')
+]);
+world.add(islandGltf ? islandGltf.scene : makeIsland());
 
 const LAYOUT = {
   character: { x: -2.05, z: 0.85, ry: 0.4, s: 1.32 },
@@ -73,30 +94,67 @@ function place(model, { x = 0, y = 0, z = 0, ry = 0, s = 1 } = {}) {
   return model;
 }
 
-const character = place(makeCharacter(), LAYOUT.character);
-const bench = place(makeBench(), LAYOUT.bench);
-place(makeCandle(), { x: LAYOUT.bench.x + 0.35, y: bench.seatY - 0.01, z: -0.05 });
-place(makeBird(), { x: LAYOUT.bench.x + 1.05, y: bench.seatY - 0.01, z: 0.08, ry: -0.55, s: 1.25 });
-const shelf = place(makeShelf(), LAYOUT.shelf);
-place(makeBook(), LAYOUT.book);
-place(makeRocks([[1.75, 2.6, -1.3, 0.16], [1.35, 1.95, -0.9, 0.11], [5.4, 3.1, -2.6, 0.13], [-4.6, 1.6, -1.8, 0.12]]));
+const SEAT_Y = 0.82; // bench seat height (authored bench.glb must match)
+const findIn = (root, name) => { let n = null; root.traverse(o => { if (o.name === name) n = o; }); return n; };
+
+// placeholders were built smaller than the authored spec, so only they get a scale
+place(characterM, { ...LAYOUT.character, s: characterM.isGlb ? 1 : LAYOUT.character.s });
+place(benchM, LAYOUT.bench);
+
+place(candleM, { x: LAYOUT.bench.x + 0.35, y: SEAT_Y - 0.01, z: -0.05 });
+const flameAnchor = findIn(candleM.object, 'flame_anchor') || candleM.object;
+const flame = makeFlame();
+flameAnchor.add(flame.object);
+animated.push(flame);
+
+if (birdM.isGlb && birdM.actions.hop) {   // authored bird: hop every few seconds on top of idle
+  const hop = birdM.actions.hop, base = birdM.update;
+  hop.setLoop(THREE.LoopOnce, 1);
+  let lastHop = 0;
+  birdM.update = (t, dt) => { if (t - lastHop > 5.5) { lastHop = t; hop.reset().play(); } base(t, dt); };
+}
+place(birdM, { x: LAYOUT.bench.x + 1.05, y: SEAT_Y - 0.01, z: 0.08, ry: -0.55, s: birdM.isGlb ? 1 : 1.25 });
+
+place(shelfM, LAYOUT.shelf);
+const shelfDeco = decorateShelf(shelfM.object);
+const shelf = { object: shelfM.object, icons: shelfDeco.icons, bubbleNode: shelfDeco.bubbleNode, height: shelfDeco.height };
+
+if (bookM.isGlb) {   // authored book: scrub its `open` clip and float a sparkle above it
+  const open = bookM.actions.open, star = makeStarMarker(), base = bookM.update;
+  if (open) { open.play(); open.paused = true; }
+  bookM.object.add(star);
+  let amount = 0;
+  bookM.setOpen = v => { amount = v; if (open) open.time = v * open.getClip().duration; };
+  bookM.update = (t, dt) => {
+    star.position.set(0, 0.75 + Math.sin(t * 2) * 0.08 + amount * 0.6, 0);
+    star.scale.setScalar(Math.max(0.001, 1 - amount));
+    star.rotation.y = t * 1.2;
+    base(t, dt);
+  };
+}
+place(bookM, LAYOUT.book);
+
+const ROCK_SPOTS = [[1.75, 2.6, -1.3, 0.16], [1.35, 1.95, -0.9, 0.11], [5.4, 3.1, -2.6, 0.13], [-4.6, 1.6, -1.8, 0.12]];
+place(makeRocks(ROCK_SPOTS, rocksGltf ? findNodes(rocksGltf.scene, 'rock_') : null));
+window.__models = modelStatus;
 const sun = place(makeSun(), { x: -3.2, y: 4.5, z: -4.0 });
 place(makeButterflies(3));
 
 // ── camera keyframes ────────────────────────────────────────────────────
 const shelfCenter = new THREE.Vector3(LAYOUT.shelf.x, shelf.height * 0.55, LAYOUT.shelf.z);
 const shelfNormal = new THREE.Vector3(Math.sin(LAYOUT.shelf.ry), 0, Math.cos(LAYOUT.shelf.ry));
+const shelfRight = new THREE.Vector3(Math.cos(LAYOUT.shelf.ry), 0, -Math.sin(LAYOUT.shelf.ry));
 const bookPos = new THREE.Vector3(LAYOUT.book.x, 0, LAYOUT.book.z);
 
 let keyframes = function () {
   const small = isSmall();
   return [
     small
-      ? { pos: new THREE.Vector3(5.5, 8.6, 22.5), tgt: new THREE.Vector3(0.7, 1.6, 0) }
+      ? { pos: new THREE.Vector3(6.2, 9.2, 24.5), tgt: new THREE.Vector3(1.1, 0.6, 0) }
       : { pos: new THREE.Vector3(8.6, 6.6, 20.8), tgt: new THREE.Vector3(-2.3, 0.0, 0.4) },
-    { pos: shelfCenter.clone().addScaledVector(shelfNormal, small ? 8.4 : 5.4).add(new THREE.Vector3(0, 0.25, 0)), tgt: shelfCenter.clone() },
+    { pos: shelfCenter.clone().addScaledVector(shelfNormal, small ? 9.2 : 7.4).addScaledVector(shelfRight, small ? 1.6 : 0).add(new THREE.Vector3(0, small ? 1.6 : 0.35, 0)), tgt: shelfCenter.clone().add(new THREE.Vector3(0, 0.2, 0)) },
     { pos: new THREE.Vector3(0.6, small ? 15 : 11, 2.9), tgt: new THREE.Vector3(0.6, 0, 1.3) },
-    { pos: bookPos.clone().add(new THREE.Vector3(0.05, small ? 5.2 : 3.6, 0.35)), tgt: bookPos.clone() }
+    { pos: bookPos.clone().add(new THREE.Vector3(0.05, small ? 7 : 5.4, 0.45)), tgt: bookPos.clone() }
   ];
 }
 // ?cam=px,py,pz,tx,ty,tz pins the camera (handy for inspecting a single model)
@@ -137,6 +195,7 @@ window.addEventListener('scroll', readScroll, { passive: true });
 // ── overlays ────────────────────────────────────────────────────────────
 const el = id => document.getElementById(id);
 const hero = el('hero'), bubble = el('bubble'), hint = el('shelf-hint'), folio = el('folio'), backBtn = el('back');
+const topbar = document.querySelector('.topbar');
 const anchorWorld = new THREE.Vector3(), anchorNdc = new THREE.Vector3();
 
 function updateOverlays() {
@@ -155,12 +214,13 @@ function updateOverlays() {
   folio.classList.toggle('is-open', folioO > 0.6);
 
   backBtn.classList.toggle('is-visible', k > 0.25);
+  topbar.classList.toggle('is-scrolled', k > 0.2);
+  bookM.setOpen(smoothstep(2.35, 2.85, k));
 
   // speech bubble follows the shelf crown
-  anchorWorld.copy(shelf.bubbleAnchor);
-  shelf.object.localToWorld(anchorWorld);
+  shelf.bubbleNode.getWorldPosition(anchorWorld);
   anchorNdc.copy(anchorWorld).project(camera);
-  const bubbleO = 1 - smoothstep(0.55, 1.1, k);
+  const bubbleO = 1 - smoothstep(0.4, 0.85, k);
   if (anchorNdc.z < 1 && bubbleO > 0.01) {
     bubble.style.visibility = 'visible';
     bubble.style.opacity = bubbleO;
@@ -226,7 +286,7 @@ function resize() {
   const w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
-  camera.fov = isSmall() ? 34 : 30;
+  camera.fov = isSmall() ? 40 : 30;
   camera.updateProjectionMatrix();
   const dpr = renderer.getPixelRatio();
   outlineUniforms.uResolution.value.set(w * dpr, h * dpr);

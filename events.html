@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="olive">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>活動雷達 — candle·kit</title>
+<meta name="description" content="Sky 光遇活動倒數：聖島間歇泉、奶奶的晚餐、聖島海龜，以及每日／每週重置，自動換算成你的本地時間。">
+<meta name="theme-color" content="#1c2119">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Serif+TC:wght@600;700&family=Outfit:wght@400;500;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/events.css">
+</head>
+<body data-page="events">
+<main class="wrap ev">
+
+  <header class="page-head ev-head">
+    <div class="ev-head-text">
+      <span class="eyebrow">CANDLE·KIT / 活動雷達</span>
+      <h1 class="title">活動 <em>Radar</em></h1>
+      <p class="lead">間歇泉、奶奶的晚餐、聖島海龜，還有每天與每週的重置——全部換算成你的本地時間，每秒更新。</p>
+    </div>
+    <aside class="sticker ev-clocks" aria-label="目前時間">
+      <span class="tape ev-clocks-tape" aria-hidden="true"></span>
+      <div class="ev-clock">
+        <span class="ev-clock-label">遊戲時間 <b id="pt-abbr">PT</b></span>
+        <time class="ev-clock-time" id="clock-pt">--:--:--</time>
+        <span class="ev-clock-date" id="clock-pt-date">America/Los_Angeles</span>
+      </div>
+      <span class="ev-clock-rule" aria-hidden="true"></span>
+      <div class="ev-clock">
+        <span class="ev-clock-label">本地時間 <b id="local-abbr">UTC</b></span>
+        <time class="ev-clock-time" id="clock-local">--:--:--</time>
+        <span class="ev-clock-date" id="clock-local-date"></span>
+      </div>
+    </aside>
+  </header>
+
+  <section class="ev-hero" aria-label="目前與下一個活動">
+    <div class="ev-stack">
+      <article class="ticket ev-live" id="live-ticket" aria-live="polite" aria-atomic="false"></article>
+      <div class="ev-seam" aria-hidden="true"><span class="tape ev-seam-tape is-left"></span><span class="tape ev-seam-tape is-right"></span></div>
+      <article class="ticket ev-next" id="next-ticket"></article>
+    </div>
+
+    <aside class="panel ev-radar" aria-labelledby="radar-title">
+      <div class="ev-radar-head">
+        <h2 class="panel-title" id="radar-title">兩小時循環</h2>
+        <span class="ev-radar-tag">2H CYCLE · PT</span>
+      </div>
+      <div class="ev-dial" id="dial"></div>
+      <ul class="ev-legend" id="legend"></ul>
+      <p class="ev-radar-note hand">指針走一圈 = 遊戲裡的兩個小時</p>
+    </aside>
+  </section>
+
+  <div class="ev-hub-row"><span class="chip ev-hub">✦ 活動中心</span></div>
+
+  <div class="ev-tabs-row">
+    <div class="seg ev-tabs" role="tablist" aria-label="活動分類">
+      <button type="button" role="tab" id="tab-cycle" aria-controls="panel-cycle" aria-selected="true" tabindex="0">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 8A5.5 5.5 0 1 1 11 3.4"/><path d="M11.2 1.4v2.3H8.9"/><path d="M8 5.2V8l1.9 1.3"/></svg>週期活動</button>
+      <button type="button" role="tab" id="tab-today" aria-controls="panel-today" aria-selected="false" tabindex="-1">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 2.5v11"/><circle cx="4" cy="4.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="4" cy="11" r="1.4" fill="currentColor" stroke="none"/><path d="M7.5 4.5h6M7.5 11h4.5M7.5 7.8h5"/></svg>今日時間表</button>
+      <button type="button" role="tab" id="tab-reset" aria-controls="panel-reset" aria-selected="false" tabindex="-1">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.6 8a5.4 5.4 0 0 0 9.6 3.4"/><path d="M13.4 8A5.4 5.4 0 0 0 3.8 4.6"/><path d="M3.6 1.8v2.9h2.9M12.4 14.2v-2.9H9.5"/></svg>重置倒數</button>
+    </div>
+  </div>
+
+  <section class="ev-panel" id="panel-cycle" role="tabpanel" aria-labelledby="tab-cycle" tabindex="0">
+    <div class="ev-grid" id="cycle-grid"></div>
+  </section>
+
+  <section class="ev-panel" id="panel-today" role="tabpanel" aria-labelledby="tab-today" tabindex="0" hidden>
+    <div class="ev-tl-card">
+      <div class="ev-tl-head">
+        <div>
+          <h2 class="ev-tl-title">今日時間表</h2>
+          <p class="ev-tl-sub mono" id="tl-sub"></p>
+        </div>
+        <div class="ev-tl-tools">
+          <div class="ev-filters" id="tl-filters" role="group" aria-label="篩選活動"></div>
+          <button type="button" class="btn ev-now-btn" id="tl-now">
+            <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.6" fill="currentColor" stroke="none"/><path d="M8 .8v2M8 13.2v2M.8 8h2M13.2 8h2"/></svg>回到現在</button>
+        </div>
+      </div>
+      <ol class="ev-tl" id="timeline" aria-label="今天所有活動，依本地時間排序"></ol>
+    </div>
+  </section>
+
+  <section class="ev-panel" id="panel-reset" role="tabpanel" aria-labelledby="tab-reset" tabindex="0" hidden>
+    <div class="ev-resets" id="resets"></div>
+  </section>
+
+  <p class="ev-footnote"><span aria-hidden="true">＊</span>時間依玩家社群分享的資訊整理，可能隨遊戲更新而變動。遊戲時間以美國太平洋時間（America/Los_Angeles）為準，夏令／冬令時間會自動換算。</p>
+</main>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/events.js"></script>
+</body>
+</html>

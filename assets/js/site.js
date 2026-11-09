@@ -1,4 +1,5 @@
-/* 燭光小站 — shared header, footer and helpers */
+/* candle·kit — shared chrome (header, mobile menu, footer) and small helpers.
+ * Usage: <body data-page="card"> … <script src="assets/js/site.js"></script> (before page scripts). */
 (function () {
   'use strict';
 
@@ -6,38 +7,55 @@
     { id: 'home', href: 'index.html', label: '首頁' },
     { id: 'card', href: 'card.html', label: '名片' },
     { id: 'height', href: 'height.html', label: '身高' },
+    { id: 'events', href: 'events.html', label: '活動' },
     { id: 'music', href: 'music.html', label: '樂譜' },
-    { id: 'events', href: 'events.html', label: '活動' }
+    { id: 'gallery', href: 'gallery.html', label: '相簿' }
   ];
 
-  const MARK = `<svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-    <defs><radialGradient id="g-flame" cx="50%" cy="60%" r="60%">
-      <stop offset="0" stop-color="#fff6d8"/><stop offset=".55" stop-color="#f2c46d"/><stop offset="1" stop-color="#e8a54b" stop-opacity="0"/>
-    </radialGradient></defs>
-    <circle cx="16" cy="12" r="11" fill="url(#g-flame)" opacity=".55"/>
-    <path d="M16 3c3 4.5 5 7.4 5 10.2A5 5 0 0 1 16 18a5 5 0 0 1-5-4.8C11 10.4 13 7.5 16 3z" fill="#f7d58c"/>
-    <path d="M16 9c1.4 2 2.2 3.3 2.2 4.6a2.2 2.2 0 0 1-4.4 0c0-1.3.8-2.6 2.2-4.6z" fill="#fffbe9"/>
-    <rect x="12" y="19" width="8" height="10" rx="2" fill="#f3eee4"/>
+  const MARK = `<svg viewBox="0 0 36 36" aria-hidden="true">
+    <circle cx="18" cy="13" r="11" fill="#f6d68f" opacity=".45"/>
+    <path d="M18 4c3.2 4.6 5.2 7.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0C12.8 11.6 14.8 8.6 18 4z" fill="#f0a24a" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M18 10.5c1.3 1.9 2 3.1 2 4.2a2 2 0 0 1-4 0c0-1.1.7-2.3 2-4.2z" fill="#fff4cf"/>
+    <rect x="13.5" y="20" width="9" height="12" rx="2.5" fill="#fffdf8" stroke="currentColor" stroke-width="1.6"/>
   </svg>`;
 
-  function renderChrome() {
+  function links() {
     const current = document.body.dataset.page || '';
+    return PAGES.map(p => `<a href="${p.href}"${p.id === current ? ' aria-current="page"' : ''}>${p.label}</a>`).join('');
+  }
+
+  function renderChrome() {
     const header = document.createElement('header');
-    header.className = 'site-header';
+    header.className = 'topbar';
     header.innerHTML = `<div class="wrap">
-      <a class="brand" href="index.html">${MARK}<span>燭光小站<small>Sky Fan Toolkit</small></span></a>
-      <nav class="nav" aria-label="主要導覽">${PAGES.map(p =>
-        `<a href="${p.href}"${p.id === current ? ' aria-current="page"' : ''}>${p.label}</a>`).join('')}</nav>
-    </div>`;
+      <a class="brand" href="index.html" aria-label="candle·kit 首頁">${MARK}<span>candle·kit</span></a>
+      <nav class="nav" aria-label="主要導覽">${links()}</nav>
+      <button class="nav-toggle" type="button" aria-label="開啟選單" aria-expanded="false" aria-controls="mobile-menu">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
+      </button>
+    </div>
+    <nav class="mobile-menu" id="mobile-menu" aria-label="行動版選單">${links()}</nav>`;
     document.body.prepend(header);
+
+    const toggle = header.querySelector('.nav-toggle'), menu = header.querySelector('.mobile-menu');
+    toggle.addEventListener('click', () => {
+      const open = menu.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open);
+      toggle.setAttribute('aria-label', open ? '關閉選單' : '開啟選單');
+    });
 
     const footer = document.createElement('footer');
     footer.className = 'site-footer';
     footer.innerHTML = `<div class="wrap">
-      <span>© ${new Date().getFullYear()} 燭光小站 · 粉絲自製工具，與 thatgamecompany 無關。</span>
-      <span>Sky: Children of the Light 為 thatgamecompany 的商標。</span>
+      <div class="hand">Made with ♡ for every child of the light</div>
+      <div>candle·kit · 粉絲自製工具，與 thatgamecompany 無關 · <a href="https://github.com/chunhao0613/sky-cotl" target="_blank" rel="noopener">GitHub</a></div>
     </div>`;
     document.body.append(footer);
+
+    const toast = document.createElement('div');
+    toast.className = 'toast'; toast.id = 'site-toast';
+    toast.setAttribute('role', 'status'); toast.setAttribute('aria-live', 'polite');
+    document.body.append(toast);
   }
 
   // localStorage can throw (private mode, blocked storage) — never let that break a tool.
@@ -51,6 +69,16 @@
       catch { return false; }
     }
   };
+
+  let toastTimer = 0;
+  function toast(message, ms = 2200) {
+    const el = document.getElementById('site-toast');
+    if (!el) return;
+    el.textContent = message;
+    el.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('is-visible'), ms);
+  }
 
   function readFileAsDataURL(file) {
     return new Promise((resolve, reject) => {
@@ -70,16 +98,16 @@
     });
   }
 
-  // Wire a .dropzone element to a hidden file input; calls onFile(file).
+  // Wire a .dropzone element to a hidden <input type=file>; calls onFile(file).
   function bindDropzone(zone, input, onFile) {
     zone.addEventListener('click', () => input.click());
     zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
-    input.addEventListener('change', () => { if (input.files[0]) onFile(input.files[0]); input.value = ''; });
-    ['dragenter', 'dragover'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.add('drag'); }));
-    ['dragleave', 'drop'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.remove('drag'); }));
-    zone.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) onFile(f); });
+    input.addEventListener('change', () => { [...input.files].forEach(onFile); input.value = ''; });
+    ['dragenter', 'dragover'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.add('is-drag'); }));
+    ['dragleave', 'drop'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.remove('is-drag'); }));
+    zone.addEventListener('drop', e => { [...e.dataTransfer.files].forEach(onFile); });
   }
 
-  window.Site = { store, readFileAsDataURL, loadImage, bindDropzone };
+  window.Site = { store, toast, readFileAsDataURL, loadImage, bindDropzone, PAGES };
   renderChrome();
 })();

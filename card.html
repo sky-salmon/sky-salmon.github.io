@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="ink">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>名片產生器 — candle·kit</title>
+<meta name="description" content="為 Sky 光遇玩家設計的名片產生器：六種風格、可拖曳的區塊版面、頭像與收藏數字，直接在瀏覽器裡匯出 PNG。">
+<meta name="theme-color" content="#111312">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Serif+TC:wght@600;700&family=Outfit:wght@400;500;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=LXGW+WenKai+TC:wght@400;700&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/card.css">
+</head>
+<body data-page="card">
+<main class="card-page">
+  <div class="wrap">
+    <header class="page-head">
+      <span class="eyebrow">CANDLE·KIT / 02 — PROFILE CARD</span>
+      <h1 class="title">名片產生器 <em>Card Studio</em></h1>
+      <p class="lead">挑一種風格，填上你的光之子資料，拖一拖區塊排版，就能匯出一張可以分享的名片。所有內容只存在這台裝置上。</p>
+      <p class="head-note hand" aria-hidden="true">每一次修改都會自動存檔 ↘</p>
+    </header>
+
+    <!-- style strip -->
+    <section class="styles" aria-labelledby="style-prompt">
+      <p class="style-prompt" id="style-prompt">今天想用哪一種<em>風格</em>？</p>
+      <div class="style-strip" id="style-strip" role="radiogroup" aria-labelledby="style-prompt"></div>
+    </section>
+
+    <div class="studio">
+      <!-- preview -->
+      <section class="stage-col" aria-label="名片預覽">
+        <div class="stage" id="stage" data-zoom="fit">
+          <div class="stage-meta">
+            <span class="chip stage-chip"><span class="dot" aria-hidden="true"></span><span id="stage-style">經典 Classic</span></span>
+            <span class="stage-size mono" id="stage-size">1080 × 1350</span>
+          </div>
+          <div class="stage-frame" id="stage-frame">
+            <canvas id="card-canvas" role="img" aria-label="名片預覽"></canvas>
+          </div>
+          <p class="stage-loading" id="stage-loading">正在準備字體…</p>
+        </div>
+        <hr class="hairline">
+        <div class="toolbar" role="toolbar" aria-label="名片工具列">
+          <div class="tool">
+            <button class="icon-btn" id="btn-undo" type="button" aria-label="復原（Ctrl+Z）" aria-describedby="cap-undo" disabled>
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 4.5 4 8l3.5 3.5"/><path d="M4.5 8h7a4.5 4.5 0 0 1 0 9H8"/></svg>
+            </button>
+            <span class="tool-cap" id="cap-undo" aria-hidden="true">復原</span>
+          </div>
+          <div class="tool">
+            <button class="icon-btn" id="btn-redo" type="button" aria-label="重做（Shift+Ctrl+Z）" disabled>
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.5 4.5 16 8l-3.5 3.5"/><path d="M15.5 8h-7a4.5 4.5 0 0 0 0 9H12"/></svg>
+            </button>
+            <span class="tool-cap" aria-hidden="true">重做</span>
+          </div>
+          <span class="tool-sep" aria-hidden="true"></span>
+          <div class="tool">
+            <button class="icon-btn" id="btn-zoom" type="button" aria-pressed="false" aria-label="縮放：切換適合寬度與 100%">
+              <svg class="i-zoom-in" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.4"/><path d="m12.6 12.6 4.4 4.4M8.6 6.4v4.4M6.4 8.6h4.4"/></svg>
+              <svg class="i-zoom-fit" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5V3h4.5M17 7.5V3h-4.5M3 12.5V17h4.5M17 12.5V17h-4.5"/></svg>
+            </button>
+            <span class="tool-cap" id="cap-zoom" aria-hidden="true">縮放</span>
+          </div>
+          <div class="tool">
+            <button class="icon-btn is-danger" id="btn-reset" type="button" aria-label="清除：回到預設內容（可復原）">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8.2 16.5-4.4-4.4a1.4 1.4 0 0 1 0-2l6.3-6.3a1.4 1.4 0 0 1 2 0l4.4 4.4a1.4 1.4 0 0 1 0 2l-6.3 6.3"/><path d="M7.2 8.7l5.9 5.9M8.2 16.5H17"/></svg>
+            </button>
+            <span class="tool-cap is-danger" aria-hidden="true">清除</span>
+          </div>
+          <span class="tool-sep" aria-hidden="true"></span>
+          <div class="tool">
+            <button class="icon-btn is-primary btn-download" id="btn-download" type="button" aria-label="下載 PNG">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5v9M6.2 9 10 12.8 13.8 9"/><path d="M4 13.5v1.6A1.9 1.9 0 0 0 5.9 17h8.2a1.9 1.9 0 0 0 1.9-1.9v-1.6"/></svg>
+            </button>
+            <span class="tool-cap is-gold" aria-hidden="true">下載 PNG</span>
+          </div>
+          <div class="tool tool-settings">
+            <button class="icon-btn" id="btn-settings" type="button" aria-label="匯出設定" aria-expanded="false" aria-controls="settings-pop">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3.5 5.5h6M13.5 5.5h3M3.5 10h2M9.5 10h7M3.5 14.5h8M15.5 14.5h1"/><circle cx="11.5" cy="5.5" r="1.9"/><circle cx="7.5" cy="10" r="1.9"/><circle cx="13.5" cy="14.5" r="1.9"/></svg>
+            </button>
+            <span class="tool-cap" aria-hidden="true">設定</span>
+            <div class="settings-pop" id="settings-pop" role="dialog" aria-label="匯出設定" hidden>
+              <p class="pop-title"><span class="mono">EXPORT</span> 匯出設定</p>
+              <div class="pop-row">
+                <span id="lbl-scale">匯出倍率</span>
+                <div class="seg seg-sm" role="radiogroup" aria-labelledby="lbl-scale" id="scale-seg">
+                  <button type="button" role="radio" data-scale="1" aria-checked="false">1×</button>
+                  <button type="button" role="radio" data-scale="2" aria-checked="true">2×</button>
+                </div>
+              </div>
+              <label class="pop-row switch-row">
+                <span>顯示日期</span>
+                <input type="checkbox" class="switch" id="opt-date" checked>
+              </label>
+              <label class="pop-row switch-row">
+                <span>小浮水印</span>
+                <input type="checkbox" class="switch" id="opt-mark" checked>
+              </label>
+              <p class="pop-foot mono" id="pop-out">→ 2160 × 2700 px</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- controls -->
+      <aside class="controls-col" aria-label="名片設定">
+        <div class="panel controls">
+          <div class="seg tabs" role="tablist" aria-label="設定分類">
+            <button type="button" role="tab" id="tab-layout" aria-controls="pane-layout" aria-selected="true">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2.5" width="5" height="11" rx="1.4"/><rect x="9" y="2.5" width="5" height="5" rx="1.4"/><rect x="9" y="9.5" width="5" height="4" rx="1.4"/></svg>版面</button>
+            <button type="button" role="tab" id="tab-size" aria-controls="pane-size" aria-selected="false" tabindex="-1">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="1.8" y="5" width="12.4" height="6" rx="1.2"/><path d="M4.5 5v2.2M7 5v1.4M9.5 5v2.2M12 5v1.4"/></svg>尺寸</button>
+            <button type="button" role="tab" id="tab-theme" aria-controls="pane-theme" aria-selected="false" tabindex="-1">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 2.2c3.4 0 6 2.3 6 5.2 0 1.9-1.4 2.9-3 2.9h-1.3c-.8 0-1.3.8-.9 1.5.5.9-.1 2-1.2 2C4.6 13.8 2 11.2 2 8s2.6-5.8 6-5.8z"/><circle cx="5.4" cy="7.4" r=".9" fill="currentColor"/><circle cx="8" cy="5.2" r=".9" fill="currentColor"/><circle cx="10.7" cy="6.8" r=".9" fill="currentColor"/></svg>主題</button>
+            <button type="button" role="tab" id="tab-content" aria-controls="pane-content" aria-selected="false" tabindex="-1">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="m10.6 2.8 2.6 2.6-7.6 7.6-3.2.6.6-3.2z"/><path d="m9.2 4.2 2.6 2.6"/></svg>內容</button>
+          </div>
+
+          <!-- 版面 -->
+          <div class="pane" id="pane-layout" role="tabpanel" aria-labelledby="tab-layout" tabindex="0">
+            <p class="pane-label"><span class="mono">01</span> 欄位配置</p>
+            <div class="layout-pick" role="radiogroup" aria-label="欄位配置">
+              <button type="button" role="radio" class="layout-opt" data-layout="single" aria-checked="true">
+                <svg viewBox="0 0 40 28" aria-hidden="true"><rect x="1" y="1" width="38" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="7" y="6" width="26" height="4" rx="2" fill="currentColor"/><rect x="7" y="12" width="26" height="4" rx="2" fill="currentColor" opacity=".55"/><rect x="7" y="18" width="26" height="4" rx="2" fill="currentColor" opacity=".3"/></svg>
+                <span>單欄</span><small class="mono">SINGLE</small>
+              </button>
+              <button type="button" role="radio" class="layout-opt" data-layout="double" aria-checked="false">
+                <svg viewBox="0 0 40 28" aria-hidden="true"><rect x="1" y="1" width="38" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="6" y="6" width="12.5" height="16" rx="2" fill="currentColor"/><rect x="21.5" y="6" width="12.5" height="7" rx="2" fill="currentColor" opacity=".55"/><rect x="21.5" y="15" width="12.5" height="7" rx="2" fill="currentColor" opacity=".3"/></svg>
+                <span>雙欄</span><small class="mono">TWO COLUMNS</small>
+              </button>
+            </div>
+            <p class="pane-label"><span class="mono">02</span> 區塊順序</p>
+            <div class="cols" id="cols"></div>
+            <p class="hint drag-hint">按住 <span class="kbd" aria-hidden="true">⠿</span> 拖曳排序，也能拖到另一欄；鍵盤可用方向鍵移動。沒填內容的區塊不會出現在名片上。</p>
+            <p class="sr-only" id="drag-live" aria-live="polite"></p>
+          </div>
+
+          <!-- 尺寸 -->
+          <div class="pane" id="pane-size" role="tabpanel" aria-labelledby="tab-size" tabindex="0" hidden>
+            <p class="pane-label"><span class="mono">01</span> 名片寬度</p>
+            <div class="seg seg-wide" role="radiogroup" aria-label="名片寬度" id="width-seg">
+              <button type="button" role="radio" data-width="1080" aria-checked="true">1080<small>px</small></button>
+              <button type="button" role="radio" data-width="1440" aria-checked="false">1440<small>px</small></button>
+              <button type="button" role="radio" data-width="1920" aria-checked="false">1920<small>px</small></button>
+            </div>
+            <p class="pane-label"><span class="mono">02</span> 細節</p>
+            <label class="slider">
+              <span class="slider-top"><span>外距</span><output class="mono" data-out="pad">60 px</output></span>
+              <input class="range" type="range" min="24" max="120" step="2" data-size="pad">
+            </label>
+            <label class="slider">
+              <span class="slider-top"><span>圓角</span><output class="mono" data-out="radius">40 px</output></span>
+              <input class="range" type="range" min="0" max="80" step="1" data-size="radius">
+            </label>
+            <label class="slider">
+              <span class="slider-top"><span>文字大小</span><output class="mono" data-out="text">100 %</output></span>
+              <input class="range" type="range" min="80" max="130" step="1" data-size="text">
+            </label>
+            <p class="out-size"><span class="mono">OUTPUT</span><b class="mono" id="out-size">1080 × 1350 px</b></p>
+          </div>
+
+          <!-- 主題 -->
+          <div class="pane" id="pane-theme" role="tabpanel" aria-labelledby="tab-theme" tabindex="0" hidden>
+            <p class="pane-label"><span class="mono">01</span> 強調色</p>
+            <div class="swatches" id="swatches" role="radiogroup" aria-label="強調色"></div>
+            <p class="pane-label"><span class="mono">02</span> 背景變化 <span class="pane-sub" id="variant-style">經典</span></p>
+            <div class="variants" id="variants" role="radiogroup" aria-label="背景變化"></div>
+            <p class="pane-label"><span class="mono">03</span> 質感</p>
+            <label class="toggle-card">
+              <span class="toggle-text"><b>紙紋顆粒</b><small>在名片上疊一層細細的雜訊，像印刷品一樣</small></span>
+              <input type="checkbox" class="switch" id="opt-grain" checked>
+            </label>
+          </div>
+
+          <!-- 內容 -->
+          <div class="pane" id="pane-content" role="tabpanel" aria-labelledby="tab-content" tabindex="0" hidden>
+            <details class="acc" open data-sec="profile">
+              <summary><span class="acc-ico" aria-hidden="true">01</span>個人資料<span class="acc-state"></span></summary>
+              <div class="acc-body">
+                <div class="avatar-row">
+                  <div class="avatar-preview" id="avatar-preview" aria-hidden="true"></div>
+                  <div class="dropzone" id="avatar-drop" role="button" tabindex="0" aria-label="上傳頭像：點一下選擇圖片，或把圖片拖進來">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 15-4.5-4.5L8 19"/></svg>
+                    <span><b>上傳頭像</b><small>點一下或拖曳圖片 · 自動裁成正方形</small></span>
+                  </div>
+                  <input type="file" id="avatar-input" accept="image/*" hidden>
+                </div>
+                <button type="button" class="text-btn" id="avatar-clear" hidden>移除頭像</button>
+                <label class="field"><span>暱稱</span><input class="input" data-field="name" maxlength="24" autocomplete="off"></label>
+                <label class="field"><span>ID / 好友碼</span><input class="input mono-input" data-field="code" maxlength="32" autocomplete="off" spellcheck="false"></label>
+                <label class="field"><span>自介</span><textarea class="textarea" data-field="bio" maxlength="160" rows="3"></textarea></label>
+              </div>
+            </details>
+            <details class="acc" data-sec="stats">
+              <summary><span class="acc-ico" aria-hidden="true">02</span>收藏<span class="acc-state"></span></summary>
+              <div class="acc-body grid-2">
+                <label class="field"><span>蠟燭</span><input class="input" data-field="candles" inputmode="numeric" maxlength="8"></label>
+                <label class="field"><span>愛心</span><input class="input" data-field="hearts" inputmode="numeric" maxlength="8"></label>
+                <label class="field"><span>升華蠟燭</span><input class="input" data-field="ascended" inputmode="numeric" maxlength="8"></label>
+                <label class="field"><span>季節蠟燭</span><input class="input" data-field="season" inputmode="numeric" maxlength="8"></label>
+              </div>
+            </details>
+            <details class="acc" data-sec="height">
+              <summary><span class="acc-ico" aria-hidden="true">03</span>身高<span class="acc-state"></span></summary>
+              <div class="acc-body">
+                <button type="button" class="btn import-btn" id="import-height">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="6.5" y="2.5" width="7" height="15" rx="1.6"/><path d="M6.5 6h2.4M6.5 9h1.6M6.5 12h2.4M6.5 15h1.6"/></svg>從身高工具帶入</button>
+                <div class="grid-3">
+                  <label class="field"><span>目前</span><input class="input" data-field="hNow" inputmode="decimal" maxlength="10"></label>
+                  <label class="field"><span>最高</span><input class="input" data-field="hTall" inputmode="decimal" maxlength="10"></label>
+                  <label class="field"><span>最矮</span><input class="input" data-field="hShort" inputmode="decimal" maxlength="10"></label>
+                </div>
+              </div>
+            </details>
+            <details class="acc" data-sec="favorites">
+              <summary><span class="acc-ico" aria-hidden="true">04</span>最愛<span class="acc-state"></span></summary>
+              <div class="acc-body">
+                <label class="field"><span>地圖</span><input class="input" data-field="map" maxlength="30"></label>
+                <label class="field"><span>先祖</span><input class="input" data-field="spirit" maxlength="30"></label>
+                <label class="field"><span>動作</span><input class="input" data-field="emote" maxlength="30"></label>
+              </div>
+            </details>
+            <details class="acc" data-sec="seasons">
+              <summary><span class="acc-ico" aria-hidden="true">05</span>季節足跡<span class="acc-state"></span></summary>
+              <div class="acc-body">
+                <label class="field"><span>走過的季節</span><input class="input" data-field="seasons" maxlength="240" aria-describedby="hint-seasons"></label>
+                <p class="hint" id="hint-seasons">用逗號分隔，例如：感恩季, 夢想季</p>
+              </div>
+            </details>
+            <details class="acc" data-sec="tags">
+              <summary><span class="acc-ico" aria-hidden="true">06</span>標籤<span class="acc-state"></span></summary>
+              <div class="acc-body">
+                <label class="field"><span>關於你的關鍵字</span><input class="input" data-field="tags" maxlength="200" aria-describedby="hint-tags"></label>
+                <p class="hint" id="hint-tags">用逗號分隔，最多 16 個</p>
+              </div>
+            </details>
+            <details class="acc" data-sec="links">
+              <summary><span class="acc-ico" aria-hidden="true">07</span>社群連結<span class="acc-state"></span></summary>
+              <div class="acc-body">
+                <label class="field"><span>Instagram</span><input class="input mono-input" data-field="ig" maxlength="40" spellcheck="false"></label>
+                <label class="field"><span>Discord</span><input class="input mono-input" data-field="discord" maxlength="40" spellcheck="false"></label>
+                <label class="field"><span>其他</span><input class="input mono-input" data-field="other" maxlength="60" spellcheck="false"></label>
+              </div>
+            </details>
+            <details class="acc" data-sec="note">
+              <summary><span class="acc-ico" aria-hidden="true">08</span>留言<span class="acc-state"></span></summary>
+              <div class="acc-body">
+                <label class="field"><span>想說的話 <small class="hand">（會用手寫字呈現）</small></span><textarea class="textarea" data-field="note" maxlength="120" rows="3"></textarea></label>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <a class="height-link" href="height.html">
+          <span class="height-ico" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="19" y="3" width="8" height="26" rx="2"/><path d="M19 8h3M19 12h2M19 16h3M19 20h2M19 24h3"/><circle cx="10" cy="9" r="3"/><path d="M5.5 28l2-9.5h5l2 9.5"/></svg>
+          </span>
+          <span class="height-text"><b>想量量身高嗎？</b><span>打開身高工具 <span class="arrow" aria-hidden="true">→</span></span></span>
+          <span class="height-note hand" aria-hidden="true">算完可以一鍵帶回來</span>
+        </a>
+      </aside>
+    </div>
+  </div>
+</main>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/card.js"></script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>身高計算 — candle·kit</title>
+<meta name="description" content="上傳 Sky 光遇的服裝 QR 截圖，在你的裝置上讀出身高與體型參數，估算你在同體型中的高矮。">
+<meta name="theme-color" content="#f4efe5">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Serif+TC:wght@600;700&family=Outfit:wght@400;500;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/height.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+</head>
+<body data-page="height">
+<main class="studio" id="studio">
+
+  <!-- 3D stage: canvas + projected ruler overlay -->
+  <div class="stage" id="stage" role="img" aria-label="一座奶油色的圓形舞台：右邊是一座亮著窗的燈塔，旁邊站著你的角色，中間立著一把刻度尺，邊上有一隻圓圓的小生物和一根點亮的蠟燭。角色的高度會隨計算結果改變。">
+    <canvas id="stage-canvas" aria-hidden="true"></canvas>
+    <svg class="ruler-marks" id="ruler-marks" aria-hidden="true"></svg>
+    <div class="stage-tag" id="stage-tag" aria-hidden="true">
+      <span class="stage-tag-k">目前</span><b class="stage-tag-v" id="stage-tag-v">？</b>
+    </div>
+    <p class="stage-note hand" id="stage-note" aria-hidden="true">參考塔 · 固定高度</p>
+    <div class="stage-grain" aria-hidden="true"></div>
+    <p class="stage-fallback" id="stage-fallback" hidden>3D 舞台無法載入，但計算功能一樣可以使用。</p>
+  </div>
+
+  <header class="masthead" id="masthead">
+    <span class="eyebrow">CANDLE·KIT / HEIGHT READER</span>
+    <h1 class="title">身高計算 <em>Height</em></h1>
+    <p class="lead">上傳遊戲裡的服裝 QR，在你的裝置上讀出身高與體型參數，估算你在同體型中有多高。</p>
+  </header>
+
+  <!-- controls: pinned note (desktop) / bottom sheet (mobile) -->
+  <section class="sheet" id="sheet" aria-labelledby="sheet-title">
+    <button class="sheet-grip" id="sheet-grip" type="button" aria-expanded="false" aria-controls="sheet" aria-label="展開控制面板">
+      <span aria-hidden="true"></span>
+    </button>
+    <span class="tape top" aria-hidden="true"></span>
+
+    <div class="sheet-scroll" id="sheet-scroll">
+      <div class="sheet-head">
+        <span class="step mono">01 · SCAN</span>
+        <div class="sheet-title-row">
+          <h2 class="sheet-title" id="sheet-title">上傳服裝 QR</h2>
+          <button class="icon-btn help-btn" id="help-btn" type="button" aria-expanded="false" aria-controls="help" aria-label="如何取得服裝 QR">
+            <span aria-hidden="true">?</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="help" id="help" hidden>
+        <p class="help-title">怎麼拿到服裝 QR？</p>
+        <ol class="help-steps">
+          <li><b>打開設定</b>在遊戲中打開 <span class="kbd">設定</span> → <span class="kbd">帳號／服裝</span>，顯示你的服裝 QR。</li>
+          <li><b>截圖</b>把整個 QR 截下來，不要被手指或對話框擋住。</li>
+          <li><b>上傳</b>把截圖拖進下方方框，或點一下選擇檔案。</li>
+        </ol>
+        <p class="help-lock">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="9" width="12" height="8.5" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6.6a3 3 0 0 1 6 0V9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="13.2" r="1.3" fill="currentColor"/></svg>
+          一切都在這台裝置上完成，圖片不會上傳到任何地方。
+        </p>
+      </div>
+
+      <div class="dropzone qr-drop" id="dropzone" role="button" tabindex="0" aria-describedby="drop-hint">
+        <span class="qr-drop-icon" id="drop-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48">
+            <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round">
+              <rect x="6" y="6" width="13" height="13" rx="2.5"/><rect x="29" y="6" width="13" height="13" rx="2.5"/><rect x="6" y="29" width="13" height="13" rx="2.5"/>
+            </g>
+            <g fill="currentColor"><rect x="10.5" y="10.5" width="4" height="4" rx="1"/><rect x="33.5" y="10.5" width="4" height="4" rx="1"/><rect x="10.5" y="33.5" width="4" height="4" rx="1"/>
+              <rect x="29" y="29" width="5" height="5" rx="1"/><rect x="37" y="29" width="5" height="5" rx="1"/><rect x="33" y="33" width="5" height="5" rx="1"/><rect x="29" y="37" width="5" height="5" rx="1"/><rect x="37" y="37" width="5" height="5" rx="1"/></g>
+          </svg>
+        </span>
+        <img class="qr-drop-thumb" id="drop-thumb" alt="" hidden>
+        <span class="qr-drop-text">
+          <b id="drop-label">拖曳截圖到這裡，或點擊選擇</b>
+          <span class="hint" id="drop-hint">PNG・JPG・WEBP · 只在本機解析</span>
+        </span>
+        <span class="qr-drop-arrow" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15V5M5.5 9.5 10 5l4.5 4.5"/></svg>
+        </span>
+      </div>
+      <input type="file" id="file-input" accept="image/*" hidden>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+
+      <details class="manual" id="manual">
+        <summary>
+          <span>手動輸入</span><span class="mono manual-sub">height · scale</span>
+          <svg class="chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 8 4 4 4-4"/></svg>
+        </summary>
+        <form class="manual-form" id="manual-form" novalidate>
+          <label class="field">
+            <span>身高參數 <i class="mono">height</i></span>
+            <input class="input mono" id="in-height" name="height" type="number" inputmode="decimal" step="any" placeholder="例如 0.5" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>體型參數 <i class="mono">scale</i></span>
+            <input class="input mono" id="in-scale" name="scale" type="number" inputmode="decimal" step="any" placeholder="例如 0.1" autocomplete="off">
+          </label>
+          <button class="btn manual-go" type="submit">計算</button>
+          <p class="manual-msg hint" id="manual-msg">兩個欄位都填好就會自動計算。</p>
+        </form>
+      </details>
+
+      <section class="result ticket" id="result" aria-labelledby="result-title" hidden>
+        <div class="result-top">
+          <h3 class="result-k mono" id="result-title">目前 · CURRENT</h3>
+          <span class="chip" id="result-src">QR</span>
+        </div>
+        <div class="result-main">
+          <output class="result-num mono" id="r-current" for="in-height in-scale">0.00</output>
+          <span class="result-note hand">數字越小＝越高</span>
+        </div>
+
+        <div class="range" aria-label="可能的範圍">
+          <div class="range-ends mono">
+            <span><i>最高</i><b id="r-tallest">0.00</b></span>
+            <span><i>最矮</i><b id="r-shortest">0.00</b></span>
+          </div>
+          <div class="range-bar" aria-hidden="true">
+            <span class="range-fill"></span>
+            <span class="range-mark" id="r-mark"></span>
+          </div>
+          <p class="range-cap" id="r-cap">在你這個體型能達到的範圍中：—</p>
+        </div>
+
+        <hr class="ticket-rule">
+
+        <dl class="raw mono">
+          <div><dt>height</dt><dd id="r-height">—</dd></div>
+          <div><dt>scale</dt><dd id="r-scale">—</dd></div>
+        </dl>
+        <p class="formula">
+          <code class="mono">7.6 − 8.3×scale − 3×height</code>
+          這是玩家社群流傳的估算公式，僅供參考，並非官方數值。
+        </p>
+      </section>
+
+      <div class="actions" id="actions" hidden>
+        <button class="btn btn-primary" id="apply-btn" type="button">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="14" height="11" rx="2"/><circle cx="7.6" cy="9" r="1.7"/><path d="M5.4 13.2c.6-1.2 1.3-1.7 2.2-1.7s1.6.5 2.2 1.7M12 8.2h2.6M12 11h2"/></svg>
+          套用到名片
+        </button>
+        <button class="btn" id="reupload-btn" type="button">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 8.5A5.8 5.8 0 0 0 5 6.6M4.5 11.5A5.8 5.8 0 0 0 15 13.4"/><path d="M4.6 3.6v3.2h3.2M15.4 16.4v-3.2h-3.2"/></svg>
+          重新上傳
+        </button>
+        <a class="to-card" id="to-card" href="card.html" hidden>已存好 · 前往名片 <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" defer></script>
+<script src="assets/js/site.js"></script>
+<script type="module" src="assets/js/height.js"></script>
+</body>
+</html>
