@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>名片產生器 — candle·kit</title>
-<meta name="description" content="為 Sky 光遇玩家設計的名片產生器：六種風格、可拖曳的區塊版面、頭像與收藏數字，直接在瀏覽器裡匯出 PNG。">
+<meta name="description" content="Sky 光遇名片產生器：六種風格，直接在名片上點擊編輯，加入季節、IAP、法術與綁定平台物品，調整版面、尺寸與背景後匯出 PNG / JPEG。">
 <meta name="theme-color" content="#111312">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Chiron+GoRound+TC:wght@400..800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Serif+TC:wght@600;700&family=Outfit:wght@400;500;600;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=LXGW+WenKai+TC:wght@400;700&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Condensed:wght@600;700&family=Caveat:wght@600;700&family=Cinzel:wght@500;700&family=Cormorant+Garamond:wght@500;700&family=DM+Sans:wght@400;500;700&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Lora:wght@400;600&family=Outfit:wght@400;500;600;700&family=Patrick+Hand&family=Pixelify+Sans:wght@400;600;700&family=Playfair+Display:wght@500;700&family=Plus+Jakarta+Sans:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/card.css">
 </head>
@@ -16,13 +16,12 @@
 <main class="card-page">
   <div class="wrap">
     <header class="page-head">
-      <span class="eyebrow">CANDLE·KIT / 02 — PROFILE CARD</span>
-      <h1 class="title">名片產生器 <em>Card Studio</em></h1>
-      <p class="lead">挑一種風格，填上你的光之子資料，拖一拖區塊排版，就能匯出一張可以分享的名片。所有內容只存在這台裝置上。</p>
-      <p class="head-note hand" aria-hidden="true">每一次修改都會自動存檔 ↘</p>
+      <span class="eyebrow">CANDLE·KIT / 02 — SKY PROFILE</span>
+      <h1 class="title">名片產生器 <em>Sky Profile</em></h1>
+      <p class="lead">選一種風格，直接點名片上的數字和文字修改，按 ＋ 放進你的季節物品、IAP、法術與綁定平台，再到右邊調版面、尺寸和背景。所有內容只存在這台裝置上。</p>
     </header>
 
-    <!-- style strip -->
+    <!-- design gallery -->
     <section class="styles" aria-labelledby="style-prompt">
       <p class="style-prompt" id="style-prompt">今天想用哪一種<em>風格</em>？</p>
       <div class="style-strip" id="style-strip" role="radiogroup" aria-labelledby="style-prompt"></div>
@@ -31,225 +30,185 @@
     <div class="studio">
       <!-- preview -->
       <section class="stage-col" aria-label="名片預覽">
-        <div class="stage" id="stage" data-zoom="fit">
+        <div class="stage" id="stage">
           <div class="stage-meta">
             <span class="chip stage-chip"><span class="dot" aria-hidden="true"></span><span id="stage-style">經典 Classic</span></span>
-            <span class="stage-size mono" id="stage-size">1080 × 1350</span>
+            <span class="stage-size mono" id="stage-size">— × —</span>
           </div>
           <div class="stage-frame" id="stage-frame">
-            <canvas id="card-canvas" role="img" aria-label="名片預覽"></canvas>
+            <div class="stage-scale" id="stage-scale">
+              <div class="card-shell" id="card-shell">
+                <div class="card" id="card" aria-label="名片（可直接編輯）"></div>
+              </div>
+            </div>
           </div>
-          <p class="stage-loading" id="stage-loading">正在準備字體…</p>
         </div>
+        <p class="stage-hint hint" id="stage-hint">點名片上的數字或文字就能改；按 <b>＋</b> 加入物品，點一下物品可以標價、改數量或移除。</p>
         <hr class="hairline">
         <div class="toolbar" role="toolbar" aria-label="名片工具列">
           <div class="tool">
-            <button class="icon-btn" id="btn-undo" type="button" aria-label="復原（Ctrl+Z）" aria-describedby="cap-undo" disabled>
+            <button class="icon-btn" id="btn-undo" type="button" aria-label="復原（Ctrl+Z）" aria-keyshortcuts="Control+Z Meta+Z" disabled>
               <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 4.5 4 8l3.5 3.5"/><path d="M4.5 8h7a4.5 4.5 0 0 1 0 9H8"/></svg>
             </button>
-            <span class="tool-cap" id="cap-undo" aria-hidden="true">復原</span>
+            <span class="tool-cap" aria-hidden="true">復原</span>
           </div>
           <div class="tool">
-            <button class="icon-btn" id="btn-redo" type="button" aria-label="重做（Shift+Ctrl+Z）" disabled>
+            <button class="icon-btn" id="btn-redo" type="button" aria-label="重做（Ctrl+Y）" aria-keyshortcuts="Control+Y Meta+Shift+Z" disabled>
               <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.5 4.5 16 8l-3.5 3.5"/><path d="M15.5 8h-7a4.5 4.5 0 0 0 0 9H12"/></svg>
             </button>
             <span class="tool-cap" aria-hidden="true">重做</span>
           </div>
           <span class="tool-sep" aria-hidden="true"></span>
           <div class="tool">
-            <button class="icon-btn" id="btn-zoom" type="button" aria-pressed="false" aria-label="縮放：切換適合寬度與 100%">
-              <svg class="i-zoom-in" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.4"/><path d="m12.6 12.6 4.4 4.4M8.6 6.4v4.4M6.4 8.6h4.4"/></svg>
-              <svg class="i-zoom-fit" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5V3h4.5M17 7.5V3h-4.5M3 12.5V17h4.5M17 12.5V17h-4.5"/></svg>
+            <button class="icon-btn" id="btn-preview" type="button" aria-pressed="false" aria-label="預覽：只看匯出時會出現的內容">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.8 10S5 4.2 10 4.2 18.2 10 18.2 10 15 15.8 10 15.8 1.8 10 1.8 10z"/><circle cx="10" cy="10" r="2.6"/></svg>
             </button>
-            <span class="tool-cap" id="cap-zoom" aria-hidden="true">縮放</span>
+            <span class="tool-cap" aria-hidden="true">預覽</span>
           </div>
           <div class="tool">
-            <button class="icon-btn is-danger" id="btn-reset" type="button" aria-label="清除：回到預設內容（可復原）">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8.2 16.5-4.4-4.4a1.4 1.4 0 0 1 0-2l6.3-6.3a1.4 1.4 0 0 1 2 0l4.4 4.4a1.4 1.4 0 0 1 0 2l-6.3 6.3"/><path d="M7.2 8.7l5.9 5.9M8.2 16.5H17"/></svg>
+            <button class="icon-btn is-danger" id="btn-reset" type="button" aria-label="清除：清空名片內容（可復原）">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 5.5h13M8 5.5V3.8h4v1.7M5.2 5.5l.8 11a1.5 1.5 0 0 0 1.5 1.4h5a1.5 1.5 0 0 0 1.5-1.4l.8-11M8.4 8.6v6M11.6 8.6v6"/></svg>
             </button>
             <span class="tool-cap is-danger" aria-hidden="true">清除</span>
           </div>
           <span class="tool-sep" aria-hidden="true"></span>
           <div class="tool">
-            <button class="icon-btn is-primary btn-download" id="btn-download" type="button" aria-label="下載 PNG">
+            <button class="icon-btn is-primary btn-download" id="btn-download" type="button" aria-label="快速匯出 PNG（2 倍）">
               <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5v9M6.2 9 10 12.8 13.8 9"/><path d="M4 13.5v1.6A1.9 1.9 0 0 0 5.9 17h8.2a1.9 1.9 0 0 0 1.9-1.9v-1.6"/></svg>
             </button>
-            <span class="tool-cap is-gold" aria-hidden="true">下載 PNG</span>
+            <span class="tool-cap is-gold" aria-hidden="true">下載</span>
           </div>
-          <div class="tool tool-settings">
-            <button class="icon-btn" id="btn-settings" type="button" aria-label="匯出設定" aria-expanded="false" aria-controls="settings-pop">
+          <div class="tool">
+            <button class="icon-btn" id="btn-export" type="button" aria-label="匯出設定" aria-haspopup="dialog">
               <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3.5 5.5h6M13.5 5.5h3M3.5 10h2M9.5 10h7M3.5 14.5h8M15.5 14.5h1"/><circle cx="11.5" cy="5.5" r="1.9"/><circle cx="7.5" cy="10" r="1.9"/><circle cx="13.5" cy="14.5" r="1.9"/></svg>
             </button>
             <span class="tool-cap" aria-hidden="true">設定</span>
-            <div class="settings-pop" id="settings-pop" role="dialog" aria-label="匯出設定" hidden>
-              <p class="pop-title"><span class="mono">EXPORT</span> 匯出設定</p>
-              <div class="pop-row">
-                <span id="lbl-scale">匯出倍率</span>
-                <div class="seg seg-sm" role="radiogroup" aria-labelledby="lbl-scale" id="scale-seg">
-                  <button type="button" role="radio" data-scale="1" aria-checked="false">1×</button>
-                  <button type="button" role="radio" data-scale="2" aria-checked="true">2×</button>
-                </div>
-              </div>
-              <label class="pop-row switch-row">
-                <span>顯示日期</span>
-                <input type="checkbox" class="switch" id="opt-date" checked>
-              </label>
-              <label class="pop-row switch-row">
-                <span>小浮水印</span>
-                <input type="checkbox" class="switch" id="opt-mark" checked>
-              </label>
-              <p class="pop-foot mono" id="pop-out">→ 2160 × 2700 px</p>
-            </div>
           </div>
         </div>
       </section>
 
-      <!-- controls -->
+      <!-- inspector -->
       <aside class="controls-col" aria-label="名片設定">
         <div class="panel controls">
           <div class="seg tabs" role="tablist" aria-label="設定分類">
             <button type="button" role="tab" id="tab-layout" aria-controls="pane-layout" aria-selected="true">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2.5" width="5" height="11" rx="1.4"/><rect x="9" y="2.5" width="5" height="5" rx="1.4"/><rect x="9" y="9.5" width="5" height="4" rx="1.4"/></svg>版面</button>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="1.6"/><path d="M6.5 2.5v11"/></svg>版面</button>
             <button type="button" role="tab" id="tab-size" aria-controls="pane-size" aria-selected="false" tabindex="-1">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="1.8" y="5" width="12.4" height="6" rx="1.2"/><path d="M4.5 5v2.2M7 5v1.4M9.5 5v2.2M12 5v1.4"/></svg>尺寸</button>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1.6"/><path d="M2 8h12M8 2v12"/></svg>尺寸</button>
             <button type="button" role="tab" id="tab-theme" aria-controls="pane-theme" aria-selected="false" tabindex="-1">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 2.2c3.4 0 6 2.3 6 5.2 0 1.9-1.4 2.9-3 2.9h-1.3c-.8 0-1.3.8-.9 1.5.5.9-.1 2-1.2 2C4.6 13.8 2 11.2 2 8s2.6-5.8 6-5.8z"/><circle cx="5.4" cy="7.4" r=".9" fill="currentColor"/><circle cx="8" cy="5.2" r=".9" fill="currentColor"/><circle cx="10.7" cy="6.8" r=".9" fill="currentColor"/></svg>主題</button>
-            <button type="button" role="tab" id="tab-content" aria-controls="pane-content" aria-selected="false" tabindex="-1">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="m10.6 2.8 2.6 2.6-7.6 7.6-3.2.6.6-3.2z"/><path d="m9.2 4.2 2.6 2.6"/></svg>內容</button>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor"/></svg>主題</button>
           </div>
 
           <!-- 版面 -->
           <div class="pane" id="pane-layout" role="tabpanel" aria-labelledby="tab-layout" tabindex="0">
-            <p class="pane-label"><span class="mono">01</span> 欄位配置</p>
+            <p class="pane-help">顯示或隱藏區塊，拖曳整列可以排序，也能拖到另一欄。</p>
             <div class="layout-pick" role="radiogroup" aria-label="欄位配置">
-              <button type="button" role="radio" class="layout-opt" data-layout="single" aria-checked="true">
-                <svg viewBox="0 0 40 28" aria-hidden="true"><rect x="1" y="1" width="38" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="7" y="6" width="26" height="4" rx="2" fill="currentColor"/><rect x="7" y="12" width="26" height="4" rx="2" fill="currentColor" opacity=".55"/><rect x="7" y="18" width="26" height="4" rx="2" fill="currentColor" opacity=".3"/></svg>
-                <span>單欄</span><small class="mono">SINGLE</small>
+              <button type="button" role="radio" class="layout-opt" data-cols="1" aria-checked="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="4" y="2.5" width="12" height="15" rx="1.8"/><path d="M7 6.5h6M7 9.5h6M7 12.5h4"/></svg>
+                <span>單欄</span>
               </button>
-              <button type="button" role="radio" class="layout-opt" data-layout="double" aria-checked="false">
-                <svg viewBox="0 0 40 28" aria-hidden="true"><rect x="1" y="1" width="38" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="6" y="6" width="12.5" height="16" rx="2" fill="currentColor"/><rect x="21.5" y="6" width="12.5" height="7" rx="2" fill="currentColor" opacity=".55"/><rect x="21.5" y="15" width="12.5" height="7" rx="2" fill="currentColor" opacity=".3"/></svg>
-                <span>雙欄</span><small class="mono">TWO COLUMNS</small>
+              <button type="button" role="radio" class="layout-opt" data-cols="2" aria-checked="false">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="3.5" width="6.5" height="13" rx="1.6"/><rect x="11" y="3.5" width="6.5" height="13" rx="1.6"/></svg>
+                <span>雙欄</span>
               </button>
             </div>
-            <p class="pane-label"><span class="mono">02</span> 區塊順序</p>
             <div class="cols" id="cols"></div>
-            <p class="hint drag-hint">按住 <span class="kbd" aria-hidden="true">⠿</span> 拖曳排序，也能拖到另一欄；鍵盤可用方向鍵移動。沒填內容的區塊不會出現在名片上。</p>
+            <p class="hint drag-hint">按住 <span class="kbd" aria-hidden="true">⠿</span> 拖曳排序；鍵盤可用方向鍵移動（左右鍵換欄）。沒有內容的區塊不會被匯出。</p>
             <p class="sr-only" id="drag-live" aria-live="polite"></p>
           </div>
 
           <!-- 尺寸 -->
           <div class="pane" id="pane-size" role="tabpanel" aria-labelledby="tab-size" tabindex="0" hidden>
-            <p class="pane-label"><span class="mono">01</span> 名片寬度</p>
-            <div class="seg seg-wide" role="radiogroup" aria-label="名片寬度" id="width-seg">
-              <button type="button" role="radio" data-width="1080" aria-checked="true">1080<small>px</small></button>
-              <button type="button" role="radio" data-width="1440" aria-checked="false">1440<small>px</small></button>
-              <button type="button" role="radio" data-width="1920" aria-checked="false">1920<small>px</small></button>
+            <p class="pane-help">上限會隨內容調整：放不下時，名片會自動長高以保留所有區塊。</p>
+            <div class="size-box">
+              <div class="size-row">
+                <div class="size-top">
+                  <span>名片寬度</span>
+                  <output class="mono size-val" id="out-width">自動</output>
+                  <button type="button" class="auto-btn" id="auto-width" aria-pressed="true">自動</button>
+                </div>
+                <input class="range" type="range" id="in-width" min="340" max="1000" step="10" aria-label="名片寬度">
+              </div>
+              <div class="size-row">
+                <div class="size-top">
+                  <span>名片高度</span>
+                  <output class="mono size-val" id="out-height">自動</output>
+                  <button type="button" class="auto-btn" id="auto-height" aria-pressed="true">自動</button>
+                </div>
+                <input class="range" type="range" id="in-height" min="360" max="2000" step="10" aria-label="名片最小高度">
+              </div>
+              <div class="size-row" id="row-balance">
+                <div class="size-top">
+                  <span>欄寬平衡</span>
+                  <output class="mono size-val" id="out-balance">—</output>
+                </div>
+                <input class="range" type="range" id="in-balance" min="20" max="80" step="1" aria-label="左欄寬度比例">
+              </div>
             </div>
-            <p class="pane-label"><span class="mono">02</span> 細節</p>
-            <label class="slider">
-              <span class="slider-top"><span>外距</span><output class="mono" data-out="pad">60 px</output></span>
-              <input class="range" type="range" min="24" max="120" step="2" data-size="pad">
-            </label>
-            <label class="slider">
-              <span class="slider-top"><span>圓角</span><output class="mono" data-out="radius">40 px</output></span>
-              <input class="range" type="range" min="0" max="80" step="1" data-size="radius">
-            </label>
-            <label class="slider">
-              <span class="slider-top"><span>文字大小</span><output class="mono" data-out="text">100 %</output></span>
-              <input class="range" type="range" min="80" max="130" step="1" data-size="text">
-            </label>
-            <p class="out-size"><span class="mono">OUTPUT</span><b class="mono" id="out-size">1080 × 1350 px</b></p>
+            <p class="out-size"><span class="mono">OUTPUT · 2×</span><b class="mono" id="out-size">—</b></p>
           </div>
 
           <!-- 主題 -->
           <div class="pane" id="pane-theme" role="tabpanel" aria-labelledby="tab-theme" tabindex="0" hidden>
-            <p class="pane-label"><span class="mono">01</span> 強調色</p>
-            <div class="swatches" id="swatches" role="radiogroup" aria-label="強調色"></div>
-            <p class="pane-label"><span class="mono">02</span> 背景變化 <span class="pane-sub" id="variant-style">經典</span></p>
-            <div class="variants" id="variants" role="radiogroup" aria-label="背景變化"></div>
-            <p class="pane-label"><span class="mono">03</span> 質感</p>
-            <label class="toggle-card">
-              <span class="toggle-text"><b>紙紋顆粒</b><small>在名片上疊一層細細的雜訊，像印刷品一樣</small></span>
-              <input type="checkbox" class="switch" id="opt-grain" checked>
-            </label>
-          </div>
+            <div class="pane-row">
+              <p class="pane-title">名片背景</p>
+              <label class="custom-color">自訂顏色<input type="color" id="in-custom-color" aria-label="自訂背景顏色"></label>
+            </div>
+            <div class="seg seg-wide bg-seg" role="radiogroup" aria-label="背景類型" id="bg-seg">
+              <button type="button" role="radio" data-mode="default" aria-checked="true">預設</button>
+              <button type="button" role="radio" data-mode="gradient" aria-checked="false">漸層</button>
+              <button type="button" role="radio" data-mode="solid" aria-checked="false">純色</button>
+              <button type="button" role="radio" data-mode="image" aria-checked="false">桌布</button>
+            </div>
 
-          <!-- 內容 -->
-          <div class="pane" id="pane-content" role="tabpanel" aria-labelledby="tab-content" tabindex="0" hidden>
-            <details class="acc" open data-sec="profile">
-              <summary><span class="acc-ico" aria-hidden="true">01</span>個人資料<span class="acc-state"></span></summary>
-              <div class="acc-body">
-                <div class="avatar-row">
-                  <div class="avatar-preview" id="avatar-preview" aria-hidden="true"></div>
-                  <div class="dropzone" id="avatar-drop" role="button" tabindex="0" aria-label="上傳頭像：點一下選擇圖片，或把圖片拖進來">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 15-4.5-4.5L8 19"/></svg>
-                    <span><b>上傳頭像</b><small>點一下或拖曳圖片 · 自動裁成正方形</small></span>
-                  </div>
-                  <input type="file" id="avatar-input" accept="image/*" hidden>
-                </div>
-                <button type="button" class="text-btn" id="avatar-clear" hidden>移除頭像</button>
-                <label class="field"><span>暱稱</span><input class="input" data-field="name" maxlength="24" autocomplete="off"></label>
-                <label class="field"><span>ID / 好友碼</span><input class="input mono-input" data-field="code" maxlength="32" autocomplete="off" spellcheck="false"></label>
-                <label class="field"><span>自介</span><textarea class="textarea" data-field="bio" maxlength="160" rows="3"></textarea></label>
+            <div class="bg-group" data-group="default">
+              <p class="hint">使用「<span id="default-style-name">經典</span>」風格本身的背景。也可以改用漸層、純色或自己的桌布。</p>
+            </div>
+            <div class="bg-group" data-group="gradient" hidden>
+              <div class="grad-grid" id="grad-grid" role="radiogroup" aria-label="漸層背景"></div>
+            </div>
+            <div class="bg-group" data-group="solid" hidden>
+              <div class="solid-row">
+                <label class="solid-pick"><input type="color" id="in-solid" aria-label="背景顏色"><span class="solid-chip" id="solid-chip"></span></label>
+                <span class="mono solid-hex" id="solid-hex">#1e3a5f</span>
               </div>
-            </details>
-            <details class="acc" data-sec="stats">
-              <summary><span class="acc-ico" aria-hidden="true">02</span>收藏<span class="acc-state"></span></summary>
-              <div class="acc-body grid-2">
-                <label class="field"><span>蠟燭</span><input class="input" data-field="candles" inputmode="numeric" maxlength="8"></label>
-                <label class="field"><span>愛心</span><input class="input" data-field="hearts" inputmode="numeric" maxlength="8"></label>
-                <label class="field"><span>升華蠟燭</span><input class="input" data-field="ascended" inputmode="numeric" maxlength="8"></label>
-                <label class="field"><span>季節蠟燭</span><input class="input" data-field="season" inputmode="numeric" maxlength="8"></label>
+              <div class="solid-presets" id="solid-presets" role="radiogroup" aria-label="純色預設"></div>
+            </div>
+            <div class="bg-group" data-group="image" hidden>
+              <div class="dropzone wp-drop" id="wp-drop" role="button" tabindex="0" aria-label="上傳桌布：點一下選擇圖片，或把圖片拖進來">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 15-4.5-4.5L8 19"/></svg>
+                <span><b>從裝置上傳</b><small>支援 JPG、PNG、WebP</small></span>
               </div>
-            </details>
-            <details class="acc" data-sec="height">
-              <summary><span class="acc-ico" aria-hidden="true">03</span>身高<span class="acc-state"></span></summary>
-              <div class="acc-body">
-                <button type="button" class="btn import-btn" id="import-height">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="6.5" y="2.5" width="7" height="15" rx="1.6"/><path d="M6.5 6h2.4M6.5 9h1.6M6.5 12h2.4M6.5 15h1.6"/></svg>從身高工具帶入</button>
-                <div class="grid-3">
-                  <label class="field"><span>目前</span><input class="input" data-field="hNow" inputmode="decimal" maxlength="10"></label>
-                  <label class="field"><span>最高</span><input class="input" data-field="hTall" inputmode="decimal" maxlength="10"></label>
-                  <label class="field"><span>最矮</span><input class="input" data-field="hShort" inputmode="decimal" maxlength="10"></label>
-                </div>
+              <input type="file" id="wp-input" accept="image/*" hidden>
+              <div class="wp-current" id="wp-current" hidden>
+                <span class="wp-thumb" id="wp-thumb"></span>
+                <span class="wp-name"><b id="wp-name">桌布</b><small>套用中</small></span>
+                <button type="button" class="row-btn" id="wp-change" aria-label="換一張"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 7.5A6 6 0 0 0 4.6 6.4M4.5 12.5a6 6 0 0 0 10.9 1.1"/><path d="M15.8 3.6v4h-4M4.2 16.4v-4h4"/></svg></button>
+                <button type="button" class="row-btn is-danger" id="wp-remove" aria-label="移除桌布"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg></button>
               </div>
-            </details>
-            <details class="acc" data-sec="favorites">
-              <summary><span class="acc-ico" aria-hidden="true">04</span>最愛<span class="acc-state"></span></summary>
-              <div class="acc-body">
-                <label class="field"><span>地圖</span><input class="input" data-field="map" maxlength="30"></label>
-                <label class="field"><span>先祖</span><input class="input" data-field="spirit" maxlength="30"></label>
-                <label class="field"><span>動作</span><input class="input" data-field="emote" maxlength="30"></label>
-              </div>
-            </details>
-            <details class="acc" data-sec="seasons">
-              <summary><span class="acc-ico" aria-hidden="true">05</span>季節足跡<span class="acc-state"></span></summary>
-              <div class="acc-body">
-                <label class="field"><span>走過的季節</span><input class="input" data-field="seasons" maxlength="240" aria-describedby="hint-seasons"></label>
-                <p class="hint" id="hint-seasons">用逗號分隔，例如：感恩季, 夢想季</p>
-              </div>
-            </details>
-            <details class="acc" data-sec="tags">
-              <summary><span class="acc-ico" aria-hidden="true">06</span>標籤<span class="acc-state"></span></summary>
-              <div class="acc-body">
-                <label class="field"><span>關於你的關鍵字</span><input class="input" data-field="tags" maxlength="200" aria-describedby="hint-tags"></label>
-                <p class="hint" id="hint-tags">用逗號分隔，最多 16 個</p>
-              </div>
-            </details>
-            <details class="acc" data-sec="links">
-              <summary><span class="acc-ico" aria-hidden="true">07</span>社群連結<span class="acc-state"></span></summary>
-              <div class="acc-body">
-                <label class="field"><span>Instagram</span><input class="input mono-input" data-field="ig" maxlength="40" spellcheck="false"></label>
-                <label class="field"><span>Discord</span><input class="input mono-input" data-field="discord" maxlength="40" spellcheck="false"></label>
-                <label class="field"><span>其他</span><input class="input mono-input" data-field="other" maxlength="60" spellcheck="false"></label>
-              </div>
-            </details>
-            <details class="acc" data-sec="note">
-              <summary><span class="acc-ico" aria-hidden="true">08</span>留言<span class="acc-state"></span></summary>
-              <div class="acc-body">
-                <label class="field"><span>想說的話 <small class="hand">（會用手寫字呈現）</small></span><textarea class="textarea" data-field="note" maxlength="120" rows="3"></textarea></label>
-              </div>
-            </details>
+              <label class="slider">
+                <span class="slider-top"><span>暗色遮罩</span><output class="mono" id="out-overlay">35%</output></span>
+                <input class="range" type="range" id="in-overlay" min="0" max="85" step="1" aria-label="暗色遮罩">
+              </label>
+              <label class="toggle-card">
+                <span class="toggle-text"><b>區塊毛玻璃</b><small>讓區塊底下的桌布變模糊</small></span>
+                <input type="checkbox" class="switch" id="in-blur">
+              </label>
+              <label class="slider" id="row-blur">
+                <span class="slider-top"><span>模糊程度</span><output class="mono" id="out-blur">8px</output></span>
+                <input class="range" type="range" id="in-blur-px" min="2" max="24" step="1" aria-label="模糊程度">
+              </label>
+              <p class="pane-sub-title">內建桌布</p>
+              <div class="wp-grid" id="wp-grid" role="radiogroup" aria-label="內建桌布"></div>
+            </div>
+
+            <div id="paper-box" hidden>
+              <p class="pane-title">紙張紋理</p>
+              <div class="paper-grid" id="paper-grid" role="radiogroup" aria-label="紙張紋理"></div>
+            </div>
+
+            <p class="pane-title">字型</p>
+            <div class="font-grid" id="font-grid" role="radiogroup" aria-label="名片字型"></div>
           </div>
         </div>
 
@@ -264,7 +223,171 @@
     </div>
   </div>
 </main>
+
+<!-- item picker -->
+<div class="modal" id="picker-modal" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-dialog picker-dialog" role="dialog" aria-modal="true" aria-labelledby="picker-title">
+    <div class="modal-head">
+      <h2 class="modal-title" id="picker-title">選擇物品</h2>
+      <div class="modal-actions">
+        <button type="button" class="sq-btn" data-close aria-label="取消"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg></button>
+        <button type="button" class="sq-btn is-primary" id="picker-ok" aria-label="確定"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 10.5 3.6 3.6 7.4-8"/></svg></button>
+      </div>
+    </div>
+    <div class="picker-tools" id="picker-tools">
+      <label class="picker-search">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.4"/><path d="m12.6 12.6 4.4 4.4"/></svg>
+        <input type="search" id="picker-q" placeholder="搜尋名稱、季節，例如 Deer、AP21、感恩" autocomplete="off" spellcheck="false" aria-label="搜尋物品">
+      </label>
+      <div class="picker-row">
+        <div class="chips" id="picker-cats" role="group" aria-label="分類"></div>
+      </div>
+      <div class="picker-row picker-row-2">
+        <select class="select picker-season" id="picker-season" aria-label="季節"></select>
+        <button type="button" class="btn btn-sm" id="picker-upload"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M10 14V4M6 7.8 10 4l4 3.8M4 13.5v1.6A1.9 1.9 0 0 0 5.9 17h8.2a1.9 1.9 0 0 0 1.9-1.9v-1.6"/></svg>上傳自己的圖示</button>
+        <input type="file" id="custom-input" accept="image/*" multiple hidden>
+      </div>
+      <div class="picker-price" id="picker-price" hidden>
+        <span class="picker-price-label">新加入的物品標價</span>
+        <div class="chips" id="price-chips" role="radiogroup" aria-label="新加入物品的價格"></div>
+      </div>
+    </div>
+    <div class="picker-body" id="picker-body" tabindex="-1"></div>
+    <div class="picker-foot">
+      <span id="picker-status" aria-live="polite">已選 0 個</span>
+      <button type="button" class="text-link" id="picker-clear">全部取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- item editor popover -->
+<div class="item-pop" id="item-pop" role="dialog" aria-labelledby="pop-name" hidden>
+  <div class="pop-head">
+    <span class="pop-ico" id="pop-ico" aria-hidden="true"></span>
+    <span class="pop-titles"><b id="pop-name">物品</b><small id="pop-sub"></small></span>
+    <button type="button" class="row-btn" id="pop-close" aria-label="關閉"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg></button>
+  </div>
+  <label class="pop-field" id="pop-price-row">
+    <span>價格</span>
+    <span class="pop-price">
+      <select class="select" id="pop-currency" aria-label="幣別"><option>US$</option><option>NT$</option><option>HK$</option><option>RM</option><option>¥</option><option>€</option></select>
+      <input class="input" id="pop-price" type="text" inputmode="decimal" maxlength="9" placeholder="不標價" aria-label="價格">
+    </span>
+  </label>
+  <div class="pop-field" id="pop-count-row">
+    <span>數量</span>
+    <span class="stepper"><button type="button" id="pop-minus" aria-label="減少">−</button><input class="input" id="pop-count" type="text" inputmode="numeric" maxlength="4" aria-label="數量"><button type="button" id="pop-plus" aria-label="增加">＋</button></span>
+  </div>
+  <label class="pop-field pop-switch" id="pop-dead-row">
+    <span>已失效（DEAD）</span>
+    <input type="checkbox" class="switch" id="pop-dead">
+  </label>
+  <label class="pop-field" id="pop-label-row">
+    <span>顯示名稱</span>
+    <input class="input" id="pop-label" maxlength="24" placeholder="留空就用預設名稱">
+  </label>
+  <div class="pop-actions">
+    <button type="button" class="row-btn" id="pop-left" aria-label="往前移"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4.5 6.5 10l5.5 5.5"/></svg></button>
+    <button type="button" class="row-btn" id="pop-right" aria-label="往後移"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4.5 13.5 10 8 15.5"/></svg></button>
+    <button type="button" class="btn btn-sm btn-danger" id="pop-remove">移除</button>
+  </div>
+</div>
+
+<!-- avatar crop -->
+<div class="modal" id="crop-modal" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-dialog crop-dialog" role="dialog" aria-modal="true" aria-labelledby="crop-title">
+    <div class="modal-head">
+      <div><h2 class="modal-title" id="crop-title">選擇頭像要顯示的範圍</h2><p class="modal-sub">拖曳圖片挑位置，圖片不是正方形時可以用縮放。</p></div>
+      <button type="button" class="sq-btn" data-close aria-label="關閉"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg></button>
+    </div>
+    <div class="crop-stage" id="crop-stage"><img id="crop-img" alt="頭像裁切預覽" draggable="false"><div class="crop-frame" aria-hidden="true"></div></div>
+    <label class="slider crop-zoom"><span class="slider-top"><span>縮放</span><output class="mono" id="out-zoom">1.00×</output></span><input class="range" type="range" id="crop-zoom" min="1" max="3" step="0.01" value="1" aria-label="縮放"></label>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-sm" data-close>取消</button>
+      <button type="button" class="btn btn-sm" id="crop-center">置中</button>
+      <button type="button" class="btn btn-sm btn-primary" id="crop-apply">套用</button>
+    </div>
+  </div>
+</div>
+
+<!-- profile details -->
+<div class="modal" id="profile-modal" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-dialog profile-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+    <div class="modal-head">
+      <h2 class="modal-title" id="profile-title">編輯個人資料</h2>
+      <div class="modal-actions">
+        <button type="button" class="sq-btn" data-close aria-label="關閉"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg></button>
+        <button type="button" class="btn btn-sm btn-primary" data-close>完成</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <section class="pm-sec">
+        <p class="pm-title">頭像</p>
+        <div class="pm-avatar">
+          <span class="pm-avatar-img" id="pm-avatar"></span>
+          <span class="pm-avatar-btns"><button type="button" class="btn btn-sm btn-primary" id="pm-avatar-change">更換</button><button type="button" class="btn btn-sm" id="pm-avatar-remove">移除</button></span>
+          <span class="pm-note">沒有頭像時，匯出的名片會自動隱藏頭像位置。</span>
+        </div>
+      </section>
+      <section class="pm-sec">
+        <div class="pm-head"><p class="pm-title">貨幣與數量</p><button type="button" class="btn btn-sm" id="pm-cur-all">全部隱藏</button></div>
+        <div class="pm-cur" id="pm-cur"></div>
+      </section>
+      <section class="pm-sec" id="pm-height-sec">
+        <p class="pm-title">光之子身高</p>
+        <div class="pm-height">
+          <label class="field"><span>目前</span><input class="input" data-h="now" inputmode="decimal" maxlength="8" placeholder="例如 1.24"></label>
+          <label class="field"><span>最高</span><input class="input" data-h="tall" inputmode="decimal" maxlength="8" placeholder="—"></label>
+          <label class="field"><span>最矮</span><input class="input" data-h="short" inputmode="decimal" maxlength="8" placeholder="—"></label>
+        </div>
+        <div class="pm-height-btns">
+          <button type="button" class="btn btn-sm import-btn" id="pm-height-import"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="6.5" y="2.5" width="7" height="15" rx="1.6"/><path d="M6.5 6h2.4M6.5 9h1.6M6.5 12h2.4M6.5 15h1.6"/></svg>從身高工具帶入</button>
+          <button type="button" class="btn btn-sm btn-danger" id="pm-height-clear">清除身高</button>
+        </div>
+      </section>
+      <section class="pm-sec">
+        <p class="pm-title">個人備註</p>
+        <input class="input" id="pm-note" maxlength="60" placeholder="寫一句會顯示在名片上的話…">
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- export options -->
+<div class="modal" id="export-modal" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-dialog export-dialog" role="dialog" aria-modal="true" aria-labelledby="export-title">
+    <div class="modal-head"><h2 class="modal-title" id="export-title">匯出設定</h2></div>
+    <div class="modal-body">
+      <label class="field"><span>檔案格式</span>
+        <select class="select" id="ex-format"><option value="png">PNG — 可保留透明背景，畫質最好</option><option value="jpeg">JPEG — 白底，檔案比較小</option></select>
+      </label>
+      <label class="field"><span>解析度</span>
+        <select class="select" id="ex-scale"><option value="1">1× — 快速、檔案小</option><option value="2">2× — 清晰</option><option value="3">3× — 超清晰，看得到細節（推薦）</option></select>
+      </label>
+      <label class="slider" id="ex-quality-row">
+        <span class="slider-top"><span>JPEG 品質</span><output class="mono" id="out-quality">92%</output></span>
+        <input class="range" type="range" id="ex-quality" min="60" max="100" step="1" aria-label="JPEG 品質">
+        <small class="hint">只在選擇 JPEG 時有效。</small>
+      </label>
+      <label class="check-row"><input type="checkbox" id="ex-transparent"> 保留透明背景（僅 PNG）</label>
+      <label class="field"><span>檔名</span><input class="input mono-input" id="ex-name" maxlength="60" spellcheck="false"></label>
+      <p class="hint ex-name-hint">用 <code>{date}</code> 會換成匯出當天的日期，例如 <span id="ex-name-demo">sky-profile-20261109.png</span></p>
+      <p class="out-size"><span class="mono">OUTPUT</span><b class="mono" id="ex-out">—</b></p>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-sm" data-close>取消</button>
+      <button type="button" class="btn btn-sm btn-primary" id="ex-go">匯出圖片</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="avatar-input" accept="image/*" hidden>
 <script src="assets/js/site.js"></script>
+<script src="assets/js/card-data.js"></script>
 <script src="assets/js/card.js"></script>
 </body>
 </html>
