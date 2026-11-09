@@ -26,8 +26,10 @@ export async function loadToonModel(name) {
   try {
     if (!(await manifest()).has(name)) { modelStatus[name] = 'placeholder'; return null; }
     const gltf = await loader.loadAsync(url);
-    gltf.scene.traverse(o => {
-      if (!o.isMesh) return;
+    // collect first: adding outline meshes while traversing would make traverse visit (and outline) them too
+    const meshes = [];
+    gltf.scene.traverse(o => { if (o.isMesh) meshes.push(o); });
+    meshes.forEach(o => {
       const src = Array.isArray(o.material) ? o.material[0] : o.material;
       const color = src && src.color ? '#' + src.color.getHexString() : '#ffffff';
       o.material = toon(color, {

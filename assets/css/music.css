@@ -409,6 +409,9 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
 
 /* ── responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 1020px) {
+  .mu-head { display: block; }
+  .mu-head-side { max-width: 600px; margin-top: 14px; padding: 0; }
+  .mu-mark { display: none; }
   .mu-transport {
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas: "btns info mode" "prog prog tempo";
@@ -465,6 +468,7 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
 
 @media (max-width: 380px) {
   .mu-pill span { font-size: 13px; }
+  .mu-tools { -webkit-mask-image: linear-gradient(90deg, #000 82%, transparent); mask-image: linear-gradient(90deg, #000 82%, transparent); padding-right: 28px; }
   .mu-mode button svg { display: none; }
 }
 
