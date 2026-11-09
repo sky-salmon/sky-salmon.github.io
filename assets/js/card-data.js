@@ -5,8 +5,8 @@
   'use strict';
 
   // ── item catalogue (folders under assets/icons, listed in icons.csv) ──────────
-  // Icons live in one folder per game type (dir). icons.csv also carries `kind` (the category shown here:
-  // furniture and instruments are props in the game but get their own tab) and `season` (from the game's
+  // Icons live in one folder per game type (dir). icons.csv also carries `kind` (finer than the closet
+  // tabs; folded back into them via KIND_ALIAS) and `season` (from the game's
   // OutfitDefs, so it is right even when the file name has no or a misleading APxx). Old saved cards keep
   // working because file paths never change; their category/season are corrected once the catalogue loads.
   const CATS = [
@@ -19,13 +19,12 @@
     { dir: '07_角_Horn', id: 'horn', zh: '角' },
     { dir: '08_鞋子_Shoes', id: 'shoes', zh: '鞋子' },
     { dir: '09_臉飾_FaceAccessory', id: 'face', zh: '臉飾' },
-    { dir: '10_道具_Prop', id: 'prop', zh: '道具' },
-    { id: 'instrument', zh: '樂器' },
-    { id: 'furniture', zh: '家具' }
+    { dir: '10_道具_Prop', id: 'prop', zh: '道具' }
   ];
   const CAT_BY_DIR = Object.fromEntries(CATS.filter(c => c.dir).map(c => [c.dir, c]));
   const CAT_BY_ID = Object.fromEntries(CATS.map(c => [c.id, c]));
-  const KIND_ALIAS = { fireworks: 'prop' };
+  // The closet lists instruments, fireworks and everything placeable under props, so the site does too.
+  const KIND_ALIAS = { fireworks: 'prop', instrument: 'prop', placeable: 'prop', furniture: 'prop' };
 
   // Season number as used in the game data (season_NN = the (N-1)th season since global launch).
   // Traditional Chinese names follow the zh Sky fan wiki; 32 (Season of Pearl) has no published
