@@ -381,6 +381,15 @@ els.apply.addEventListener('click', () => {
   }
 });
 
+// soft fade at the bottom of the card while more content sits below the fold
+function updateMore() {
+  const el = els.scroll;
+  el.classList.toggle('has-more', el.scrollTop + el.clientHeight < el.scrollHeight - 6);
+}
+els.scroll.addEventListener('scroll', updateMore, { passive: true });
+new ResizeObserver(updateMore).observe(els.scroll);
+new MutationObserver(() => requestAnimationFrame(updateMore)).observe(els.scroll, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'open'] });
+
 // ── 3D stage ────────────────────────────────────────────────────────────
 let peek = 0;   // mobile: height of the collapsed sheet, so the diorama stays framed above it
 function safeRect() {
@@ -388,7 +397,8 @@ function safeRect() {
   if (!narrowMQ.matches) {
     const c = els.sheet.getBoundingClientRect();
     const x = Math.max(0, c.right - s.left + 16), y = Math.max(0, m.bottom - s.top + 6);
-    return { x, y, w: Math.max(200, s.width - x - 24), h: Math.max(200, s.height - y - 20), narrow: false };
+    const w = Math.max(200, s.width - x - 24), h = Math.max(200, s.height - y - 20);
+    return { x, y, w, h, narrow: w / h < 1 };   // tall free area (tablet portrait): frame the trio, let the disc bleed
   }
   if (!els.sheet.classList.contains('is-expanded') || !peek) peek = els.sheet.getBoundingClientRect().height;
   const y = Math.max(0, m.bottom - s.top + 2);

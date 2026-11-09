@@ -19,7 +19,7 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
 .mu-stage {
   --pad: clamp(12px, 2.2vw, 26px);
   --energy: 0;
-  position: relative; overflow: hidden; isolation: isolate; border-radius: 30px;
+  position: relative; z-index: 3; overflow: hidden; isolation: isolate; border-radius: 30px; /* z-index: sheets stay above later siblings */
   background:
     radial-gradient(120% 70% at 50% -10%, rgba(255, 214, 140, .07), transparent 60%),
     radial-gradient(140% 100% at 50% 0%, #17130e 0%, var(--stage) 55%, #060504 100%);
@@ -118,7 +118,7 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
 .mu-key::after {
   content: ""; position: absolute; inset: 7%; border-radius: clamp(8px, 1.5vw, 15px); pointer-events: none;
   border: 1.5px solid #ffd892; box-shadow: 0 0 14px rgba(255, 210, 130, .55), inset 0 0 12px rgba(255, 210, 130, .22);
-  opacity: var(--cue); transform: scale(calc(1.22 - .22 * var(--cue)));
+  opacity: var(--cue); transform: scale(calc(1.1 - .1 * var(--cue)));
 }
 .mu-key.is-target::after { opacity: max(var(--cue), .4); }
 .mu-key.is-wait::after { animation: mu-breathe 1.3s ease-in-out infinite; }
@@ -250,16 +250,16 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
 /* instruments */
 .mu-inst-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .mu-inst {
-  position: relative; display: grid; justify-items: start; align-content: start; gap: 2px; padding: 14px 14px 12px; min-height: 138px;
+  position: relative; display: grid; justify-items: start; align-content: start; gap: 1px; padding: 12px 14px 11px; min-height: 0;
   border-radius: 16px; border: 1px solid var(--line-strong); background: rgba(255, 255, 255, .022); text-align: left; color: var(--ink);
   transition: border-color .2s, background .25s, box-shadow .25s, transform .15s;
 }
 .mu-inst:hover { border-color: rgba(233, 194, 122, .5); }
 .mu-inst:active { transform: scale(.98); }
-.mu-inst svg { width: 42px; height: 42px; margin-bottom: 8px; color: var(--gold); stroke-width: 1.3; }
+.mu-inst svg { width: 38px; height: 38px; margin-bottom: 6px; color: var(--gold); stroke-width: 1.3; }
 .mu-inst b { font-size: 16px; font-weight: 700; }
 .mu-inst .mono { font-size: 10px; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; }
-.mu-inst .hand { margin-top: 4px; font-size: 17px; line-height: 1.1; color: var(--ink-soft); }
+.mu-inst .hand { margin-top: 3px; font-size: 16px; line-height: 1.15; color: var(--ink-soft); }
 .mu-inst[aria-pressed="true"] {
   border-color: rgba(233, 194, 122, .75);
   background: radial-gradient(120% 90% at 15% 0%, rgba(233, 194, 122, .17), transparent 70%), rgba(233, 194, 122, .04);
@@ -309,9 +309,9 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
 #import-status { margin-top: 8px; }
 
 /* recorder */
-.mu-deck { display: flex; align-items: center; gap: 18px; padding: 16px; border-radius: 18px; border: 1px solid var(--line); background: radial-gradient(120% 120% at 0% 50%, rgba(224, 87, 75, .06), transparent 60%), rgba(255, 255, 255, .02); }
+.mu-deck { display: flex; align-items: center; gap: 16px; padding: 14px; border-radius: 18px; border: 1px solid var(--line); background: radial-gradient(120% 120% at 0% 50%, rgba(224, 87, 75, .06), transparent 60%), rgba(255, 255, 255, .02); }
 .mu-rec-btn {
-  position: relative; width: 66px; height: 66px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  position: relative; width: 60px; height: 60px; flex: none; border-radius: 50%; display: grid; place-items: center;
   border: 1.5px solid rgba(224, 87, 75, .6); background: radial-gradient(circle, rgba(224, 87, 75, .12), transparent 70%);
   transition: transform .15s, box-shadow .3s;
 }
@@ -323,9 +323,9 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
 .mu-deck-read { display: grid; gap: 1px; min-width: 0; }
 .mu-deck-state { font-size: 10.5px; letter-spacing: .18em; color: var(--muted); }
 .mu-deck[data-state="rec"] .mu-deck-state { color: #ff9c8f; }
-.mu-deck-time { font-size: 30px; font-weight: 500; line-height: 1.15; color: var(--ink); font-variant-numeric: tabular-nums; }
+.mu-deck-time { font-size: 28px; font-weight: 500; line-height: 1.15; color: var(--ink); font-variant-numeric: tabular-nums; }
 .mu-deck-count { font-size: 13px; color: var(--ink-soft); }
-.mu-roll { position: relative; margin: 12px 0 10px; height: 104px; border-radius: 14px; border: 1.5px dashed var(--line-strong); background: rgba(0, 0, 0, .2); overflow: hidden; }
+.mu-roll { position: relative; margin: 12px 0 10px; height: 92px; border-radius: 14px; border: 1.5px dashed var(--line-strong); background: rgba(0, 0, 0, .2); overflow: hidden; }
 .mu-roll svg { width: 100%; height: 100%; }
 .mu-roll-empty { position: absolute; inset: 0; display: grid; place-items: center; font-size: 19px; color: var(--muted); }
 .mu-roll-empty[hidden] { display: none; }
@@ -455,7 +455,6 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
   .mu-drawer-head { padding: 22px 16px 14px 18px; }
   .mu-drawer-head h2 { font-size: 23px; }
   .mu-drawer-body { padding: 14px 18px 24px; }
-  .mu-inst { min-height: 128px; }
 
   .mu-result-card.ticket { padding: 26px 20px 22px; }
   .mu-result-title b { font-size: 56px; }

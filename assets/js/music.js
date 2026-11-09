@@ -178,7 +178,7 @@
 
     // Karplus–Strong plucked string, rendered once per key into a buffer (then pitch-corrected).
     const KS = {
-      harp: { seconds: 2.9, t60: 2.8, smooth: 3, pick: 0 },
+      harp: { seconds: 3.2, t60: 3.3, smooth: 3, pick: 0 },
       guitar: { seconds: 2.5, t60: 2.0, smooth: 1, pick: 0.17 }
     };
     function ksBuffer(kind, k, f) {
@@ -189,8 +189,9 @@
       const f0 = sr / (N - 0.5);
       const len = Math.floor(sr * P.seconds);
       const buf = ctx.createBuffer(1, len, sr), d = buf.getChannelData(0);
-      let ring = new Float32Array(N);
-      for (let i = 0; i < N; i++) ring[i] = Math.random() * 2 - 1;
+      let ring = new Float32Array(N), seed = (k + 1) * 2654435761 + kind.length * 97; // seeded: same tone every session
+      const rand = () => { seed = (seed + 0x6D2B79F5) | 0; let x = Math.imul(seed ^ (seed >>> 15), 1 | seed); x ^= x + Math.imul(x ^ (x >>> 7), 61 | x); return ((x ^ (x >>> 14)) >>> 0) / 2147483648 - 1; };
+      for (let i = 0; i < N; i++) ring[i] = rand();
       if (P.pick) { // pluck position: comb out some harmonics
         const m = Math.max(1, Math.round(N * P.pick)), out = new Float32Array(N);
         for (let i = 0; i < N; i++) out[i] = ring[i] - ring[(i - m + N) % N];
@@ -201,15 +202,18 @@
       for (let i = 0; i < N; i++) ring[i] -= mean;
       const t60 = P.t60 * (1 - (k / 14) * 0.45);
       const damp = Math.pow(0.001, 1 / (f0 * t60));
-      let idx = 0, peak = 1e-6;
+      let idx = 0, peak = 1e-6, energy = 0;
+      const w0 = Math.floor(sr * 0.02), w1 = Math.floor(sr * 0.25);
       for (let i = 0; i < len; i++) {
         const a = ring[idx], nx = idx + 1 === N ? 0 : idx + 1;
         d[i] = a;
         const abs = a < 0 ? -a : a; if (abs > peak) peak = abs;
+        if (i >= w0 && i < w1) energy += a * a;
         ring[idx] = damp * 0.5 * (a + ring[nx]);
         idx = nx;
       }
-      const g = 0.9 / peak;
+      // level by the body of the note (not the noisy attack), but never clip
+      const g = Math.min(0.3 / Math.sqrt(energy / (w1 - w0) + 1e-9), 0.95 / peak);
       for (let i = 0; i < len; i++) d[i] *= g;
       const res = { buf, f0 };
       ksCache.set(id, res);
@@ -236,8 +240,8 @@
         v.srcs.push(o1, o2, o3, nz);
         v.end = t + decay * 7;
       },
-      harp(v, f, k) { plucked(v, f, k, 'harp', 1, 5400, 0.5); },
-      guitar(v, f, k) { plucked(v, f / 2, k, 'guitar', 1, 3600, 0.62); },
+      harp(v, f, k) { plucked(v, f, k, 'harp', 5400, 0.8); },
+      guitar(v, f, k) { plucked(v, f / 2, k, 'guitar', 3600, 0.7); },
       musicbox(v, f, k) {
         const t = v.t, F = f * 2, tau = 0.62 - k * 0.022, out = amp(1);
         out.connect(v.vca);
@@ -298,7 +302,7 @@
       }
     };
 
-    function plucked(v, f, k, kind, octave, cutoff, level) {
+    function plucked(v, f, k, kind, cutoff, level) {
       const t = v.t, { buf, f0 } = ksBuffer(kind, k, f);
       const src = ctx.createBufferSource();
       src.buffer = buf; src.playbackRate.value = f / f0;
@@ -641,6 +645,11 @@
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape') { if (closeTopmost()) e.preventDefault(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey || isEditable(e.target)) return;
+    if (e.code === 'Space' && P.song && !e.repeat && !e.target.closest('button, a, input, summary, [role="button"]')) {
+      e.preventDefault();
+      if (P.playing) pause(); else play();
+      return;
+    }
     const k = codeMap.get(e.code);
     if (k == null) return;
     e.preventDefault();
@@ -740,10 +749,10 @@
     P.nextSched = lowerBound(P.notes, P.pos0, n => n[0]);
     updateTransport(); render(P.pos0);
   }
-  function stopPlayback() {
+  function stopPlayback(letRing) {
     P.playing = false;
     clearInterval(P.sched); P.sched = 0;
-    cancelPending(true);
+    cancelPending(!letRing);
     resetStats();
     keyEls.forEach((el, k) => { el.classList.remove('is-lit'); clearTimeout(litTimers[k]); });
     setPosition(LEAD_IN);
@@ -843,7 +852,7 @@
   }
 
   function finishListen() {
-    stopPlayback();
+    stopPlayback(true); // let the final chord ring out
     P.ended = true;
     updateTransport();
   }
@@ -852,6 +861,7 @@
   function practiceInput(k) {
     if (P.mode !== 'practice' || !P.song) return;
     if (!P.playing) {
+      if (openName || rec.state === 'rec' || !result.hidden) return; // only auto-start from the bare stage
       const first = P.steps[P.step >= P.steps.length ? 0 : P.step];
       if (!first || !first.keys.has(k)) return;
       play(); // pressing a glowing key starts / resumes practice
@@ -1064,7 +1074,7 @@
       Audio.ensure();
       closeDrawer(false);
       loadSong(song, act === 'practice' ? 'practice' : 'listen', act === 'play');
-      (act === 'play' ? tp.play : keyEls[0]).focus({ preventScroll: true });
+      tp.play.focus({ preventScroll: true });
       if (act === 'practice') toast('按下發光的鍵開始練習');
     } else if (act === 'export') {
       download(song);
@@ -1127,7 +1137,7 @@
   const recEls = {
     deck: $('#rec-deck'), toggle: $('#rec-toggle'), state: $('#rec-state'), time: $('#rec-time'), count: $('#rec-count'),
     roll: $('#rec-roll'), empty: $('#rec-roll-empty'), form: $('#rec-save'), name: $('#rec-name'), bpm: $('#rec-bpm'),
-    chip: $('#rec-chip'), chipTime: $('#rec-chip-time')
+    chip: $('#rec-chip'), chipTime: $('#rec-chip-time'), help: $('#rec-help')
   };
   function recordNote(k) { if (rec.state === 'rec') rec.notes.push([Math.round(now() - rec.start), k]); }
   function recStart() {
@@ -1169,6 +1179,7 @@
     recEls.time.textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${(s % 60).toFixed(1).padStart(4, '0')}`;
     recEls.count.textContent = `${rec.notes.length} 個音符`;
     recEls.form.hidden = rec.state !== 'done';
+    recEls.help.hidden = rec.state === 'done';
     recEls.chip.hidden = !recording;
     recEls.chipTime.textContent = fmt(elapsed);
     stage.classList.toggle('is-recording', recording);

@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#0b0a09">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Serif+TC:wght@600;700&family=Outfit:wght@400;500;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=LXGW+WenKai+TC:wght@400;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Serif+TC:wght@600;700&family=Outfit:wght@400;500;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/music.css">
 </head>
@@ -173,7 +173,7 @@
           <svg id="rec-roll" viewBox="0 0 300 96" preserveAspectRatio="none"></svg>
           <span class="mu-roll-empty hand" id="rec-roll-empty">按下紅鈕，然後隨意彈奏…</span>
         </div>
-        <p class="hint">錄音時，你按下的每個鍵都會連同時間一起記下（樂譜播放的聲音不會被錄進去）。</p>
+        <p class="hint" id="rec-help">錄音只記下你按的鍵與時間（毫秒），樂譜播放的聲音不會被錄進去。</p>
 
         <form class="mu-save" id="rec-save" hidden>
           <h3 class="mu-d-label">命名與保存</h3>

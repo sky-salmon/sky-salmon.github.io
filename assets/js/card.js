@@ -9,7 +9,6 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   // ── sections ──────────────────────────────────────────────────────────────
   const SECTION_META = {
@@ -1667,9 +1666,11 @@
     return li;
   }
 
+  // Pointer-event drag & drop (mouse, pen and touch). The source row stays in the DOM (hidden) so the
+  // handle keeps its pointer capture; a placeholder row moves around instead.
   let drag = null;
   function onHandleDown(e) {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
     const handle = e.currentTarget, row = handle.closest('.sec-row');
     e.preventDefault();
     const rect = row.getBoundingClientRect();
@@ -1677,17 +1678,20 @@
     ghost.classList.add('is-ghost'); ghost.setAttribute('aria-hidden', 'true');
     Object.assign(ghost.style, { width: rect.width + 'px', height: rect.height + 'px', left: rect.left + 'px', top: rect.top + 'px' });
     document.body.append(ghost);
-    row.classList.add('is-placeholder');
+    const ph = document.createElement('li');
+    ph.className = 'sec-row is-placeholder'; ph.style.height = rect.height + 'px'; ph.setAttribute('aria-hidden', 'true');
+    row.after(ph);
+    row.classList.add('is-src');
     document.body.classList.add('is-dragging');
-    drag = { id: row.dataset.id, row, ghost, handle, dx: e.clientX - rect.left, dy: e.clientY - rect.top, pid: e.pointerId, before: JSON.stringify(colLists()) };
-    try { handle.setPointerCapture(e.pointerId); } catch (err) { /* capture is optional */ }
-    handle.addEventListener('pointermove', onDragMove);
-    handle.addEventListener('pointerup', onDragEnd);
-    handle.addEventListener('pointercancel', onDragEnd);
-    handle.addEventListener('lostpointercapture', onDragEnd);
+    drag = { id: row.dataset.id, row, ph, ghost, handle, dx: e.clientX - rect.left, dy: e.clientY - rect.top, pid: e.pointerId, before: JSON.stringify(colLists()) };
+    try { handle.setPointerCapture(e.pointerId); } catch (err) { /* capture is optional: window listeners below */ }
+    window.addEventListener('pointermove', onDragMove);
+    window.addEventListener('pointerup', onDragEnd);
+    window.addEventListener('pointercancel', onDragEnd);
   }
   function onDragMove(e) {
     if (!drag || e.pointerId !== drag.pid) return;
+    e.preventDefault();
     drag.ghost.style.left = (e.clientX - drag.dx) + 'px';
     drag.ghost.style.top = (e.clientY - drag.dy) + 'px';
     drag.ghost.style.transform = 'rotate(-1.5deg) scale(1.03)';
@@ -1701,19 +1705,27 @@
       if (dist < best) { best = dist; target = l; }
     });
     $$('.col-box', colsEl).forEach(b => b.classList.toggle('is-target', lists.length > 1 && b.contains(target)));
-    const rows = $$('.sec-row:not(.is-placeholder)', target);
+    const rows = $$('.sec-row:not(.is-placeholder):not(.is-src)', target);
     const before = rows.find(r => { const rr = r.getBoundingClientRect(); return e.clientY < rr.top + rr.height / 2; });
-    const empty = target.querySelector('.col-empty');
-    if (before) { if (drag.row.nextElementSibling !== before) target.insertBefore(drag.row, before); }
-    else if (drag.row.parentNode !== target || drag.row.nextElementSibling !== empty) target.insertBefore(drag.row, empty);
-    lists.forEach(l => { l.querySelector('.col-empty').hidden = !!l.querySelector('.sec-row'); });
+    const ref = before || target.querySelector('.col-empty');
+    if (drag.ph.nextElementSibling !== ref || drag.ph.parentNode !== target) target.insertBefore(drag.ph, ref);
+    lists.forEach(l => { l.querySelector('.col-empty').hidden = !!l.querySelector('.sec-row:not(.is-src)'); });
+    // keep the dragged row reachable on small screens
+    if (e.clientY > window.innerHeight - 40) window.scrollBy(0, 12); else if (e.clientY < 70) window.scrollBy(0, -12);
   }
   function onDragEnd(e) {
-    if (!drag || (e.pointerId !== undefined && e.pointerId !== drag.pid)) return;
+    if (!drag || e.pointerId !== drag.pid) return;
     const d = drag; drag = null;
-    ['pointermove', 'pointerup', 'pointercancel', 'lostpointercapture'].forEach((t, i) => d.handle.removeEventListener(t, [onDragMove, onDragEnd, onDragEnd, onDragEnd][i]));
-    d.ghost.remove(); d.row.classList.remove('is-placeholder'); document.body.classList.remove('is-dragging');
-    const orders = $$('.sec-list', colsEl).map(l => $$('.sec-row', l).map(r => r.dataset.id));
+    window.removeEventListener('pointermove', onDragMove);
+    window.removeEventListener('pointerup', onDragEnd);
+    window.removeEventListener('pointercancel', onDragEnd);
+    try { d.handle.releasePointerCapture(d.pid); } catch (err) { /* already released */ }
+    d.ghost.parentNode.removeChild(d.ghost);
+    document.body.classList.remove('is-dragging');
+    const orders = $$('.sec-list', colsEl).map(l => [...l.children]
+      .filter(li => li.classList.contains('is-placeholder') || (li.classList.contains('sec-row') && !li.classList.contains('is-src')))
+      .map(li => li.classList.contains('is-placeholder') ? d.id : li.dataset.id));
+    if (e.type === 'pointercancel') { renderCols(); return; }
     if (state.layout === 'double') state.cols = [orders[0], orders[1]]; else state.order = orders[0];
     const changed = JSON.stringify(colLists()) !== d.before;
     renderCols(d.id);
@@ -1919,6 +1931,17 @@
       const dir = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]; if (!dir) return;
       const btns = $$('button', $(sel)), i = btns.indexOf(document.activeElement); if (i < 0) return;
       e.preventDefault(); const nb = btns[(i + dir + btns.length) % btns.length]; nb.click(); nb.focus();
+    });
+  });
+
+  // swatches / variants are rebuilt on change, so re-focus by index after the click
+  ['#swatches', '#variants'].forEach(sel => {
+    const box = $(sel);
+    box.addEventListener('keydown', e => {
+      const dir = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]; if (!dir) return;
+      const btns = $$('button', box), i = btns.indexOf(document.activeElement); if (i < 0) return;
+      e.preventDefault(); const j = (i + dir + btns.length) % btns.length; btns[j].click();
+      const again = $$('button', box)[j]; if (again) again.focus();
     });
   });
 

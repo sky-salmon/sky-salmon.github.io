@@ -330,7 +330,12 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
   candleBody.scale.setScalar(candleM.isGlb ? 1 : 1.7);
   candleBody.add(candleM.object);
   candleRoot.add(candleBody, softShadow(0.75, 0.5, 0.3));
-  const flameAnchor = findNodes(candleM.object, 'flame_anchor')[0] || candleM.object;
+  let flameAnchor = findNodes(candleM.object, 'flame_anchor')[0];
+  if (!flameAnchor) {   // authored candle without the node: light it at the top of its bounds
+    flameAnchor = new THREE.Object3D();
+    flameAnchor.position.y = new THREE.Box3().setFromObject(candleM.object).max.y;
+    candleM.object.add(flameAnchor);
+  }
   const flame = makeFlame();
   flameAnchor.add(flame.object);
   animated.push(flame);
