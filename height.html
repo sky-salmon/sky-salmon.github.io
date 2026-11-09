@@ -29,7 +29,7 @@
     <div class="stage-tag" id="stage-tag" aria-hidden="true">
       <span class="stage-tag-k">目前</span><b class="stage-tag-v" id="stage-tag-v">？</b>
     </div>
-    <p class="stage-note hand" id="stage-note" aria-hidden="true">參考塔 · 固定高度</p>
+    <p class="stage-note hand" id="stage-note" aria-hidden="true">ref. tower</p>
     <div class="stage-grain" aria-hidden="true"></div>
     <p class="stage-fallback" id="stage-fallback" hidden>3D 舞台無法載入，但計算功能一樣可以使用。</p>
   </div>
@@ -111,6 +111,13 @@
           <p class="manual-msg hint" id="manual-msg">兩個欄位都填好就會自動計算。</p>
         </form>
       </details>
+
+      <div class="result-empty" id="result-empty">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+          <path d="M7 9h26v7a4 4 0 0 0 0 8v7H7v-7a4 4 0 0 0 0-8z"/><path d="M15 9v22" stroke-dasharray="2.2 3"/><path d="M20 16h8M20 20.5h6M20 25h7" stroke-linecap="round"/>
+        </svg>
+        <p><span class="hand">your ticket prints here</span>上傳 QR 或手動輸入後，結果會印在這張票根上。</p>
+      </div>
 
       <section class="result ticket" id="result" aria-labelledby="result-title" hidden>
         <div class="result-top">

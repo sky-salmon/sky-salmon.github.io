@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="night">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>樂譜練習 — candle·kit</title>
+<meta name="description" content="十五鍵樂器練習舞台：用滑鼠、觸控或鍵盤彈奏，匯入社群 JSON 樂譜、跟著金色光圈練習，或錄下你自己的旋律。全部在瀏覽器裡合成發聲。">
+<meta name="theme-color" content="#0b0a09">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Serif+TC:wght@600;700&family=Outfit:wght@400;500;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/music.css">
+</head>
+<body data-page="music">
+<main class="wrap mu">
+
+  <header class="page-head mu-head">
+    <div class="mu-head-text">
+      <span class="eyebrow">CANDLE·KIT / 15-KEY STAGE</span>
+      <h1 class="title">樂譜練習 <em>Quiet Stage</em></h1>
+    </div>
+    <div class="mu-head-side">
+      <p class="lead">十五個琴鍵、一束暖光。用滑鼠、觸控或鍵盤彈奏，匯入社群樂譜跟著光圈練習，或錄下你自己的旋律。</p>
+      <p class="mu-head-note hand" aria-hidden="true">戴上耳機，燈光為你亮起 ✦</p>
+    </div>
+  </header>
+
+  <section class="mu-stage" id="stage" aria-label="十五鍵演奏舞台">
+
+    <div class="mu-bar">
+      <div class="mu-tools" role="toolbar" aria-label="舞台工具">
+        <button class="mu-pill" type="button" data-drawer="instrument" aria-expanded="false" aria-controls="drawer-instrument">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6.2l10-2.2v11.4"/><circle cx="6.6" cy="18" r="2.4"/><circle cx="16.6" cy="15.4" r="2.4"/><path d="M9 9.6l10-2.2"/></svg>
+          <span>樂器</span>
+        </button>
+        <button class="mu-pill" type="button" data-drawer="library" aria-expanded="false" aria-controls="drawer-library">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8.5L19 7.5V21H6z"/><path d="M14.5 3v4.5H19"/><path d="M9 11.5h7M9 14.5h7M9 17.5h4"/></svg>
+          <span>樂譜</span>
+        </button>
+        <button class="mu-pill" type="button" data-drawer="compose" aria-expanded="false" aria-controls="drawer-compose">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle class="mu-rec-dot" cx="12" cy="12" r="3.2"/></svg>
+          <span>編曲</span>
+        </button>
+        <button class="mu-pill" type="button" data-drawer="settings" aria-expanded="false" aria-controls="drawer-settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
+          <span>設定</span>
+        </button>
+      </div>
+      <div class="mu-status">
+        <button class="mu-rec-chip" id="rec-chip" type="button" hidden aria-label="錄音中，開啟編曲面板">
+          <span class="mu-rec-chip-dot" aria-hidden="true"></span>REC <span class="mono" id="rec-chip-time">0:00</span>
+        </button>
+        <span class="mu-inst-chip" id="inst-chip"><span class="mu-inst-chip-dot" aria-hidden="true"></span><b id="inst-chip-name">鋼琴</b><span class="mono" id="inst-chip-en">PIANO</span></span>
+      </div>
+    </div>
+
+    <div class="mu-body">
+      <div class="mu-glow" aria-hidden="true"></div>
+      <div class="mu-motes" id="motes" aria-hidden="true"></div>
+      <span class="mu-mark is-left mono" aria-hidden="true">C4 — C6</span>
+      <span class="mu-mark is-right mono" aria-hidden="true">15 KEYS · C MAJOR</span>
+
+      <div class="mu-keys" id="keys" role="group" aria-label="十五個琴鍵（C4 到 C6）"></div>
+
+      <p class="mu-hint hand" id="hint">點一下琴鍵，或用鍵盤彈奏</p>
+      <p class="mu-hud mono" id="hud" hidden aria-live="polite"></p>
+    </div>
+
+    <div class="mu-transport" id="transport">
+      <div class="mu-tp-btns">
+        <button class="icon-btn is-primary" id="tp-play" type="button" aria-label="播放" disabled>
+          <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.6v12.8l10.4-6.4z"/></svg>
+          <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="5.5" width="3.4" height="13" rx="1"/><rect x="13.6" y="5.5" width="3.4" height="13" rx="1"/></svg>
+        </button>
+        <button class="icon-btn" id="tp-stop" type="button" aria-label="停止" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+        </button>
+      </div>
+      <div class="mu-tp-info">
+        <span class="mu-tp-kicker mono" id="tp-kicker">FREE PLAY · 自由演奏</span>
+        <strong class="mu-tp-title" id="tp-title">還沒有選曲</strong>
+        <button class="mu-tp-open" id="tp-open" type="button">打開樂譜庫 →</button>
+      </div>
+      <div class="mu-mode" role="group" aria-label="播放模式">
+        <button type="button" data-mode="listen" aria-pressed="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3.5" y="13.5" width="4" height="6.5" rx="1.6"/><rect x="16.5" y="13.5" width="4" height="6.5" rx="1.6"/></svg>聆聽
+        </button>
+        <button type="button" data-mode="practice" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" class="is-fill"/></svg>練習
+        </button>
+      </div>
+      <div class="mu-tp-progress">
+        <input class="mu-range" id="tp-seek" type="range" min="0" max="1000" step="1" value="0" aria-label="播放進度" disabled>
+        <span class="mu-tp-time mono" id="tp-time">0:00 / 0:00</span>
+      </div>
+      <label class="mu-tp-tempo" for="tp-tempo" title="速度">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 3.5h5.6L19 20.5H5z"/><path d="M12 16.5l5.2-8.2"/><circle cx="12" cy="16.5" r="1.2" class="is-fill"/></svg>
+        <span class="sr-only">速度</span>
+        <input class="mu-range" id="tp-tempo" type="range" min="50" max="150" step="5" value="100">
+        <output class="mono" id="tp-tempo-out" for="tp-tempo">100%</output>
+      </label>
+    </div>
+
+    <div class="mu-scrim" id="scrim"></div>
+
+    <!-- 樂器 -->
+    <aside class="mu-drawer" id="drawer-instrument" role="dialog" aria-labelledby="dh-instrument" tabindex="-1">
+      <header class="mu-drawer-head">
+        <div>
+          <span class="mu-drawer-eyebrow mono">01 · INSTRUMENT</span>
+          <h2 id="dh-instrument">樂器 <em>Timbre</em></h2>
+        </div>
+        <button class="icon-btn mu-close" type="button" aria-label="關閉樂器面板"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
+      </header>
+      <div class="mu-drawer-body">
+        <p class="mu-d-note hand">每一種聲音都是用振盪器即時合成的 ♪</p>
+        <div class="mu-inst-grid" id="inst-grid" role="group" aria-label="選擇樂器"></div>
+      </div>
+    </aside>
+
+    <!-- 樂譜 -->
+    <aside class="mu-drawer" id="drawer-library" role="dialog" aria-labelledby="dh-library" tabindex="-1">
+      <header class="mu-drawer-head">
+        <div>
+          <span class="mu-drawer-eyebrow mono">02 · LIBRARY</span>
+          <h2 id="dh-library">樂譜 <em>Songbook</em></h2>
+        </div>
+        <button class="icon-btn mu-close" type="button" aria-label="關閉樂譜面板"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
+      </header>
+      <div class="mu-drawer-body">
+        <h3 class="mu-d-label">曲目 <span class="mono" id="lib-count">0</span></h3>
+        <ul class="mu-songs" id="song-list"></ul>
+
+        <h3 class="mu-d-label">匯入樂譜</h3>
+        <div class="dropzone mu-drop" id="import-zone" role="button" tabindex="0" aria-describedby="import-help">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9"/><path d="M4.5 15v3.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V15"/></svg>
+          <span><b>選擇或拖放樂譜檔</b><small id="import-help">.json / .txt · 支援 songNotes 格式（1Key0–1Key14）</small></span>
+        </div>
+        <input type="file" id="import-file" accept=".json,.txt,application/json,text/plain" multiple hidden>
+        <details class="mu-paste">
+          <summary>或貼上 JSON 文字</summary>
+          <label class="field">
+            <span class="sr-only">樂譜 JSON</span>
+            <textarea class="textarea mono" id="import-text" rows="5" spellcheck="false" placeholder='[{ "name": "我的歌", "bpm": 120, "songNotes": [{ "time": 0, "key": "1Key0" }] }]'></textarea>
+          </label>
+          <button class="btn" id="import-paste" type="button">匯入文字</button>
+        </details>
+        <p class="status" id="import-status" role="status" aria-live="polite"></p>
+      </div>
+    </aside>
+
+    <!-- 編曲 -->
+    <aside class="mu-drawer" id="drawer-compose" role="dialog" aria-labelledby="dh-compose" tabindex="-1">
+      <header class="mu-drawer-head">
+        <div>
+          <span class="mu-drawer-eyebrow mono">03 · RECORDER</span>
+          <h2 id="dh-compose">編曲 <em>Record</em></h2>
+        </div>
+        <button class="icon-btn mu-close" type="button" aria-label="關閉編曲面板"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
+      </header>
+      <div class="mu-drawer-body">
+        <div class="mu-deck" id="rec-deck" data-state="idle">
+          <button class="mu-rec-btn" id="rec-toggle" type="button" aria-label="開始錄音">
+            <span class="mu-rec-btn-core" aria-hidden="true"></span>
+          </button>
+          <div class="mu-deck-read">
+            <span class="mu-deck-state mono" id="rec-state">STANDBY · 待機</span>
+            <span class="mu-deck-time mono" id="rec-time">00:00.0</span>
+            <span class="mu-deck-count" id="rec-count">0 個音符</span>
+          </div>
+        </div>
+        <div class="mu-roll" aria-hidden="true">
+          <svg id="rec-roll" viewBox="0 0 300 96" preserveAspectRatio="none"></svg>
+          <span class="mu-roll-empty hand" id="rec-roll-empty">按下紅鈕，然後隨意彈奏…</span>
+        </div>
+        <p class="hint">錄音時，你按下的每個鍵都會連同時間一起記下（樂譜播放的聲音不會被錄進去）。</p>
+
+        <form class="mu-save" id="rec-save" hidden>
+          <h3 class="mu-d-label">命名與保存</h3>
+          <div class="mu-save-row">
+            <label class="field">
+              <span>曲名</span>
+              <input class="input" id="rec-name" type="text" maxlength="60" autocomplete="off">
+            </label>
+            <label class="field mu-bpm-field">
+              <span>BPM</span>
+              <input class="input mono" id="rec-bpm" type="number" min="30" max="300" step="1" value="120">
+            </label>
+          </div>
+          <div class="mu-save-actions">
+            <button class="btn btn-primary" type="submit">存入樂譜庫</button>
+            <button class="btn" id="rec-preview" type="button">試聽</button>
+            <button class="btn" id="rec-export" type="button">匯出 JSON</button>
+            <button class="btn btn-danger" id="rec-discard" type="button">捨棄</button>
+          </div>
+        </form>
+      </div>
+    </aside>
+
+    <!-- 設定 -->
+    <aside class="mu-drawer" id="drawer-settings" role="dialog" aria-labelledby="dh-settings" tabindex="-1">
+      <header class="mu-drawer-head">
+        <div>
+          <span class="mu-drawer-eyebrow mono">04 · SETTINGS</span>
+          <h2 id="dh-settings">設定 <em>Backstage</em></h2>
+        </div>
+        <button class="icon-btn mu-close" type="button" aria-label="關閉設定面板"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
+      </header>
+      <div class="mu-drawer-body">
+        <h3 class="mu-d-label" id="lbl-labels">鍵上標示</h3>
+        <div class="mu-seg" id="set-labels" role="group" aria-labelledby="lbl-labels">
+          <button type="button" data-value="none">無</button>
+          <button type="button" data-value="keys">鍵位</button>
+          <button type="button" data-value="notes">音名</button>
+          <button type="button" data-value="numbers">數字</button>
+        </div>
+
+        <h3 class="mu-d-label" id="lbl-layout">鍵盤配置</h3>
+        <div class="mu-layouts" id="set-layout" role="group" aria-labelledby="lbl-layout"></div>
+
+        <h3 class="mu-d-label">聲音</h3>
+        <label class="mu-slider" for="set-volume">
+          <span>主音量</span>
+          <input class="mu-range" id="set-volume" type="range" min="0" max="100" step="1">
+          <output class="mono" id="set-volume-out" for="set-volume">80</output>
+        </label>
+        <label class="mu-slider" for="set-reverb">
+          <span>殘響</span>
+          <input class="mu-range" id="set-reverb" type="range" min="0" max="100" step="1">
+          <output class="mono" id="set-reverb-out" for="set-reverb">35</output>
+        </label>
+
+        <h3 class="mu-d-label">視覺</h3>
+        <div class="mu-switch-row">
+          <span id="lbl-calm">柔和視覺<small>關閉漣漪、縮放與飄浮光點</small></span>
+          <button class="mu-switch" id="set-calm" type="button" role="switch" aria-checked="false" aria-labelledby="lbl-calm"></button>
+        </div>
+
+        <button class="mu-reset" id="set-reset" type="button">恢復預設設定</button>
+      </div>
+    </aside>
+
+    <!-- 練習結果 -->
+    <div class="mu-result" id="result" hidden>
+      <div class="mu-result-wrap" role="dialog" aria-labelledby="result-title" aria-describedby="result-desc">
+        <span class="tape top" aria-hidden="true"></span>
+        <div class="ticket mu-result-card">
+          <span class="mu-result-eyebrow mono">PRACTICE · 練習完成</span>
+          <h2 class="mu-result-title" id="result-title">正確率 <b id="result-acc">100</b><small>%</small></h2>
+          <p class="mu-result-quip hand" id="result-quip">Bravo!</p>
+          <hr class="ticket-rule">
+          <dl class="mu-result-stats" id="result-desc">
+            <div><dt>曲目</dt><dd id="result-song">—</dd></div>
+            <div><dt>按對</dt><dd id="result-hit">0</dd></div>
+            <div><dt>按錯</dt><dd id="result-miss">0</dd></div>
+            <div><dt>用時</dt><dd id="result-time">0:00</dd></div>
+          </dl>
+          <div class="mu-result-actions">
+            <button class="btn mu-btn-ink" id="result-again" type="button">再練一次</button>
+            <button class="btn mu-btn-ghost" id="result-close" type="button">完成</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mu-notes" aria-label="使用說明">
+    <article class="dashed-card mu-note">
+      <span class="mu-note-no">i.</span>
+      <h2>匯入社群樂譜</h2>
+      <p>支援常見的 JSON 樂譜：<code>songNotes</code> 裡的 <code>time</code>（毫秒）與 <code>key</code>（<code>1Key0</code>–<code>1Key14</code>）。可上傳檔案或直接貼上。</p>
+    </article>
+    <article class="dashed-card mu-note">
+      <span class="mu-note-no">ii.</span>
+      <h2>練習模式</h2>
+      <p>金色光圈會提前亮起提示下一個鍵；在練習模式裡，樂譜會停在每一步等你按對，結束後告訴你正確率。</p>
+    </article>
+    <article class="dashed-card mu-note">
+      <span class="mu-note-no">iii.</span>
+      <h2>你的旋律</h2>
+      <p>在「編曲」錄下即興，取個名字存進樂譜庫，或匯出成同樣格式的 JSON 分享給朋友。</p>
+      <span class="mu-note-hand hand">樂譜只存在你的瀏覽器裡 ♡</span>
+    </article>
+  </section>
+</main>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/music.js"></script>
+</body>
+</html>
