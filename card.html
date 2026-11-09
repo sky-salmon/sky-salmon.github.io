@@ -43,7 +43,7 @@
             </div>
           </div>
         </div>
-        <p class="stage-hint hint" id="stage-hint">點名片上的數字或文字就能改；按 <b>＋</b> 加入物品，點一下物品可以標價、改數量或移除。</p>
+        <p class="stage-hint hint" id="stage-hint">名片上看到的就是下載的樣子。點數字或文字直接改；按 <b>＋</b> 加入物品，點物品可以標價、改數量或移除；按 <b>✎</b> 設定頭像、身高與備註。</p>
         <hr class="hairline">
         <div class="toolbar" role="toolbar" aria-label="名片工具列">
           <div class="tool">
@@ -113,7 +113,7 @@
               </button>
             </div>
             <div class="cols" id="cols"></div>
-            <p class="hint drag-hint">按住 <span class="kbd" aria-hidden="true">⠿</span> 拖曳排序；鍵盤可用方向鍵移動（左右鍵換欄）。沒有內容的區塊不會被匯出。</p>
+            <p class="hint drag-hint">按住 <span class="kbd" aria-hidden="true">⠿</span> 拖曳排序；鍵盤可用方向鍵移動（左右鍵換欄）。顯示中的區塊即使是空的也會出現在圖片上，不需要就按眼睛隱藏。</p>
             <p class="sr-only" id="drag-live" aria-live="polite"></p>
           </div>
 
@@ -329,8 +329,9 @@
         <div class="pm-avatar">
           <span class="pm-avatar-img" id="pm-avatar"></span>
           <span class="pm-avatar-btns"><button type="button" class="btn btn-sm btn-primary" id="pm-avatar-change">更換</button><button type="button" class="btn btn-sm" id="pm-avatar-remove">移除</button></span>
-          <span class="pm-note">沒有頭像時，匯出的名片會自動隱藏頭像位置。</span>
+          <span class="pm-note">還沒上傳時會顯示預設剪影；名片上看到什麼，下載的圖片就是什麼。</span>
         </div>
+        <label class="pm-switch"><span>在名片上顯示頭像</span><input type="checkbox" class="switch" id="pm-avatar-on"></label>
       </section>
       <section class="pm-sec">
         <div class="pm-head"><p class="pm-title">貨幣與數量</p><button type="button" class="btn btn-sm" id="pm-cur-all">全部隱藏</button></div>
