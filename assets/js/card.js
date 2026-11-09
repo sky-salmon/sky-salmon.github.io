@@ -51,7 +51,7 @@
       layout: { cols: 1, left: SEC_IDS.slice(), right: [], hidden: { pin: true, spells: true, extra: true, info: true } },
       size: { w: null, h: null, bal: 50 },
       themes: {},
-      profile: { avatar: null, cur: { candle: '0', ascended: '0', heart: '0', seasonCandle: '0', seasonHeart: '0', ticket: '0' }, curOn: { ...CUR_DEFAULT_ON }, h: { now: '', tall: '', short: '' }, note: '' },
+      profile: { avatar: null, avatarOn: true, cur: { candle: '0', ascended: '0', heart: '0', seasonCandle: '0', seasonHeart: '0', ticket: '0' }, curOn: { ...CUR_DEFAULT_ON }, h: { now: '', tall: '', short: '' }, note: '' },
       items: { pass: [], pin: [], iap: [], spells: [], extra: [], link: [] },
       views: { pass: 'grid', pin: 'grid', iap: 'grid', extra: 'grid' },
       titles: {}, linkNote: '', linkNoteOn: false, info: '', currency: 'US$', totalHidden: false
@@ -215,7 +215,9 @@
 
   function itemsHTML(sec, s, clean) {
     const list = s.items[sec], view = sec === 'spells' || sec === 'link' ? 'grid' : (s.views[sec] || 'grid');
-    if (!list.length) return clean ? '' : `<div class="cp-empty ed" data-act="add" data-sec="${sec}">按 ＋ 加入${SECTIONS[sec].zh}物品</div>`;
+    // WYSIWYG: what the editor lays out is exactly what gets exported — an empty section is
+    // just its title in both, and editor-only controls float on top without taking space.
+    if (!list.length) return '';
     const btns = list.map((it, i) => {
       const info = itemInfo(it), name = it.label || info.label;
       let cap = '';
@@ -228,34 +230,32 @@
     let total = '';
     if (sec === 'iap') {
       const sum = list.reduce((a, it) => a + (fmtPrice(it.price) || 0), 0);
-      if (list.some(it => fmtPrice(it.price) !== null)) {
-        total = `<div class="iap-total${s.totalHidden ? ' is-muted is-blank' : ''}">${clean ? '' : `<button type="button" class="cp-btn ed" data-act="total" aria-pressed="${!s.totalHidden}" aria-label="${s.totalHidden ? '匯出時顯示總價' : '匯出時隱藏總價'}">${s.totalHidden ? ICON.eyeOff : ICON.eye}</button>`}<span>TOTAL</span><b>${esc(money(sum, s.currency))}</b></div>`;
-      }
+      if (hasPrices(s) && !s.totalHidden) total = `<div class="iap-total"><span>TOTAL</span><b>${esc(money(sum, s.currency))}</b></div>`;
     }
     return `<div class="items" data-sec="${sec}" data-view="${view}">${btns}</div>${total}`;
   }
 
+  const hasPrices = s => s.items.iap.some(it => fmtPrice(it.price) !== null);
   function editable(bind, ph, clean, extra = '') {
     return clean ? `data-bind="${bind}"` : `data-bind="${bind}" contenteditable="true" spellcheck="false" data-ph="${esc(ph)}" ${extra}`;
   }
 
   function panelHTML(sec, s, clean) {
-    const meta = SECTIONS[sec], empty = isEmpty(sec, s);
-    const cls = `cp cp-${sec}${empty ? ' is-empty-sec' : ''}`;
+    const meta = SECTIONS[sec], cls = `cp cp-${sec}`;
     if (sec === 'profile') {
-      const p = s.profile, av = assetURL(p.avatar);
+      const p = s.profile, av = assetURL(p.avatar), showAv = p.avatarOn !== false;
       const curs = D.CURRENCIES.filter(c => p.curOn[c.id]).map(c =>
         `<span class="cur" title="${c.zh}">${c.svg}<span class="cur-val" ${editable('cur.' + c.id, '0', clean, 'inputmode="numeric" role="textbox" aria-label="' + c.zh + '"')}>${esc(p.cur[c.id] || '0')}</span></span>`).join('');
       const h = p.h, hasH = String(h.now).trim() !== '';
       const range = [h.tall && `最高 ${esc(h.tall)}`, h.short && `最矮 ${esc(h.short)}`].filter(Boolean).join(' · ');
       return `<section class="${cls}" data-sec="profile">
         ${clean ? '' : `<span class="cp-tools ed"><button type="button" class="cp-btn" data-act="profile" aria-label="編輯個人資料">${ICON.pen}</button></span>`}
-        <div class="pf">
-          <div class="pf-avatar${av ? '' : ' is-empty'}" ${clean ? '' : `data-act="avatar" role="button" tabindex="0" aria-label="${av ? '更換頭像' : '上傳頭像'}"`}>${av ? `<img src="${av}" alt="">` : D.GLYPH.avatar}${!av && !clean ? '<span class="pf-avatar-hint ed">點我加頭像</span>' : ''}</div>
+        <div class="pf${showAv ? '' : ' no-avatar'}">
+          ${showAv ? `<div class="pf-avatar${av ? '' : ' is-empty'}" ${clean ? '' : `data-act="avatar" role="button" tabindex="0" aria-label="${av ? '更換頭像' : '上傳頭像'}"`}>${av ? `<img src="${av}" alt="">` : D.GLYPH.avatar}${!av && !clean ? '<span class="pf-avatar-hint ed">點我加頭像</span>' : ''}</div>` : ''}
           <div class="pf-main">
-            <div class="pf-cur${curs ? '' : ' is-blank'}">${curs}</div>
-            <div class="pf-height${hasH ? '' : ' is-empty ed'}" ${clean ? '' : 'data-act="height" role="button" tabindex="0"'}>${D.GLYPH.height}${hasH ? `<b>${esc(h.now)}</b>${range ? `<span class="sep">|</span><small>${range}</small>` : ''}` : '<span>點我帶入身高</span>'}</div>
-            <div class="pf-note${p.note.trim() ? '' : ' is-blank'}">${D.GLYPH.pencil}<div class="pf-note-val" ${editable('note', '加一句備註', clean, 'role="textbox" aria-label="個人備註"')}>${esc(p.note)}</div></div>
+            ${curs ? `<div class="pf-cur">${curs}</div>` : ''}
+            ${hasH ? `<div class="pf-height" ${clean ? '' : 'data-act="height" role="button" tabindex="0" aria-label="修改身高"'}>${D.GLYPH.height}<b>${esc(h.now)}</b>${range ? `<span class="sep">|</span><small>${range}</small>` : ''}</div>` : ''}
+            ${p.note.trim() ? `<div class="pf-note">${D.GLYPH.pencil}<div class="pf-note-val" ${editable('note', '加一句備註', clean, 'role="textbox" aria-label="個人備註"')}>${esc(p.note)}</div></div>` : ''}
           </div>
         </div>
       </section>`;
@@ -267,17 +267,18 @@
         tools.push(`<button type="button" class="cp-btn" data-act="view" data-sec="${sec}" aria-label="切換顯示方式（目前：${VIEW_LABEL[v]}，下一個：${VIEW_LABEL[next]}）" title="顯示方式：${VIEW_LABEL[v]}">${ICON[v]}</button>`);
       }
       if (sec === 'link') tools.push(`<button type="button" class="cp-btn" data-act="link-note" aria-pressed="${s.linkNoteOn}" aria-label="${s.linkNoteOn ? '收起' : '加入'}備註">${ICON.pen}</button>`);
+      if (sec === 'iap' && hasPrices(s)) tools.push(`<button type="button" class="cp-btn" data-act="total" aria-pressed="${!s.totalHidden}" aria-label="${s.totalHidden ? '在名片上顯示總價' : '從名片上隱藏總價'}" title="總價：${s.totalHidden ? '隱藏中' : '顯示中'}">${s.totalHidden ? ICON.eyeOff : ICON.eye}</button>`);
       if (meta.picker) tools.push(`<button type="button" class="cp-btn" data-act="add" data-sec="${sec}" aria-label="加入${meta.zh}物品">${ICON.plus}</button>`);
     }
     let body = '';
     if (sec === 'info') body = `<div class="info-note" ${editable('info', '寫點備註、聯絡方式或想說的話…', clean, 'data-multiline="true" role="textbox" aria-multiline="true" aria-label="INFO 內容"')}>${esc(s.info)}</div>`;
     else {
-      if (sec === 'link' && (s.linkNoteOn || s.linkNote.trim())) body += `<div class="link-note${s.linkNote.trim() ? '' : ' is-blank'}" ${editable('linkNote', '加一句說明，例如：信箱已綁定', clean, 'role="textbox" aria-label="LINK 備註"')}>${esc(s.linkNote)}</div>`;
+      if (sec === 'link' && (s.linkNoteOn || s.linkNote.trim())) body += `<div class="link-note" ${editable('linkNote', '加一句說明，例如：信箱已綁定', clean, 'role="textbox" aria-label="LINK 備註"')}>${esc(s.linkNote)}</div>`;
       body += itemsHTML(sec, s, clean);
     }
     return `<section class="${cls}" data-sec="${sec}">
       <div class="cp-head"><span class="cp-title" ${editable('secTitle.' + sec, meta.title, clean, 'role="textbox" aria-label="區塊標題"')}>${esc(s.titles[sec] || meta.title)}</span>${tools.length ? `<span class="cp-tools ed">${tools.join('')}</span>` : ''}</div>
-      <div class="cp-body">${body}</div>
+      ${body ? `<div class="cp-body">${body}</div>` : ''}
     </section>`;
   }
 
@@ -335,21 +336,36 @@
   let previewMode = false;
   function renderMain() {
     renderCard(cardEl, state, { clean: previewMode });
+    snapHeight(cardEl);
+    watchContent();
     fitStage();
     updateMeta();
   }
   function fitStage() {
     const avail = frameEl.clientWidth - parseFloat(getComputedStyle(frameEl).paddingLeft) * 2;
-    const extra = shellEl.dataset.design === 'classic' ? 28 : 0; // classic's bezel margin
-    const w = shellEl.offsetWidth + extra, h = shellEl.offsetHeight + extra;
+    const w = shellEl.offsetWidth, h = shellEl.offsetHeight;
     const k = Math.min(1, avail / w);
     shellEl.style.transform = k < 1 ? `scale(${k})` : '';
     scaleEl.style.width = w * k + 'px';
     scaleEl.style.height = h * k + 'px';
     scaleEl.dataset.k = k;
   }
+  // Round the card's height up to a whole CSS pixel, on screen and in the export alike, so the
+  // image never ends in a half-covered (semi-transparent) row and both are the same size.
+  function snapHeight(card) {
+    card.style.minHeight = '';
+    const h = parseFloat(getComputedStyle(card).height);
+    if (Number.isFinite(h) && Math.abs(h - Math.round(h)) > .001) card.style.minHeight = Math.max(Math.ceil(h), state.size.h || 0) + 'px';
+  }
   new ResizeObserver(() => fitStage()).observe(frameEl);
   new ResizeObserver(() => { fitStage(); updateMeta(); }).observe(cardEl);
+  // The card's own box can't report shrinking content (its min-height holds it), so watch the
+  // content — fonts arriving late or typed text — and re-snap from there.
+  const contentRO = new ResizeObserver(() => snapHeight(cardEl));
+  function watchContent() {
+    contentRO.disconnect();
+    $$(':scope > .card-cols, :scope > .card-mast', cardEl).forEach(el => contentRO.observe(el));
+  }
   function updateMeta() {
     const W = cardEl.offsetWidth, H = cardEl.offsetHeight;
     $('#stage-size').textContent = `${W} × ${H}`;
@@ -394,17 +410,12 @@
     if (b.startsWith('cur.')) { const v = state.profile.cur[b.slice(4)] || '0'; state.profile.cur[b.slice(4)] = v; el.textContent = v; }
     if (b.startsWith('secTitle.') && !el.textContent.trim()) el.textContent = SECTIONS[b.slice(9)].title;
     if (b === 'title' && !el.textContent.trim()) { state.title = 'SKY PROFILE'; el.textContent = state.title; }
+    // an emptied profile note disappears from the card (and the export); drop just that row
+    // instead of re-rendering, so a click already under way elsewhere on the card still lands
+    if (b === 'note' && !state.profile.note.trim()) el.closest('.pf-note')?.remove();
     if (dirtyText) { dirtyText = false; commit(true); }
     renderCols();
   });
-  // Keep the "blank / empty" markers (hidden on export) in step with typed text without
-  // rebuilding the card, so focus and pending clicks inside it are never lost.
-  function syncBlanks() {
-    $('.pf-note', cardEl)?.classList.toggle('is-blank', !state.profile.note.trim());
-    $('.link-note', cardEl)?.classList.toggle('is-blank', !state.linkNote.trim());
-    $$('.cp[data-sec]', cardEl).forEach(p => p.classList.toggle('is-empty-sec', isEmpty(p.dataset.sec, state)));
-  }
-  cardEl.addEventListener('input', syncBlanks);
   cardEl.addEventListener('keydown', e => {
     const el = e.target.closest('[data-bind]');
     if (el && e.key === 'Enter' && el.dataset.multiline !== 'true') { e.preventDefault(); el.blur(); }
@@ -1094,6 +1105,7 @@
     const p = state.profile, av = assetURL(p.avatar);
     $('#pm-avatar').style.backgroundImage = av ? `url("${av}")` : '';
     $('#pm-avatar-remove').disabled = !av;
+    $('#pm-avatar-on').checked = p.avatarOn !== false;
     $('#pm-cur').innerHTML = D.CURRENCIES.map(c => `<div class="pm-cur-item${p.curOn[c.id] ? '' : ' is-off'}">
         <button type="button" class="row-btn pm-cur-eye" data-cur-eye="${c.id}" aria-pressed="${!!p.curOn[c.id]}" aria-label="${p.curOn[c.id] ? '隱藏' : '顯示'}${c.zh}">${p.curOn[c.id] ? EYE : EYE_OFF}</button>
         ${c.svg}<small>${c.zh}</small><input class="input" data-cur-in="${c.id}" value="${esc(p.cur[c.id] || '0')}" inputmode="numeric" maxlength="9" aria-label="${c.zh}數量">
@@ -1126,6 +1138,7 @@
     renderMain(); commit(false);
   }));
   $('#pm-note').addEventListener('input', e => { state.profile.note = e.target.value.slice(0, 60); renderMain(); commit(false); });
+  $('#pm-avatar-on').addEventListener('change', e => { state.profile.avatarOn = e.target.checked; commit(); renderMain(); });
   $('#pm-avatar-change').addEventListener('click', () => { avatarOpener = $('#pm-avatar-change'); $('#avatar-input').click(); });
   $('#pm-avatar-remove').addEventListener('click', () => { state.profile.avatar = null; commit(); renderMain(); syncProfileUI(); $('#pm-avatar-change').focus(); });
   $('#pm-height-clear').addEventListener('click', () => { state.profile.h = { now: '', tall: '', short: '' }; commit(); renderMain(); syncProfileUI(); });
@@ -1192,6 +1205,154 @@
     ctx.drawImage(small, 0, 0, W, H);
     return c.toDataURL('image/jpeg', .9);
   }
+  // ── native export ───────────────────────────────────────────────────────
+  // The browser paints the card itself: the card's DOM goes into an SVG <foreignObject> together
+  // with the page's own CSS, so the file is the same pixels as the preview. An SVG drawn into a
+  // canvas cannot fetch anything, so fonts and images are inlined as data URLs first.
+  const dataURLs = new Map();
+  function toDataURL(url) {
+    if (!url || url.startsWith('data:')) return Promise.resolve(url);
+    if (!dataURLs.has(url)) {
+      dataURLs.set(url, fetch(url, { cache: 'force-cache' })
+        .then(r => { if (!r.ok) throw new Error(`${r.status} ${url}`); return r.blob(); })
+        .then(b => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(fr.error); fr.readAsDataURL(b); }))
+        .catch(err => { dataURLs.delete(url); throw err; }));
+    }
+    return dataURLs.get(url);
+  }
+  const famKey = f => String(f || '').trim().replace(/^["']|["']$/g, '').toLowerCase();
+  const normWeight = w => ({ normal: '400', bold: '700', '': '400' }[String(w || '').trim()] || String(w).trim().replace(/\s+/g, ' '));
+  const normStyle = s => (String(s || '').trim() || 'normal');
+  function parseRanges(s) {
+    return String(s || 'U+0-10FFFF').split(',').map(t => t.trim().replace(/^u\+/i, '')).filter(Boolean).map(t => {
+      if (t.includes('?')) return [parseInt(t.replace(/\?/g, '0'), 16), parseInt(t.replace(/\?/g, 'F'), 16)];
+      const [a, b] = t.split('-');
+      return [parseInt(a, 16), parseInt(b || a, 16)];
+    });
+  }
+  const rangeKey = s => parseRanges(s).map(r => r.join('-')).join(',');
+  let facesPromise = null;
+  // Every @font-face the page declares: same-origin sheets through the CSSOM, Google Fonts
+  // (cross-origin, CORS-enabled) by fetching the stylesheet text.
+  function allFontFaces() {
+    if (facesPromise) return facesPromise;
+    facesPromise = (async () => {
+      const faces = [], urlOf = (src, base) => { const m = String(src).match(/url\(\s*["']?([^"')]+)["']?\s*\)/); return m ? new URL(m[1], base).href : ''; };
+      for (const sheet of document.styleSheets) {
+        let rules = null;
+        try { rules = sheet.cssRules; } catch { /* cross-origin: read the text below */ }
+        if (rules) {
+          for (const r of rules) {
+            if (!(r instanceof CSSFontFaceRule)) continue;
+            const st = r.style, url = urlOf(st.getPropertyValue('src'), sheet.href || location.href);
+            if (url) faces.push({ family: st.getPropertyValue('font-family').trim(), style: st.getPropertyValue('font-style'), weight: st.getPropertyValue('font-weight'), range: st.getPropertyValue('unicode-range'), url });
+          }
+        } else if (sheet.href) {
+          const text = await fetch(sheet.href).then(r => r.ok ? r.text() : '').catch(() => '');
+          for (const m of text.matchAll(/@font-face\s*\{([^}]*)\}/g)) {
+            const prop = n => ((m[1].match(new RegExp(`(?:^|;)\\s*${n}\\s*:\\s*([^;]+)`)) || [])[1] || '').trim();
+            const url = urlOf(prop('src'), sheet.href);
+            if (url) faces.push({ family: prop('font-family'), style: prop('font-style'), weight: prop('font-weight'), range: prop('unicode-range'), url });
+          }
+        }
+      }
+      return faces;
+    })().catch(err => { facesPromise = null; throw err; });
+    return facesPromise;
+  }
+  // Only the faces the card can actually draw with: a family it names, a unicode-range that
+  // covers some of its text, and (when the browser tracks it) a face the page really loaded.
+  async function fontFaceCSS(root) {
+    const fams = new Set(), chars = new Set();
+    for (const el of [root, ...root.querySelectorAll('*')]) {
+      for (const pseudo of [null, '::before', '::after']) {
+        const cs = getComputedStyle(el, pseudo);
+        if (pseudo) {
+          if (!cs.content || cs.content === 'none' || cs.content === 'normal') continue;
+          for (const ch of cs.content.replace(/^["']|["']$/g, '')) chars.add(ch.codePointAt(0));
+        }
+        cs.fontFamily.split(',').forEach(f => fams.add(famKey(f)));
+      }
+    }
+    for (const ch of root.textContent) chars.add(ch.codePointAt(0));
+    const status = new Map();
+    if (document.fonts) document.fonts.forEach(f => status.set([famKey(f.family), normStyle(f.style), normWeight(f.weight), rangeKey(f.unicodeRange)].join('|'), f.status));
+    const used = (await allFontFaces()).filter(f => {
+      if (!fams.has(famKey(f.family))) return false;
+      const ranges = parseRanges(f.range);
+      let hit = false;
+      for (const c of chars) { if (ranges.some(([a, b]) => c >= a && c <= b)) { hit = true; break; } }
+      if (!hit) return false;
+      const st = status.get([famKey(f.family), normStyle(f.style), normWeight(f.weight), rangeKey(f.range)].join('|'));
+      return st === undefined || st === 'loaded';
+    });
+    const rules = await Promise.all(used.map(async f => {
+      try {
+        return `@font-face{font-family:"${famKey(f.family)}";font-style:${normStyle(f.style)};font-weight:${normWeight(f.weight)};${f.range ? `unicode-range:${f.range};` : ''}src:url(${await toDataURL(f.url)});}`;
+      } catch { return ''; }
+    }));
+    return rules.join('\n');
+  }
+  // The page's own stylesheets as written (CSSOM re-serialisation can mangle var() shorthands);
+  // @font-face blocks are dropped because fontFaceCSS() supplies inlined versions.
+  let pageCSSPromise = null;
+  function pageCSS() {
+    if (pageCSSPromise) return pageCSSPromise;
+    pageCSSPromise = Promise.all([...document.styleSheets].map(async sheet => {
+      let rules;
+      try { rules = sheet.cssRules; } catch { return ''; } // cross-origin (Google Fonts): fonts only
+      const text = sheet.href ? await fetch(sheet.href, { cache: 'force-cache' }).then(r => r.ok ? r.text() : null).catch(() => null) : null;
+      if (text !== null) return text.replace(/@font-face\s*\{[^}]*\}/g, '');
+      return [...rules].filter(r => !(r instanceof CSSFontFaceRule)).map(r => r.cssText).join('\n');
+    })).then(parts => parts.join('\n')).catch(err => { pageCSSPromise = null; throw err; });
+    return pageCSSPromise;
+  }
+  const INHERITED = ['font-family', 'font-size', 'line-height', 'color', 'letter-spacing', 'font-synthesis', 'text-rendering', '-webkit-font-smoothing', 'font-kerning', 'word-break', 'overflow-wrap'];
+  async function renderNative(opts) {
+    // a clean (preview-mode) copy of the card, laid out off-screen at its real size
+    const host = document.createElement('div');
+    host.setAttribute('aria-hidden', 'true');
+    host.style.cssText = 'position:fixed;left:-20000px;top:0;z-index:-1;pointer-events:none;';
+    host.innerHTML = '<div class="card-shell"><div class="card"></div></div>';
+    scaleEl.append(host); // same ancestors (and inherited styles) as the on-screen card
+    const shell = host.firstChild, card = shell.firstChild;
+    try {
+      renderCard(card, state, { clean: true });
+      await Promise.all($$('img', card).map(img => img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })));
+      snapHeight(card);
+      const box = shell.getBoundingClientRect(), W = box.width, H = box.height, s = opts.scale;
+      const [fonts, css] = await Promise.all([fontFaceCSS(card), pageCSS()]);
+      const clone = shell.cloneNode(true);
+      await Promise.all($$('img', clone).map(async img => { img.setAttribute('src', await toDataURL(img.src)); }));
+      const root = document.createElement('div'), pcs = getComputedStyle(host);
+      root.setAttribute('style', INHERITED.map(p => `${p}:${pcs.getPropertyValue(p)}`).join(';') + `;width:${W}px;height:${H}px;margin:0;padding:0;`);
+      const style = document.createElement('style');
+      style.textContent = css + '\n' + fonts;
+      root.append(style, clone);
+      // laid out at 1× and scaled by the viewBox (CSS zoom was measurably less faithful)
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W * s}" height="${H * s}" viewBox="0 0 ${W} ${H}"><foreignObject x="0" y="0" width="${W}" height="${H}">${new XMLSerializer().serializeToString(root)}</foreignObject></svg>`;
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error('svg render')); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+      try { await img.decode(); } catch { /* already decoded */ }
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.ceil(W * s); canvas.height = Math.ceil(H * s);
+      const ctx = canvas.getContext('2d');
+      const paint = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (opts.format === 'jpeg' || !opts.transparent) { ctx.fillStyle = opts.format === 'jpeg' ? '#ffffff' : '#111312'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+        ctx.drawImage(img, 0, 0, W * s, H * s); // exact size: never stretch by a rounding pixel
+      };
+      paint();
+      await new Promise(r => setTimeout(r, 80)); // WebKit can paint images nested in an SVG a beat late
+      paint();
+      return canvas;
+    } finally { host.remove(); }
+  }
+  const canvasBlob = (canvas, opts) => new Promise((res, rej) => {
+    try { canvas.toBlob(b => (b ? res(b) : rej(new Error('blob'))), opts.format === 'jpeg' ? 'image/jpeg' : 'image/png', (opts.quality || 92) / 100); }
+    catch (err) { rej(err); } // a tainted canvas (older WebKit) throws here → fall back to html2canvas
+  });
+
   let exporting = false;
   async function doExport(opts) {
     if (exporting) return;
@@ -1202,20 +1363,42 @@
     toast('正在產生圖片…', 6000);
     const wasPreview = previewMode;
     try {
+      renderMain(); // re-derive the on-screen card from state so the screen and the file match
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      let blob = null;
+      try { blob = await canvasBlob(await renderNative(opts), opts); }
+      catch (err) { console.warn('native export failed, using html2canvas', err); }
+      if (!blob) blob = await canvasBlob(await renderH2C(opts), opts);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName(opts.name, opts.format === 'jpeg' ? 'jpg' : 'png');
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast(`已下載 ${a.download}`);
+    } catch (err) {
+      console.error(err);
+      toast('匯出失敗，請重新整理後再試一次');
+    } finally {
+      previewMode = wasPreview; renderMain();
+      btn.classList.remove('is-busy');
+      exporting = false;
+    }
+  }
+  // Fallback for browsers that refuse to read back an SVG-painted canvas.
+  async function renderH2C(opts) {
+    {
       const h2c = await loadH2C();
       previewMode = true; renderMain();
-      if (document.fonts && document.fonts.ready) await document.fonts.ready;
       await Promise.all($$('img', cardEl).map(img => img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })));
       const th = themeOf(state, state.design), W = cardEl.offsetWidth, H = cardEl.offsetHeight;
       const blurURL = cardEl.classList.contains('has-blur') ? await blurredWallpaper(wallpaperSrc(th), W, H, th.blurPx).catch(() => '') : '';
-      const canvas = await h2c(shellEl, {
+      return h2c(shellEl, {
         scale: opts.scale, useCORS: true, logging: false,
         backgroundColor: opts.format === 'jpeg' ? '#ffffff' : (opts.transparent ? null : '#111312'),
         windowWidth: Math.max(document.documentElement.clientWidth, shellEl.offsetWidth + 64),
         onclone: doc => {
           const shell = doc.getElementById('card-shell'), card = doc.getElementById('card');
-          shell.style.transform = 'none'; shell.style.margin = '0';
-          if (card.style) card.style.boxShadow = shell.dataset.design === 'classic' ? 'none' : '';
+          shell.style.transform = 'none';
           const win = doc.defaultView;
           card.querySelectorAll('svg').forEach(svg => svg.setAttribute('color', win.getComputedStyle(svg).color));
           if (blurURL) {
@@ -1231,22 +1414,6 @@
           }
         }
       });
-      const type = opts.format === 'jpeg' ? 'image/jpeg' : 'image/png';
-      const blob = await new Promise(res => canvas.toBlob(res, type, (opts.quality || 92) / 100));
-      if (!blob) throw new Error('blob');
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = fileName(opts.name, opts.format === 'jpeg' ? 'jpg' : 'png');
-      document.body.append(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-      toast(`已下載 ${a.download}`);
-    } catch (err) {
-      console.error(err);
-      toast('匯出失敗，請重新整理後再試一次');
-    } finally {
-      previewMode = wasPreview; renderMain();
-      btn.classList.remove('is-busy');
-      exporting = false;
     }
   }
 
