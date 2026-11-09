@@ -94,8 +94,8 @@
 
   // ── fonts ─────────────────────────────────────────────────────────────────
   const F = {
-    sans: '"Outfit", "Noto Sans TC", sans-serif',
-    tc: '"Noto Sans TC", "Outfit", sans-serif',
+    sans: '"Outfit", "NaniFont", "NaniFont Common", "Chiron GoRound TC", sans-serif',
+    tc: '"NaniFont", "NaniFont Common", "Chiron GoRound TC", "Outfit", sans-serif',
     serif: '"Noto Serif TC", serif',
     iserif: '"Instrument Serif", "Noto Serif TC", serif',
     mono: '"JetBrains Mono", "Noto Sans TC", monospace',
@@ -104,7 +104,7 @@
     pixel: '"Pixelify Sans", "Noto Sans TC", monospace'
   };
   const FONT_FACES = [
-    '500 20px "Noto Sans TC"', '700 20px "Noto Sans TC"', '800 20px "Noto Sans TC"', '700 20px "Noto Serif TC"',
+    '400 20px "NaniFont"', '500 20px "Chiron GoRound TC"', '700 20px "Chiron GoRound TC"', '800 20px "Chiron GoRound TC"', '500 20px "Noto Sans TC"', '700 20px "Noto Sans TC"', '800 20px "Noto Sans TC"', '700 20px "Noto Serif TC"',
     '400 20px "LXGW WenKai TC"', '700 20px "LXGW WenKai TC"',
     '500 20px Outfit', '800 20px Outfit', '400 20px "Instrument Serif"', 'italic 400 20px "Instrument Serif"',
     '500 20px "JetBrains Mono"', '700 20px "JetBrains Mono"', '600 20px Caveat', '700 20px Caveat',
