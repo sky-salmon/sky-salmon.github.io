@@ -1421,6 +1421,8 @@
   function renderAll() { renderMain(); syncStrip(); renderCols(); syncThemeUI(); syncSizeUI(); renderThumbs(); }
   renderAll();
   pushHistory(); save();
+  // Seasons and categories come from icons.csv; redraw once it is in so saved items show the right ones.
+  D.loadCatalog().then(() => { renderMain(); renderCols(); renderThumbs(); }).catch(() => {});
   if (document.fonts) document.fonts.ready.then(() => { fitStage(); updateMeta(); renderThumbs(); });
   addEventListener('load', () => { fitStage(); renderThumbs(); });
   window.addEventListener('pageshow', e => { if (e.persisted) { state = normalize(store.get(KEY, null)) || state; renderAll(); } });

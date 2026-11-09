@@ -5,6 +5,10 @@
   'use strict';
 
   // ── item catalogue (folders under assets/icons, listed in icons.csv) ──────────
+  // Icons live in one folder per game type (dir). icons.csv also carries `kind` (the category shown here:
+  // furniture and instruments are props in the game but get their own tab) and `season` (from the game's
+  // OutfitDefs, so it is right even when the file name has no or a misleading APxx). Old saved cards keep
+  // working because file paths never change; their category/season are corrected once the catalogue loads.
   const CATS = [
     { dir: '01_斗篷_Cape', id: 'cape', zh: '斗篷' },
     { dir: '02_面具_Mask', id: 'mask', zh: '面具' },
@@ -15,12 +19,17 @@
     { dir: '07_角_Horn', id: 'horn', zh: '角' },
     { dir: '08_鞋子_Shoes', id: 'shoes', zh: '鞋子' },
     { dir: '09_臉飾_FaceAccessory', id: 'face', zh: '臉飾' },
-    { dir: '10_道具_Prop', id: 'prop', zh: '道具' }
+    { dir: '10_道具_Prop', id: 'prop', zh: '道具' },
+    { id: 'instrument', zh: '樂器' },
+    { id: 'furniture', zh: '家具' }
   ];
-  const CAT_BY_DIR = Object.fromEntries(CATS.map(c => [c.dir, c]));
+  const CAT_BY_DIR = Object.fromEntries(CATS.filter(c => c.dir).map(c => [c.dir, c]));
+  const CAT_BY_ID = Object.fromEntries(CATS.map(c => [c.id, c]));
+  const KIND_ALIAS = { fireworks: 'prop' };
 
-  // APxx in the asset names is the season (adventure pass) number. Chinese names are only
-  // given where the localisation is well known; later seasons fall back to English or the code.
+  // Season number as used in the game data (season_NN = the (N-1)th season since global launch).
+  // Traditional Chinese names follow the zh Sky fan wiki; 32 (Season of Pearl) has no published
+  // Chinese name yet, so 珍珠季 is provisional.
   const SEASONS = {
     '01': { en: '' },
     '02': { zh: '感恩季', en: 'Gratitude' },
@@ -33,22 +42,27 @@
     '09': { zh: '夢想季', en: 'Dreams' },
     '10': { zh: '集結季', en: 'Assembly' },
     '11': { zh: '小王子季', en: 'The Little Prince' },
-    '12': { zh: '飛行季', en: 'Flight' },
-    '13': { zh: '深海季', en: 'Abyss' },
+    '12': { zh: '飛翔季', en: 'Flight' },
+    '13': { zh: '深淵季', en: 'Abyss' },
     '14': { zh: '表演季', en: 'Performance' },
     '15': { zh: '破曉季', en: 'Shattering' },
-    '16': { zh: '歐若拉季', en: 'AURORA' },
-    '17': { zh: '回憶季', en: 'Remembrance' },
-    '18': { en: 'Passage' },
-    '19': { en: 'Moments' },
-    '20': { en: 'Revival' },
+    '16': { zh: 'AURORA季', en: 'AURORA' },
+    '17': { zh: '緬懷季', en: 'Remembrance' },
+    '18': { zh: '夜行季', en: 'Passage' },
+    '19': { zh: '拾光季', en: 'Moments' },
+    '20': { zh: '歸巢季', en: 'Revival' },
     '21': { zh: '九色鹿季', en: 'Nine-Colored Deer' },
-    '22': { en: 'Nesting' },
-    '23': { en: 'Duets' },
-    '24': { en: 'Moomin' },
-    '25': { en: 'Radiance' },
-    '26': { en: 'Blue Bird' },
-    '27': { en: 'Two Embers' }
+    '22': { zh: '築巢季', en: 'Nesting' },
+    '23': { zh: '二重奏季', en: 'Duets' },
+    '24': { zh: '姆明季', en: 'Moomin' },
+    '25': { zh: '彩染季', en: 'Radiance' },
+    '26': { zh: '青鳥季', en: 'Blue Bird' },
+    '27': { zh: '雙星季', en: 'Two Embers' },
+    '28': { zh: '遷徙季', en: 'Migration' },
+    '29': { zh: '織光季', en: 'Lightmending' },
+    '30': { zh: '狂歡季', en: 'Carnival' },
+    '31': { zh: '致梵谷', en: 'Dear Van Gogh' },
+    '32': { zh: '珍珠季', en: 'Pearl' }
   };
   function seasonName(code) {
     const s = SEASONS[code];
@@ -59,21 +73,34 @@
     return [`AP${code}`, s.zh, s.en].filter(Boolean).join(' · ');
   }
 
+  // path → { cat, season } from icons.csv, filled by loadCatalog()
+  const META = new Map();
+
   // "03_髮型_Hair/CharSkyKid_Hair_AP21FancyUpdo" → readable bits
   function parsePath(path) {
     const slash = path.indexOf('/');
     const dir = path.slice(0, slash), name = path.slice(slash + 1);
-    const m = name.match(/_AP(\d{2})/);
     const label = name
       .replace(/^(CharSkyKid|CharSkyNPC|NPC|Nest)_/, '')
+      .replace(/^UiOutfit(Body|Cape|Wing|Face|Feet|Hair|Hat|Horn|Mask|Neck|Prop)/, '')
       .replace(/^(Wing|Mask|Hair|Body|Hat|Horn|Neck|Tail|Feet|Face|Prop)_/, '')
-      .replace(/AP\d{2}/, '')
+      .replace(/AP\d{0,2}(?=[A-Z_]|$)/, '')
       .replace(/_\d+$/, '')
       .replace(/[_$]+/g, ' ')
       .replace(/([a-z])([A-Z0-9])/g, '$1 $2')
       .replace(/\s+/g, ' ').trim() || name;
-    const cat = CAT_BY_DIR[dir];
-    return { dir, name, season: m ? m[1] : null, label, cat: cat ? cat.id : 'prop', catZh: cat ? cat.zh : '' };
+    const meta = META.get(path);
+    let season, catId;
+    if (meta) {
+      season = meta.season;
+      catId = meta.cat;
+    } else { // catalogue not loaded yet (or an old csv): fall back to the file name
+      const m = name.match(/_AP(\d{2})/);
+      season = m ? m[1] : null;
+      catId = CAT_BY_DIR[dir] ? CAT_BY_DIR[dir].id : 'prop';
+    }
+    const cat = CAT_BY_ID[catId];
+    return { dir, name, season, label, cat: catId, catZh: cat ? cat.zh : '' };
   }
   function iconURL(path) {
     return 'assets/icons/' + path.split('/').map(encodeURIComponent).join('/') + '.png';
@@ -86,15 +113,31 @@
     catalogPromise = fetch('assets/icons/icons.csv')
       .then(r => { if (!r.ok) throw new Error('icons.csv ' + r.status); return r.text(); })
       .then(text => {
+        const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/);
+        const head = lines[0].split(',').map(h => h.trim());
+        const col = n => head.indexOf(n);
+        const iDir = col('category'), iName = col('name'), iIcon = col('icon'), iStatus = col('status'),
+          iKind = col('kind'), iSeason = col('season');
+        const rows = [];
+        lines.slice(1).forEach(line => {
+          const f = line.split(',');
+          const dir = f[iDir], name = f[iName], status = (f[iStatus] || '').trim();
+          if (!dir || !name || (status && status !== 'ok') || !CAT_BY_DIR[dir]) return;
+          const path = dir + '/' + name;
+          const kind = iKind >= 0 ? (KIND_ALIAS[f[iKind]] || f[iKind]) : '';
+          const season = iSeason >= 0 ? ((f[iSeason] || '').trim() || null) : undefined;
+          if (kind || season !== undefined) META.set(path, {
+            cat: CAT_BY_ID[kind] ? kind : CAT_BY_DIR[dir].id,
+            season: season === undefined ? ((name.match(/_AP(\d{2})/) || [])[1] || null) : season
+          });
+          rows.push({ path, dir, icon: f[iIcon] || name });
+        });
         const seen = new Set(), out = [];
-        text.replace(/^﻿/, '').split(/\r?\n/).slice(1).forEach(line => {
-          const [dir, name, icon, , status] = line.split(',');
-          if (!dir || !name || (status && status.trim() !== 'ok') || !CAT_BY_DIR[dir]) return;
-          const key = dir + '|' + (icon || name);
+        rows.forEach(r => {
+          const key = r.dir + '|' + r.icon;
           if (seen.has(key)) return;
           seen.add(key);
-          const path = dir + '/' + name;
-          out.push(Object.assign({ path }, parsePath(path)));
+          out.push(Object.assign({ path: r.path }, parsePath(r.path)));
         });
         return out;
       })
