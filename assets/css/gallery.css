@@ -133,7 +133,7 @@
 .ga-lb-cap { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 16px; padding: 8px 2px 12px; min-width: min(420px, calc(100vw - 60px)); }
 .ga-lb-caption {
   flex: 1 1 220px; min-width: 0; padding: 2px 6px; border: 0; border-bottom: 1.5px dashed transparent; border-radius: 0; background: transparent;
-  font-family: var(--cap-font, "Caveat", "Noto Serif TC", serif); font-size: 30px; font-weight: 600; line-height: 1.25; color: #2d2620;
+  font-family: var(--cap-font, "Caveat", "LXGW WenKai TC", "Noto Serif TC", serif); font-size: 30px; font-weight: 600; line-height: 1.25; color: #2d2620;
   transition: border-color .2s, background .2s;
 }
 .ga-lb-caption::placeholder { color: #b3a998; }

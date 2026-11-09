@@ -10,7 +10,7 @@ import { smoothstep, clamp01 } from './util.js';
 if (document.fonts) {
   await Promise.race([
     Promise.all([
-      document.fonts.load('700 56px "Noto Sans TC"', '名片產生器身高計算樂譜練習活動倒數光影相簿關於這裡'),
+      document.fonts.load('400 58px "NaniFont"', '名片產生器身高計算樂譜練習活動倒數光影相簿關於這裡'),
       document.fonts.load('600 26px "Caveat"', 'Toolbox')
     ]).catch(() => {}),
     new Promise(r => setTimeout(r, 2500))

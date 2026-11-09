@@ -9,7 +9,7 @@
 }
 
 /* Caveat has no CJK glyphs: let Chinese notes fall back to the serif instead of heavy sans. */
-.ev .hand { font-family: "Caveat", var(--font-serif-tc); font-weight: 600; letter-spacing: .01em; }
+.ev .hand { font-family: var(--font-hand); font-weight: 600; letter-spacing: .01em; }
 
 /* ── head + clocks sticker ───────────────────────────────────────────── */
 .ev-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 24px 48px; }

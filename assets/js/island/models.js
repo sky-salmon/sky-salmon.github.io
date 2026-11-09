@@ -305,7 +305,7 @@ function stickerTexture(kind) {
 function labelTexture(text) {
   return canvasTexture(512, (ctx, w, h) => {
     ctx.fillStyle = '#2a231f';
-    ctx.font = '700 56px "Noto Sans TC", "Outfit", sans-serif';
+    ctx.font = '400 58px "NaniFont", "Chiron GoRound TC", "Noto Sans TC", sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(text, w / 2, h / 2 + 2);
   }, 112);
