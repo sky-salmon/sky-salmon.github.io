@@ -13,11 +13,13 @@ Each file starts with `_fields`, which explains every field.
 
 ## Editing
 
-**Admin page:** `admin.html` on the site (not linked from the menu). Sign in with a fine-grained GitHub token that
-can only reach `chunhao0613/sky-cotl` with *Contents: Read and write*. The page only opens for `chunhao0613`, and
-each save is one commit on `main` (the three files plus `assets/js/seasons-data.js`). The token stays in the browser
-and is only sent to `api.github.com`. Nothing secret is stored in the repo; GitHub's own write permission is what
-protects the data.
+**Admin page:** `admin.html` on the site (not linked from the menu). Sign in with Google: admin accounts are listed in
+Firestore (`config/admins`, approved from the page's Settings) plus `rootAdmins()` in `firebase/firestore.rules`.
+The GitHub token and the repository to save to are kept in Firestore `config/github`, readable by admins only. Each
+save is one commit on `main` (the three files plus `assets/js/seasons-data.js`). The repository defaults to the one
+the site is published from (`<account>.github.io/<repo>/`), so the site can move to another GitHub account; change it
+under Settings for a custom domain. Nothing secret is stored in the repo; GitHub's own write permission still decides
+who can save.
 
 The card editor reads these files at runtime and applies them over `assets/icons/icons.csv` (which keeps the game's
 own values in `game_season` / `game_group`), so item, pack and season edits are live once GitHub Pages has rebuilt.
