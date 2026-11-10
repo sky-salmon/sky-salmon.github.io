@@ -12,6 +12,8 @@
   const KINDS = ['seasons', 'items', 'packs'];
   const PATH = { seasons: 'data/seasons.json', items: 'data/items.json', packs: 'data/packs.json' };
   const SEASONS_JS = 'assets/js/seasons-data.js';
+  const SDK_URL = new URL('vendor/firebase.js', document.currentScript.src).href;
+  const FB_CFG = window.FIREBASE_CONFIG;
 
   const $ = s => document.querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -620,8 +622,9 @@
     } catch (e) { toast('載入失敗：' + esc(e.message), 6000); }
   }
 
-  function logout() {
+  async function logout() {
     store.del(TOKEN_KEY); token = null;  // an unsaved draft stays in this browser for the next sign-in
+    if (fb && fauth && fauth.currentUser) await fb.signOut(fauth).catch(() => {});
     location.reload();
   }
 
@@ -655,26 +658,112 @@
     }
   }
 
+  // ── sign-in: Google (Firebase) with the GitHub token kept in Firestore, or a GitHub token pasted here ──
+  // admin/{uid} in Firestore holds the token; firebase/firestore.rules lets only the listed admin accounts read it.
+  let fb = null, fauth = null, fdb = null, guser = null, mode = 'google';
+  const gateShow = id => ['#g-start', '#g-denied', '#g-setup'].forEach(x => { $(x).hidden = x !== id; });
+  const gateErr = msg => { $('#g-err').textContent = msg || ''; $('#g-err').hidden = !msg; };
+  function loadFirebase() {
+    if (!FB_CFG) return Promise.reject(new Error('Firebase 尚未設定'));
+    if (!loadFirebase.p) loadFirebase.p = import(SDK_URL).then(m => {
+      fb = m;
+      const app = m.initializeApp(FB_CFG);
+      fauth = m.initializeAuth(app, { persistence: [m.indexedDBLocalPersistence, m.browserLocalPersistence], popupRedirectResolver: m.browserPopupRedirectResolver });
+      fdb = m.getFirestore(app);
+      if (window.FIREBASE_EMULATOR) {  // test harness only
+        m.connectAuthEmulator(fauth, 'http://127.0.0.1:9099', { disableWarnings: true });
+        m.connectFirestoreEmulator(fdb, '127.0.0.1', 8080);
+        window.__adminTest = { signIn: (sub, email) => fb.signInWithCredential(fauth, fb.GoogleAuthProvider.credential(JSON.stringify({ sub, email, email_verified: true }))).then(r => afterGoogle(r.user)) };
+      }
+      return new Promise(res => { const off = m.onAuthStateChanged(fauth, u => { off(); res(u); }); });
+    });
+    return loadFirebase.p;
+  }
+  const adminRef = () => fb.doc(fdb, 'admin', guser.uid);
+  async function afterGoogle(user) {
+    guser = user; gateErr('');
+    let snap;
+    try { snap = await fb.getDoc(adminRef()); }
+    catch (e) {
+      if (e.code === 'permission-denied') return showDenied(user);
+      gateShow('#g-start'); gateErr('讀取管理設定失敗：' + (e.message || e.code)); return;
+    }
+    const saved = snap.exists() && snap.data().githubToken;
+    if (!saved) return showSetup('第一次使用：貼上 GitHub 權杖。它會存在只有你的 Google 帳號讀得到的地方，之後用 Google 登入就好。');
+    try { open(await signIn(saved)); }
+    catch (ex) { token = null; showSetup('存著的 GitHub 權杖不能用了（' + ex.message + '）請貼一個新的。'); }
+  }
+  function showSetup(why) {
+    mode = 'google';
+    $('#g-setup-why').textContent = why;
+    $('#remember-row').hidden = true;
+    $('#login-btn').textContent = '儲存並進入';
+    gateShow('#g-setup');
+    $('#g-alt').hidden = true;
+  }
+  async function showDenied(user) {
+    $('#g-who').textContent = user.email || user.uid;
+    let rules = '';
+    try { rules = await (await fetch('firebase/firestore.rules', { cache: 'no-cache' })).text(); } catch { /* shown empty */ }
+    $('#g-rules').value = rules.replace(/function isAdmin\(uid\) \{ return uid in \[(.*?)\]; \}/, (m, list) => {
+      const ids = list.split(',').map(x => x.trim()).filter(Boolean);
+      if (!ids.includes(`'${user.uid}'`)) ids.push(`'${user.uid}'`);
+      return `function isAdmin(uid) { return uid in [${ids.join(', ')}]; }`;
+    });
+    gateShow('#g-denied');
+  }
+  $('#g-signin').addEventListener('click', async () => {
+    const b = $('#g-signin');
+    b.disabled = true; gateErr('');
+    try { const r = await fb.signInWithPopup(fauth, new fb.GoogleAuthProvider()); await afterGoogle(r.user); }
+    catch (e) {
+      if (!/popup-closed|cancelled-popup/.test(e.code || '')) gateErr(/popup-blocked/.test(e.code || '') ? '瀏覽器擋住了登入視窗，請允許彈出視窗後再試。' : '登入失敗：' + (e.code || e.message));
+    } finally { b.disabled = false; }
+  });
+  document.addEventListener('click', async e => {
+    if (e.target.closest('[data-signout]')) { if (fauth) await fb.signOut(fauth); location.reload(); }
+  });
+  $('#g-copy').addEventListener('click', async () => {
+    const ta = $('#g-rules');
+    try { await navigator.clipboard.writeText(ta.value); toast('已複製規則'); } catch { ta.focus(); ta.select(); }
+  });
+  $('#g-alt').addEventListener('click', () => {  // fallback when Google sign-in isn't available
+    mode = 'token';
+    $('#g-setup-why').textContent = '用 GitHub 權杖登入：權杖只存在這個瀏覽器，只會送到 GitHub。';
+    $('#remember-row').hidden = false;
+    $('#login-btn').textContent = '登入';
+    gateShow('#g-setup'); $('#g-alt').hidden = true;
+  });
+
   $('#login').addEventListener('submit', async e => {
     e.preventDefault();
-    const t = $('#token').value.trim(), err = $('#login-err'), btn = $('#login-btn');
+    const t = $('#token').value.trim(), err = $('#login-err'), btn = $('#login-btn'), label = btn.textContent;
     if (!t) return;
     err.hidden = true; btn.disabled = true; btn.textContent = '確認中…';
     try {
       const login = await signIn(t);
-      store.del(TOKEN_KEY); store.set(TOKEN_KEY, t, $('#remember').checked);
+      if (mode === 'google' && guser) await fb.setDoc(adminRef(), { githubToken: t, updatedAt: fb.serverTimestamp() });
+      else { store.del(TOKEN_KEY); store.set(TOKEN_KEY, t, $('#remember').checked); }
       $('#token').value = '';
       open(login);
     } catch (ex) {
-      token = null; err.textContent = ex.message; err.hidden = false;
-    } finally { btn.disabled = false; btn.textContent = '登入'; }
+      token = null; err.textContent = ex.code === 'permission-denied' ? '這個 Google 帳號不能儲存權杖。' : ex.message; err.hidden = false;
+    } finally { btn.disabled = false; btn.textContent = label; }
   });
 
+  // start: a token remembered on this device (fallback mode), else Google
   const saved = store.get(TOKEN_KEY);
   if (saved) {
+    mode = 'token';
     signIn(saved).then(open).catch(ex => {
       token = null; store.del(TOKEN_KEY);
-      $('#login-err').textContent = '請重新登入：' + ex.message; $('#login-err').hidden = false;
+      $('#g-alt').click(); $('#login-err').textContent = '請重新登入：' + ex.message; $('#login-err').hidden = false;
     });
+  } else if (!FB_CFG) $('#g-alt').click();
+  else {
+    loadFirebase().then(u => {
+      const b = $('#g-signin'); b.disabled = false; b.querySelector('span').textContent = '用 Google 登入';
+      if (u) afterGoogle(u);
+    }).catch(e => { console.warn(e); gateErr('連不到 Google 登入服務，可以改用 GitHub 權杖登入。'); });
   }
 })();

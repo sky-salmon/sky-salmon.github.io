@@ -5,9 +5,10 @@
 <title>目錄管理 — candle·kit</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<!-- The GitHub token lives in this page, so nothing from other sites may run here: no inline or third-party scripts, and the
-     only network peer besides this site is api.github.com. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com; base-uri 'none'; form-action 'none'">
+<!-- The GitHub token lives in this page, so nothing from other sites may run here: no inline scripts, and the only
+     third-party code is Google's sign-in helper (apis.google.com, required by Firebase's popup sign-in). The token is only
+     sent to api.github.com; Firebase (Google sign-in + Firestore) keeps it for the owner's Google account. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://apis.google.com; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com; frame-src https://github-pages-de8f7.firebaseapp.com https://accounts.google.com; base-uri 'none'; form-action 'none'">
 <meta name="theme-color" content="#101211">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/css/admin.css">
@@ -16,22 +17,36 @@
 <div class="gate" id="gate">
   <div class="gate-card">
     <h1>目錄管理</h1>
-    <p>只有網站擁有者能進來。用 GitHub 權杖登入：它只存在這個瀏覽器，只會送到 GitHub。</p>
-    <form id="login" autocomplete="off">
-      <label class="field"><span>GitHub 權杖（fine-grained token）</span>
-        <input class="input" id="token" type="password" placeholder="github_pat_…" spellcheck="false" autocapitalize="off" required></label>
-      <label class="switch"><input type="checkbox" id="remember" checked><span>在這台裝置上記住（關掉分頁也保持登入）</span></label>
-      <button class="btn" type="submit" id="login-btn">登入</button>
-      <p class="err" id="login-err" role="alert" hidden></p>
-    </form>
-    <details open>
-      <summary>還沒有權杖？</summary>
-      <ol>
-        <li><a href="https://github.com/settings/personal-access-tokens/new?name=candle-kit%20admin&amp;description=sky-cotl%20%E7%9B%AE%E9%8C%84%E7%AE%A1%E7%90%86%E9%A0%81&amp;target_name=chunhao0613&amp;expires_in=366&amp;contents=write" target="_blank" rel="noopener">開啟已填好的建立頁</a>（名稱、一年期限、Contents 寫入都已設定）。</li>
-        <li>Repository access 選 <b>Only select repositories</b> → <code>sky-cotl</code>（只有這項要自己點）。</li>
-        <li>按 <b>Generate token</b>，複製後貼到上面，勾著「記住」登入。之後這台裝置就不用再貼。</li>
-      </ol>
-    </details>
+    <section id="g-start">
+      <p>只有網站擁有者能進來。</p>
+      <button class="btn g-btn" type="button" id="g-signin" disabled><svg viewBox="0 0 18 18" aria-hidden="true" class="g-logo"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg><span>載入中…</span></button>
+    </section>
+    <section id="g-denied" hidden>
+      <p class="err">這個 Google 帳號（<b id="g-who"></b>）沒有管理權限。</p>
+      <p>如果這是網站擁有者的帳號：把下面的規則整段複製，貼到 Firebase 控制台 → Firestore Database → 規則（Rules），按發布，再回來重新整理。</p>
+      <textarea class="input rules" id="g-rules" readonly rows="6" aria-label="Firestore 規則"></textarea>
+      <div class="row"><button class="btn small" type="button" id="g-copy">複製規則</button><button class="btn ghost small" type="button" data-signout>換一個帳號</button></div>
+    </section>
+    <section id="g-setup" hidden>
+      <p id="g-setup-why"></p>
+      <form id="login" autocomplete="off">
+        <label class="field"><span>GitHub 權杖（fine-grained token）</span>
+          <input class="input" id="token" type="password" placeholder="github_pat_…" spellcheck="false" autocapitalize="off" required></label>
+        <label class="switch" id="remember-row"><input type="checkbox" id="remember" checked><span>在這台裝置上記住（關掉分頁也保持登入）</span></label>
+        <button class="btn" type="submit" id="login-btn">登入</button>
+        <p class="err" id="login-err" role="alert" hidden></p>
+      </form>
+      <details open>
+        <summary>還沒有權杖？</summary>
+        <ol>
+          <li><a href="https://github.com/settings/personal-access-tokens/new?name=candle-kit%20admin&amp;description=sky-cotl%20%E7%9B%AE%E9%8C%84%E7%AE%A1%E7%90%86%E9%A0%81&amp;target_name=chunhao0613&amp;expires_in=366&amp;contents=write" target="_blank" rel="noopener">開啟已填好的建立頁</a>（名稱、一年期限、Contents 寫入都已設定）。</li>
+          <li>Repository access 選 <b>Only select repositories</b> → <code>sky-cotl</code>（只有這項要自己點）。</li>
+          <li>按 <b>Generate token</b>，複製後貼到上面。</li>
+        </ol>
+      </details>
+    </section>
+    <p class="err" id="g-err" role="alert" hidden></p>
+    <p class="gate-alt"><button class="link" type="button" id="g-alt">改用 GitHub 權杖登入</button></p>
   </div>
 </div>
 
@@ -57,6 +72,7 @@
 </div>
 <div class="drawer" id="drawer" hidden></div>
 <div class="toast" id="toast" role="status" hidden></div>
+<script src="assets/js/firebase-config.js"></script>
 <script src="assets/js/admin.js"></script>
 </body>
 </html>

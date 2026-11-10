@@ -135,7 +135,10 @@
     } catch (e) {
       if (!/popup-closed|cancelled-popup/.test(e.code || '')) {
         console.warn('sign-in failed', e);
-        toast(/popup-blocked/.test(e.code || '') ? t('瀏覽器擋住了登入視窗，請允許彈出視窗後再試') : t('登入失敗，請稍後再試'), 4000);
+        const code = e.code || '';
+        toast(/popup-blocked/.test(code) ? t('瀏覽器擋住了登入視窗，請允許彈出視窗後再試')
+          : /unauthorized-domain/.test(code) ? t('這個網址還不能登入（Firebase 授權網域沒有設定）')
+          : t('登入失敗，請稍後再試') + (code ? ` (${code.replace('auth/', '')})` : ''), 5000);
       }
       return false;
     }

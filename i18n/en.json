@@ -401,5 +401,6 @@
  "其他": "Other",
  "沒有符合的禮包。": "No matching packs.",
  "灰點：只在遊戲內購清單或已下架，wiki 沒有對到": "Grey dot: only in the game's purchase list or retired; not matched on the wiki",
- "衣櫃分類": "Closet categories"
+ "衣櫃分類": "Closet categories",
+ "這個網址還不能登入（Firebase 授權網域沒有設定）": "Sign-in isn't enabled for this address yet (Firebase authorized domains)."
 }
