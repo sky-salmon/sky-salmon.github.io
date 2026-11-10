@@ -9,16 +9,17 @@
   // tabs; folded back into them via KIND_ALIAS) and `season` (from the game's
   // OutfitDefs, so it is right even when the file name has no or a misleading APxx). Old saved cards keep
   // working because file paths never change; their category/season are corrected once the catalogue loads.
+  // zh labels follow the closet tabs (hat = 髮飾, horn = 頭飾, face = 面飾); dirs are kept as-is for saved cards.
   const CATS = [
     { dir: '01_斗篷_Cape', id: 'cape', zh: '斗篷' },
     { dir: '02_面具_Mask', id: 'mask', zh: '面具' },
     { dir: '03_髮型_Hair', id: 'hair', zh: '髮型' },
     { dir: '04_服裝_Outfit', id: 'outfit', zh: '服裝' },
-    { dir: '05_頭飾_Headwear', id: 'hat', zh: '頭飾' },
+    { dir: '05_頭飾_Headwear', id: 'hat', zh: '髮飾' },
     { dir: '06_項鍊_Necklace', id: 'neck', zh: '項鍊' },
-    { dir: '07_角_Horn', id: 'horn', zh: '角' },
+    { dir: '07_角_Horn', id: 'horn', zh: '頭飾' },
     { dir: '08_鞋子_Shoes', id: 'shoes', zh: '鞋子' },
-    { dir: '09_臉飾_FaceAccessory', id: 'face', zh: '臉飾' },
+    { dir: '09_臉飾_FaceAccessory', id: 'face', zh: '面飾' },
     { dir: '10_道具_Prop', id: 'prop', zh: '道具' }
   ];
   const CAT_BY_DIR = Object.fromEntries(CATS.filter(c => c.dir).map(c => [c.dir, c]));
