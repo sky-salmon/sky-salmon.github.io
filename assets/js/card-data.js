@@ -23,14 +23,17 @@
     { id: 'head', zh: '頭飾' },
     { id: 'ear', zh: '耳飾' },
     { id: 'cape', zh: '斗篷' },
-    { id: 'prop', zh: '道具' }
+    { id: 'prop', zh: '道具' },
+    { id: 'spell', zh: '魔法' }
   ];
+  // the closet's category order (used by CLOSET and IAP, and for the default "closet order" browsing)
+  const CLOSET_CATS = ['top', 'shoes', 'outfit', 'mask', 'face', 'neck', 'hair', 'head', 'ear', 'cape', 'prop'];
   const CAT_BY_ID = Object.fromEntries(CATS.map(c => [c.id, c]));
   // icon folder → category, used until icons.csv has loaded (and as the fallback for older csv files)
   const DIR_CAT = {
     '01_斗篷_Cape': 'cape', '02_面具_Mask': 'mask', '03_髮型_Hair': 'hair', '04_服裝_Outfit': 'top',
     '05_頭飾_Headwear': 'head', '06_項鍊_Necklace': 'neck', '07_角_Horn': 'head', '08_鞋子_Shoes': 'shoes',
-    '09_臉飾_FaceAccessory': 'face', '10_道具_Prop': 'prop'
+    '09_臉飾_FaceAccessory': 'face', '10_道具_Prop': 'prop', '11_魔法_Spells': 'spell'
   };
 
   // Season number as used in the game data (season_NN = the (N-1)th season since global launch).
@@ -79,7 +82,7 @@
     return [`AP${code}`, s.zh, s.en].filter(Boolean).join(' · ');
   }
 
-  // path → { cat, season, ult } from icons.csv, filled by loadCatalog()
+  // path → { cat, season, ult, order, usd, pack, iap } from icons.csv, filled by loadCatalog()
   const META = new Map();
 
   // "03_髮型_Hair/CharSkyKid_Hair_AP21FancyUpdo" → readable bits
@@ -107,7 +110,8 @@
       catId = DIR_CAT[dir] || 'prop';
     }
     const cat = CAT_BY_ID[catId];
-    return { dir, name, season, label, cat: catId, catZh: (cat ? cat.zh : '') + (ult ? '・畢業禮' : ''), ult };
+    return { dir, name, season, label, cat: catId, catZh: (cat ? cat.zh : '') + (ult ? '・畢業禮' : ''), ult,
+      order: meta ? meta.order : 1e9, usd: meta ? meta.usd : '', pack: meta ? meta.pack : '', iap: meta ? meta.iap : '' };
   }
   function iconURL(path) {
     return 'assets/icons/' + path.split('/').map(encodeURIComponent).join('/') + '.png';
@@ -124,7 +128,8 @@
         const head = lines[0].split(',').map(h => h.trim());
         const col = n => head.indexOf(n);
         const iDir = col('category'), iName = col('name'), iIcon = col('icon'), iStatus = col('status'),
-          iSeason = col('season'), iGroup = col('group'), iUlt = col('ultimate');
+          iSeason = col('season'), iGroup = col('group'), iUlt = col('ultimate'), iOrder = col('order'),
+          iUsd = col('iap_usd'), iPack = col('iap_pack'), iIap = col('iap_status');
         const rows = [];
         lines.slice(1).forEach(line => {
           const f = line.split(',');
@@ -136,7 +141,11 @@
           if (group || season !== undefined) META.set(path, {
             cat: CAT_BY_ID[group] ? group : DIR_CAT[dir],
             season: season === undefined ? ((name.match(/_AP(\d{2})/) || [])[1] || null) : season,
-            ult: iUlt >= 0 && (f[iUlt] || '').trim() === '1'
+            ult: iUlt >= 0 && (f[iUlt] || '').trim() === '1',
+            order: iOrder >= 0 ? (parseInt(f[iOrder], 10) || 0) : 0,
+            usd: iUsd >= 0 ? (f[iUsd] || '').trim() : '',   // pack price in USD, '?' = paid but price unknown
+            pack: iPack >= 0 ? (f[iPack] || '').trim() : '',
+            iap: iIap >= 0 ? (f[iIap] || '').trim() : ''    // confirmed / game-only / wiki-only
           });
           rows.push({ path, dir, icon: f[iIcon] || name });
         });
@@ -352,7 +361,7 @@
   ];
 
   window.CardData = {
-    CATS, CAT_BY_ID, SEASONS, seasonName, seasonFull, parsePath, iconURL, loadCatalog,
+    CATS, CAT_BY_ID, CLOSET_CATS, SEASONS, seasonName, seasonFull, parsePath, iconURL, loadCatalog,
     CURRENCIES, GLYPH, PINS, LINKS, GRADIENTS, gradientCSS, SOLIDS, FONTS,
     WALLPAPERS, wallpaperURL, textureURL, PAPERS
   };

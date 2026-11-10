@@ -330,6 +330,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 .picker-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .picker-row-2 { flex-wrap: wrap; }
 .picker-season { width: auto; flex: 1; min-width: 180px; padding: 8px 34px 8px 12px; font-size: 13.5px; }
+.picker-browse { width: auto; flex: 0 0 auto; padding: 8px 34px 8px 12px; font-size: 13.5px; }
 .chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
 .chips::-webkit-scrollbar { display: none; }
 .chip-btn { flex: none; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; font-size: 13px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; }
@@ -344,11 +345,16 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 .picker-group-head .mono { font-size: 11px; color: var(--gold); padding: 1px 6px; border-radius: 5px; background: var(--accent-soft); }
 .picker-group-head .text-link { margin-left: auto; font-size: 12px; }
 .picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+.picker-grid:has(.pick-price) { row-gap: 18px; padding-bottom: 8px; }
 .pick {
   position: relative; display: grid; place-items: center; aspect-ratio: 1; padding: 6px; border-radius: 12px;
   border: 1px solid var(--line); background: rgba(255, 255, 255, .035); transition: border-color .15s, background .15s, transform .15s;
 }
 .pick img, .pick svg { width: 100%; height: 100%; object-fit: contain; }
+.pick-price {
+  position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); padding: 1px 5px; border-radius: 6px;
+  background: var(--gold); color: #1a1408; font-size: 10px; font-weight: 800; white-space: nowrap; line-height: 1.4;
+}
 .pick:hover { border-color: var(--line-strong); background: rgba(255, 255, 255, .07); }
 .pick[aria-pressed="true"] { border-color: var(--gold); background: rgba(226, 178, 92, .14); box-shadow: inset 0 0 0 1px var(--gold); }
 .pick[aria-pressed="true"]::after {
