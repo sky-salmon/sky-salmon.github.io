@@ -11,19 +11,30 @@ The card editor, its translations and the extraction tools in `sky-fish-mod` all
 
 Each file starts with `_fields`, which explains every field.
 
-## After editing
+## Editing
+
+**Admin page:** `admin.html` on the site (not linked from the menu). Sign in with a fine-grained GitHub token that
+can only reach `chunhao0613/sky-cotl` with *Contents: Read and write*. The page only opens for `chunhao0613`, and
+each save is one commit on `main` (the three files plus `assets/js/seasons-data.js`). The token stays in the browser
+and is only sent to `api.github.com`. Nothing secret is stored in the repo; GitHub's own write permission is what
+protects the data.
+
+The card editor reads these files at runtime and applies them over `assets/icons/icons.csv` (which keeps the game's
+own values in `game_season` / `game_group`), so item, pack and season edits are live once GitHub Pages has rebuilt.
+
+**By hand:** edit the JSON, then
 
 ```bash
 python scripts/build_catalog.py      # validates the three files, regenerates assets/js/seasons-data.js
 ```
 
-Item and pack changes reach the site through the icon list. Rebuild it in `sky-fish-mod` (it reads this folder from
-`../sky-cotl/data`, or from `$SKY_DATA`), then copy the CSV here:
+`build_catalog.py` also fills empty `zh_hans` season names with OpenCC; the admin page keeps the last converted name
+and falls back to the Traditional text when the Traditional name changes.
+
+New seasons and new items need an icon rebuild in `sky-fish-mod`, because the icons come from the game files (it
+reads this folder from `../sky-cotl/data`, or from `$SKY_DATA`):
 
 ```bash
 python tools/sky_icon_extract.py game/<version>/apk/Sky.apks -o out/site_icons --flat
 cp out/site_icons/icons.csv ../sky-cotl/assets/icons/icons.csv
 ```
-
-Season-name changes only need `build_catalog.py`. New seasons and new items need the icon rebuild too, because
-the icons come from the game files.

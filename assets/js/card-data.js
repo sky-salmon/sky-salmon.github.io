@@ -98,36 +98,73 @@
 
   let catalogPromise = null;
   // Fetches icons.csv once; returns [{path, dir, name, season, label, cat, catZh}] de-duplicated by atlas icon.
+  // data/ (seasons, item corrections, paid packs) is applied on top of icons.csv at runtime, so edits saved from the
+  // admin page show up without rebuilding the icon list. icons.csv keeps the game's own values (game_season,
+  // game_group) for that; its baked-in corrections are only the fallback when data/ can't be loaded.
+  const getJSON = url => fetch(url, { cache: 'no-cache' }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+  function applySeasons(list) {
+    (list || []).forEach(s => {
+      SEASONS[s.code] = { zh: LANG === 'en' ? s.en : LANG === 'zh-Hans' ? (s.zh_hans || (SEASONS[s.code] || {}).zh || s.zh) : s.zh,
+        en: s.en, start: s.start, end: s.end };
+    });
+  }
   function loadCatalog() {
     if (catalogPromise) return catalogPromise;
-    catalogPromise = fetch('assets/icons/icons.csv')
-      .then(r => { if (!r.ok) throw new Error('icons.csv ' + r.status); return r.text(); })
-      .then(text => {
+    catalogPromise = Promise.all([
+      fetch('assets/icons/icons.csv').then(r => { if (!r.ok) throw new Error('icons.csv ' + r.status); return r.text(); }),
+      getJSON('data/seasons.json'), getJSON('data/items.json'), getJSON('data/packs.json')
+    ]).then(([text, seasonsDoc, itemsDoc, packsDoc]) => {
+        const fixes = (itemsDoc && itemsDoc.items) || null;
+        const ultSet = seasonsDoc ? new Set(seasonsDoc.seasons.flatMap(s => s.ultimates || [])) : null;
+        if (seasonsDoc && LANG !== 'zh-Hans') applySeasons(seasonsDoc.seasons);  // zh-Hans names come pre-converted from seasons-data.js
+        else if (seasonsDoc) applySeasons(seasonsDoc.seasons.map(x => Object.assign({}, x, { zh_hans: x.zh_hans || ((window.SKY_SEASONS || []).find(y => y.code === x.code) || {}).zh_hans })));
+        let iapOf = null;  // outfit -> pack; confirmed packs win
+        if (packsDoc) {
+          iapOf = new Map();
+          const rank = { confirmed: 0, 'wiki-only': 1, 'game-only': 2 };
+          packsDoc.packs.slice().sort((a, b) => (rank[a.status] ?? 9) - (rank[b.status] ?? 9) || (a.usd == null) - (b.usd == null))
+            .forEach(p => p.items.forEach(n => { if (!iapOf.has(n)) iapOf.set(n, p); }));
+        }
         const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/);
         const head = lines[0].split(',').map(h => h.trim());
         const col = n => head.indexOf(n);
         const iDir = col('category'), iName = col('name'), iIcon = col('icon'), iStatus = col('status'),
           iSeason = col('season'), iGroup = col('group'), iUlt = col('ultimate'), iOrder = col('order'),
           iUsd = col('iap_usd'), iPack = col('iap_pack'), iIap = col('iap_status'),
-          iNameZh = col('name_zh'), iNameEn = col('name_en'), iPackZh = col('iap_pack_zh');
+          iNameZh = col('name_zh'), iNameEn = col('name_en'), iPackZh = col('iap_pack_zh'),
+          iGameSeason = col('game_season'), iGameGroup = col('game_group');
+        const cell = (f, i) => (i >= 0 ? (f[i] || '').trim() : '');
         const rows = [];
         lines.slice(1).forEach(line => {
           const f = line.split(',');
-          const dir = f[iDir], name = f[iName], status = (f[iStatus] || '').trim();
-          if (!dir || !name || (status && status !== 'ok') || !DIR_CAT[dir]) return;
+          const dir = f[iDir], name = f[iName], status = cell(f, iStatus);
+          if (!dir || !name || (status && status !== 'ok' && status !== 'hidden') || !DIR_CAT[dir]) return;
           const path = dir + '/' + name;
-          const group = iGroup >= 0 ? (f[iGroup] || '').trim() : '';
-          const season = iSeason >= 0 ? ((f[iSeason] || '').trim() || null) : undefined;
+          const fix = fixes ? (fixes[name] || {}) : null;
+          if (fix ? fix.hidden : status === 'hidden') return;
+          let group = cell(f, iGroup), season = iSeason >= 0 ? (cell(f, iSeason) || null) : undefined;
+          if (fix) {  // game value + data/items.json correction
+            if (iGameGroup >= 0) group = fix.group || cell(f, iGameGroup) || group;
+            if ('season' in fix) season = fix.season || null;
+            else if (iGameSeason >= 0) season = cell(f, iGameSeason) || null;
+          }
+          let usd = cell(f, iUsd), pack = (LANG !== 'en' && cell(f, iPackZh)) || cell(f, iPack), iap = cell(f, iIap);
+          if (iapOf) {
+            const p = iapOf.get(name);
+            usd = p ? (p.usd != null ? Number(p.usd).toFixed(2) : '?') : '';
+            pack = p ? ((LANG !== 'en' && p.name_zh) || p.name_en || p.id) : '';
+            iap = p ? p.status : '';
+          }
           if (group || season !== undefined) META.set(path, {
             cat: CAT_BY_ID[group] ? group : DIR_CAT[dir],
             season: season === undefined ? ((name.match(/_AP(\d{2})/) || [])[1] || null) : season,
-            ult: iUlt >= 0 && (f[iUlt] || '').trim() === '1',
+            ult: ultSet ? ultSet.has(name) : cell(f, iUlt) === '1',
             order: iOrder >= 0 ? (parseInt(f[iOrder], 10) || 0) : 0,
-            usd: iUsd >= 0 ? (f[iUsd] || '').trim() : '',   // pack price in USD, '?' = paid but price unknown
-            pack: (LANG !== 'en' && iPackZh >= 0 && (f[iPackZh] || '').trim()) || (iPack >= 0 ? (f[iPack] || '').trim() : ''),
-            nameZh: iNameZh >= 0 ? (f[iNameZh] || '').trim() : '',
-            nameEn: iNameEn >= 0 ? (f[iNameEn] || '').trim() : '',
-            iap: iIap >= 0 ? (f[iIap] || '').trim() : ''    // confirmed / game-only / wiki-only
+            usd,              // pack price in USD, '?' = paid but price unknown
+            pack,
+            nameZh: (fix && fix.name_zh) || cell(f, iNameZh),
+            nameEn: (fix && fix.name_en) || cell(f, iNameEn),
+            iap               // confirmed / game-only / wiki-only
           });
           rows.push({ path, dir, icon: f[iIcon] || name });
         });
