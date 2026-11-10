@@ -35,7 +35,7 @@ cat > entry.js <<'JS'
 export { initializeApp } from 'firebase/app';
 export { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserPopupRedirectResolver, GoogleAuthProvider,
   signInWithPopup, signInWithCredential, signOut, onAuthStateChanged, connectAuthEmulator } from 'firebase/auth';
-export { getFirestore, doc, getDoc, setDoc, deleteDoc, serverTimestamp, connectFirestoreEmulator } from 'firebase/firestore/lite';
+export { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, serverTimestamp, connectFirestoreEmulator } from 'firebase/firestore/lite';
 JS
 npx esbuild entry.js --bundle --format=esm --minify --legal-comments=eof --target=es2020 --outfile=assets/js/vendor/firebase.js
 ```

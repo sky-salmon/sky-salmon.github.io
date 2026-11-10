@@ -1,15 +1,22 @@
 rules_version = '2';
-// candle·kit (card.html) cloud data.
-//   cards/{uid}   one signed-in user's own card (JSON string in `data`): only that user can read or write it.
-//   shares/{uid}  the card that user shared: anyone with the link can read it, only its owner can write it.
-//                 The id is the owner's uid, so every Google account has at most one shared card (no spam).
-//   admin/{uid}   the site owner's GitHub token for admin.html, readable only by an admin's own Google account.
-// Nothing can be listed, so shared cards are only reachable through their link.
+// candle·kit Firestore rules (paste into Firebase console → Firestore Database → Rules).
+//   cards/{uid}     one signed-in user's own card (JSON string in `data`): only that user can read or write it.
+//   shares/{uid}    the card that user shared: anyone with the link can read it, only its owner can write it.
+//                   The id is the owner's uid, so every Google account has at most one shared card (no spam).
+//   config/admins   Google accounts allowed into admin.html ({uids, labels}); admins add and remove each other there.
+//   config/github   the GitHub token and repository admin.html saves to; readable by admins only.
+//   requests/{uid}  an account asking to become an admin; admins see and approve or dismiss it.
+// Nothing outside requests/ can be listed, so shared cards are only reachable through their link.
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedInAs(uid) { return request.auth != null && request.auth.uid == uid; }
-    // Google account ids allowed into admin.html. admin.html shows the line to paste here when an account is refused.
-    function isAdmin(uid) { return uid in []; }
+    // Always an admin, even if config/admins is emptied or deleted (so the owner can't lock themselves out).
+    function rootAdmins() { return ['dhY5yeJvwGUobxmWj35UzBtzKbr2']; }
+    function isAdmin() {
+      let admins = /databases/$(database)/documents/config/admins;
+      return request.auth != null && (request.auth.uid in rootAdmins()
+        || (exists(admins) && request.auth.uid in get(admins).data.uids));
+    }
     function validCard(keys) {
       let d = request.resource.data;
       return d.keys().hasOnly(keys) && d.v == 1 && d.data is string && d.data.size() < 1000000
@@ -21,18 +28,41 @@ service cloud.firestore {
       allow create, update: if signedInAs(uid) && validCard(['v', 'data', 'updatedAt']);
     }
 
-    match /admin/{uid} {
-      allow get, delete: if signedInAs(uid) && isAdmin(uid);
-      allow create, update: if signedInAs(uid) && isAdmin(uid)
-        && request.resource.data.keys().hasOnly(['githubToken', 'updatedAt'])
-        && request.resource.data.githubToken is string && request.resource.data.githubToken.size() < 400
-        && request.resource.data.updatedAt == request.time;
-    }
-
     match /shares/{uid} {
       allow get: if true;
       allow create, update: if signedInAs(uid) && validCard(['v', 'data', 'updatedAt']);
       allow delete: if signedInAs(uid);
+    }
+
+    match /config/admins {
+      allow get: if isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['uids', 'labels', 'updatedAt'])
+        && request.resource.data.uids is list && request.resource.data.uids.size() <= 50
+        && request.resource.data.labels is map && request.resource.data.updatedAt == request.time;
+    }
+
+    match /config/github {
+      allow get, delete: if isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['token', 'repo', 'updatedAt'])
+        && request.resource.data.token is string && request.resource.data.token.size() < 400
+        && request.resource.data.repo is string && request.resource.data.repo.matches('^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$')
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /requests/{uid} {
+      allow get: if signedInAs(uid) || isAdmin();
+      allow list, delete: if isAdmin();
+      allow create, update: if signedInAs(uid)
+        && request.resource.data.keys().hasOnly(['label', 'createdAt'])
+        && request.resource.data.label is string && request.resource.data.label.size() < 200
+        && request.resource.data.createdAt == request.time;
+    }
+
+    // admin.html before config/: one GitHub token per admin account. Read once to move it into config/github.
+    match /admin/{uid} {
+      allow get, delete: if signedInAs(uid) && isAdmin();
     }
   }
 }
