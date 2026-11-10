@@ -827,16 +827,21 @@
     closePop();
     const meta = SECTIONS[sec];
     const cats = SEC_CATS[sec] || [];
-    pk = { sec, mode: meta.picker, sel: new Map(), cat: cats.length === 1 ? cats[0] : 'all', season: 'all', q: '',
-      price: sec === 'iap' ? 'auto' : '', group: sec === 'pass' ? 'season' : 'closet' };
+    pk = { sec, mode: meta.picker, sel: new Map(), cat: sec === 'iap' ? 'packs' : cats.length === 1 ? cats[0] : 'all', season: 'all', q: '',
+      price: sec === 'iap' ? 'auto' : '', group: 'closet', series: '__recent', only: false };
     state.items[sec].forEach(it => pk.sel.set(itemKey(it), it));
     $('#picker-title').textContent = PICK_TITLES[sec];
     $('#picker-tools').hidden = pk.mode === 'links';
     $('#picker-price').hidden = sec !== 'iap';
     $('#picker-q').value = '';
+    $('#picker-q').placeholder = sec === 'pass' ? t('找季節或畢業禮，例如 梵谷、Moomin、31') : sec === 'iap' ? t('搜尋全部禮包，例如 Bat、Moomin、Fortune') : t('搜尋名稱、季節，例如 Deer、AP21、感恩');
     $('.picker-search').hidden = pk.mode !== 'catalog';
-    $('#picker-season').hidden = pk.mode !== 'catalog' || sec === 'spells';
-    $('#picker-group').hidden = pk.mode !== 'catalog' || sec === 'pass' || sec === 'spells';
+    $('#picker-cats').closest('.picker-row').hidden = sec === 'extra';
+    $('#picker-season').hidden = sec !== 'extra';
+    $('#picker-group').hidden = sec !== 'extra';
+    $('#picker-only').hidden = sec !== 'extra' && sec !== 'pass';
+    $('#picker-only').setAttribute('aria-pressed', 'false');
+    $('#picker-only').textContent = t('只看已選');
     $('#picker-group').value = pk.group;
     if (sec === 'iap') $('#price-chips').innerHTML = PRICES.map(p => `<button type="button" role="radio" class="chip-btn" data-price="${p}" aria-checked="${p === pk.price}">${p === 'auto' ? t('官方價格') : p ? '$' + p : t('不標價')}</button>`).join('');
     openModal(picker, opener);
@@ -844,15 +849,25 @@
     renderPicker();
   }
   function renderPickerChrome() {
-    if (pk.mode === 'catalog') {
-      const own = SEC_CATS[pk.sec] || [];
-      const cats = [...(own.length > 1 ? [['all', t('全部')]] : []), ...own.map(id => [id, D.CAT_BY_ID[id].zh]), ['mine', t('我的圖示')]];
-      $('#picker-cats').innerHTML = cats.map(([id, zh]) => `<button type="button" class="chip-btn" data-cat="${id}" aria-pressed="${id === pk.cat}">${zh}</button>`).join('');
-    } else if (pk.mode === 'pins') {
-      $('#picker-cats').innerHTML = [['all', t('徽章')], ['mine', t('我的圖示')]].map(([id, zh]) => `<button type="button" class="chip-btn" data-cat="${id}" aria-pressed="${id === pk.cat}">${zh}</button>`).join('');
+    let cats = null;
+    if (pk.mode === 'pins') cats = [['all', t('徽章')], ['mine', t('我的圖示')]];
+    else if (pk.mode === 'catalog') {
+      if (pk.sec === 'pass') cats = [['pass', t('季節')], ['mine', t('我的圖示')]];
+      else if (pk.sec === 'iap') cats = [['packs', t('禮包')], ['mine', t('我的圖示')]];
+      else if (pk.sec === 'spells') cats = [['spell', D.CAT_BY_ID.spell.zh], ['mine', t('我的圖示')]];
     }
+    if (cats) $('#picker-cats').innerHTML = cats.map(([id, zh]) => `<button type="button" class="chip-btn" data-cat="${id}" aria-pressed="${id === pk.cat}">${zh}</button>`).join('');
   }
-  function updatePickerStatus() { $('#picker-status').textContent = t('已選 {n} 個', { n: pk.sel.size }); }
+  const priceOf = it => fmtPrice(it.price);
+  function updatePickerStatus() {
+    const items = [...pk.sel.values()];
+    const sum = pk.sec === 'iap' ? items.reduce((a, it) => a + (priceOf(it) || 0), 0) : 0;
+    $('#picker-status').textContent = sum ? t('已選 {n} 個 · 合計 {sum}', { n: items.length, sum: money(sum, 'US$') }) : t('已選 {n} 個', { n: items.length });
+    $('#picker-tray').innerHTML = [...pk.sel.entries()].map(([k, it]) => {
+      const info = itemInfo(it);
+      return `<span class="tray-it" title="${esc(it.label || info.label)}">${info.html}<button type="button" data-unpick="${esc(k)}" aria-label="${esc(t('移除 {name}', { name: it.label || info.label }))}">×</button></span>`;
+    }).join('');
+  }
   function pickBtn(key, html, label, extra = '') {
     return `<button type="button" class="pick${extra}" data-key="${esc(key)}" aria-pressed="${pk.sel.has(key)}" title="${esc(label)}" aria-label="${esc(label)}">${html}</button>`;
   }
@@ -861,6 +876,162 @@
     const btns = ids.map(id => `<span class="pick-wrap" style="position:relative">${pickBtn('u:' + id, `<img src="${assets[id]}" alt="">`, t('自訂圖示'))}<button type="button" class="pick-del" data-del="${id}" aria-label="${t('從圖庫刪除')}">×</button></span>`).join('');
     return `<div class="picker-group"><p class="picker-group-head">${t('我的圖示')} <span class="mono">${ids.length}</span></p>${ids.length ? `<div class="picker-grid">${btns}</div>` : `<p class="picker-empty">${t('還沒有自己的圖示 — 按「上傳自己的圖示」加入截圖或圖片，會自動裁成正方形。')}</p>`}</div>`;
   }
+  const iconImg = path => `<img src="${esc(D.iconURL(path))}" alt="" loading="lazy" decoding="async">`;
+  const catRank = c => { const r = D.CLOSET_CATS.indexOf(c); return r < 0 ? (c === 'pass' ? -1 : 99) : r; };
+  // item grid, grouped by closet category (game order) or by season
+  function groupsHTML(list, bySeason) {
+    list.sort((a, b) => catRank(a.cat) - catRank(b.cat) || a.order - b.order);
+    const groups = new Map();
+    list.forEach(i => {
+      const g = bySeason ? (i.season || '—') : i.cat;
+      if (!groups.has(g)) groups.set(g, []);
+      groups.get(g).push(i);
+    });
+    const keys = [...groups.keys()];
+    if (bySeason) keys.sort((a, b) => (a === '—') - (b === '—') || b.localeCompare(a));
+    else keys.sort((a, b) => catRank(a) - catRank(b));
+    return keys.map(g => {
+      const items = groups.get(g);
+      const head = bySeason ? (g === '—' ? t('非季節') : `<span class="mono">AP${g}</span>${esc(D.seasonLabel(g))}`)
+        : `${esc(D.CATS.find(c => c.id === g)?.zh || g)} <span class="mono">${items.length}</span>`;
+      return `<div class="picker-group"><p class="picker-group-head">${head}<button type="button" class="text-link" data-all="${esc(items.map(i => 'c:' + i.path).join('|'))}">${t('全選這組')}</button></p>
+        <div class="picker-grid">${items.map(i => pickBtn('c:' + i.path, iconImg(i.path), `${i.label}${i.season ? ' · ' + D.seasonName(i.season) : ''}`)).join('')}</div></div>`;
+    }).join('');
+  }
+  const matches = (i, q) => !q || (i.label + ' ' + i.name + ' ' + i.catZh + ' ' + (i.season ? D.seasonFull(i.season) : '')).toLowerCase().includes(q);
+
+  // PASS: one compact pill per season. The pendant toggles the whole season, the small icons single ultimate gifts.
+  function passSeasons() {
+    const by = new Map();
+    pk.catalog.forEach(i => {
+      if (!i.season || !(i.cat === 'pass' || i.ult)) return;
+      if (!by.has(i.season)) by.set(i.season, { code: i.season, pend: null, ults: [] });
+      const s = by.get(i.season);
+      if (i.cat === 'pass') { if (!s.pend) s.pend = i; } else s.ults.push(i);
+    });
+    const list = [...by.values()].sort((a, b) => b.code.localeCompare(a.code));
+    list.forEach(s => s.ults.sort((a, b) => catRank(a.cat) - catRank(b.cat) || a.order - b.order));
+    return list;
+  }
+  const seasonKeys = s => [...(s.pend ? ['c:' + s.pend.path] : []), ...s.ults.map(u => 'c:' + u.path)];
+  function renderPass() {
+    const q = pk.q.trim().toLowerCase(), all = passSeasons();
+    pk.seasons = all;
+    const st = s => { const keys = seasonKeys(s), n = keys.filter(k => pk.sel.has(k)).length; return { n, on: n > 0, full: n === keys.length }; };
+    const list = all.filter(s => (!pk.only || st(s).on) &&
+      (!q || (`ap${s.code} ` + D.seasonFull(s.code)).toLowerCase().includes(q) || s.ults.some(u => matches(u, q))));
+    const nOn = all.filter(s => st(s).on).length;
+    $('#picker-only').textContent = t('只看已選（{n} 季）', { n: nOn });
+    pBody.innerHTML = `<div class="pk-bar"><p class="pk-how">${t('點季節掛墜＝整季全選或取消；點旁邊的小圖示＝只切換那件畢業禮。灰色是沒選的。')}</p>
+        <button type="button" class="text-link" data-pass-all>${t('全部季節都有')}</button></div>
+      ${list.length ? `<div class="pk-pills">${list.map(s => {
+        const x = st(s);
+        return `<div class="pk-pill${x.on ? ' on' : ''}${x.full ? ' full' : ''}">
+          <button type="button" class="pk-pend" data-season-toggle="${s.code}" aria-pressed="${x.full}" title="${esc(t('{season}：點一下{act}', { season: D.seasonFull(s.code), act: x.full ? t('取消整季') : t('選整季') }))}">${s.pend ? iconImg(s.pend.path) : `<span class="mono">AP${s.code}</span>`}</button>
+          <span class="pk-pill-body"><span class="pk-pill-name"><span class="mono">AP${s.code}</span><b>${esc(D.seasonName(s.code))}</b></span>
+            <span class="pk-ults">${s.ults.map(u => `<button type="button" class="pk-ult" data-ult="c:${esc(u.path)}" data-season="${s.code}" aria-pressed="${pk.sel.has('c:' + u.path)}" title="${esc(t('畢業禮：{name}', { name: u.label }))}">${iconImg(u.path)}</button>`).join('')}</span></span></div>`;
+      }).join('')}</div>` : `<p class="picker-empty">${pk.only ? t('還沒選任何季節。') : t('找不到符合的季節，換個關鍵字試試。')}</p>`}`;
+  }
+  function setSeason(code, on) {
+    const s = pk.seasons.find(x => x.code === code);
+    if (s) seasonKeys(s).forEach(k => togglePick(k, on));
+  }
+
+  // IAP: series index on the left (recent, picked, seasons, events, other), the packs of that series on the right
+  const packKeys = p => p.items.map(path => 'c:' + path);
+  const seriesName = (kind, series) => kind === 'season' ? D.seasonFull(series) : kind === 'other' ? t('常駐與其他') : series;
+  function iapIndex(P) {
+    const by = new Map();
+    P.forEach(p => {
+      const k = p.kind + '|' + p.series;
+      if (!by.has(k)) by.set(k, { key: k, kind: p.kind, series: p.series, packs: [], latest: '' });
+      const s = by.get(k); s.packs.push(p); if (p.year > s.latest) s.latest = p.year;
+    });
+    const all = [...by.values()];
+    const maxSeason = Math.max(0, ...P.filter(p => p.kind === 'season').map(p => +p.series));
+    const maxYear = Math.max(0, ...P.map(p => +p.year || 0));
+    return {
+      season: all.filter(s => s.kind === 'season').sort((a, b) => b.series.localeCompare(a.series)),
+      event: all.filter(s => s.kind === 'event').sort((a, b) => b.latest.localeCompare(a.latest) || b.packs.length - a.packs.length),
+      other: all.filter(s => s.kind === 'other'),
+      recent: P.filter(p => (p.kind === 'season' && +p.series >= maxSeason - 4) || (p.kind === 'event' && +p.year >= maxYear - 1))
+    };
+  }
+  function renderIap() {
+    const P = D.packs(), I = pk.iapIndex || (pk.iapIndex = iapIndex(P));
+    const q = pk.q.trim().toLowerCase();
+    const packState = p => { const keys = packKeys(p), n = keys.filter(k => pk.sel.has(k)).length; return n === 0 ? 0 : n === keys.length ? 2 : 1; };
+    const picked = list => list.filter(p => packState(p)).length;
+    let packs, title;
+    if (q) {
+      packs = P.filter(p => (p.name + ' ' + p.id + ' ' + p.series + ' ' + seriesName(p.kind, p.series) + ' ' + p.items.map(x => D.parsePath(x).label).join(' ')).toLowerCase().includes(q));
+      title = t('搜尋「{q}」', { q: pk.q.trim() });
+    } else if (pk.series === '__recent') { packs = I.recent; title = t('最近的禮包'); }
+    else if (pk.series === '__picked') { packs = P.filter(p => packState(p)); title = t('已選的禮包'); }
+    else { const s = [...I.season, ...I.event, ...I.other].find(x => x.key === pk.series); packs = s ? s.packs : []; title = s ? esc(seriesName(s.kind, s.series)) : ''; }
+    const idxBtn = (key, label, list) => { const k = picked(list); return `<button type="button" data-series="${esc(key)}" aria-pressed="${!q && pk.series === key}"><span>${label}</span><span>${k ? `<span class="sel">${k}✓</span> ` : ''}<span class="n">${list.length}</span></span></button>`; };
+    // events: newest year first; seasons and "other" in one block
+    const blocks = new Map();
+    packs.slice().sort((a, b) => (b.year || '').localeCompare(a.year || '') || (b.kind === 'season' ? b.series.localeCompare(a.series) : 0)).forEach(p => {
+      const y = p.kind === 'event' ? p.year : p.kind === 'season' ? D.seasonFull(p.series) : '';
+      if (!blocks.has(y)) blocks.set(y, []);
+      blocks.get(y).push(p);
+    });
+    const tile = p => {
+      const st = packState(p), n = Math.min(p.items.length, 3);
+      const contents = p.items.map(x => D.parsePath(x).label).join('、');
+      return `<button type="button" class="pk-pack${st === 1 ? ' part' : ''}" data-pack="${esc(p.id)}" aria-pressed="${st === 2}" title="${esc(p.name)}${p.items.length > 1 ? esc(t('（{n} 件：{list}）', { n: p.items.length, list: contents })) : ''}${p.status !== 'confirmed' ? ' · ' + esc(p.status === 'game-only' ? t('僅遊戲資料') : t('已下架')) : ''}">
+        ${p.status !== 'confirmed' ? '<span class="pk-flag" aria-hidden="true"></span>' : ''}
+        <span class="pk-stack n${n}">${p.items.slice(0, 3).map(iconImg).join('')}</span>
+        <span class="pk-price">${p.usd != null ? money(p.usd, 'US$') : t('價格未知')}</span>
+        <span class="pk-nm">${esc(p.name)}</span></button>`;
+    };
+    pBody.innerHTML = `<div class="pk-split">
+      <nav class="pk-nav" aria-label="${t('禮包分類')}">
+        ${idxBtn('__recent', t('最近'), I.recent)}${idxBtn('__picked', t('已選'), P.filter(p => packState(p)))}
+        <span class="pk-sec">${t('季節')}</span>${I.season.map(s => idxBtn(s.key, `<span class="mono">AP${s.series}</span> ${esc(D.seasonName(s.series))}`, s.packs)).join('')}
+        <span class="pk-sec">${t('節日活動')}</span>${I.event.map(s => idxBtn(s.key, esc(s.series.replace(/^Days of /, '')), s.packs)).join('')}
+        ${I.other.length ? `<span class="pk-sec">${t('其他')}</span>${I.other.map(s => idxBtn(s.key, t('常駐與其他'), s.packs)).join('')}` : ''}
+      </nav>
+      <div class="pk-main"><p class="picker-group-head">${title} <span class="mono">${packs.length}</span></p>
+        ${packs.length ? [...blocks].map(([y, ps]) => `${blocks.size > 1 && y ? `<p class="pk-year">${esc(y)}</p>` : ''}<div class="pk-packs">${ps.map(tile).join('')}</div>`).join('')
+          : `<p class="picker-empty">${t('沒有符合的禮包。')}</p>`}
+        <p class="pk-legend"><span><i class="pk-flag" aria-hidden="true"></i>${t('灰點：只在遊戲內購清單或已下架，wiki 沒有對到')}</span></p>
+      </div></div>`;
+  }
+  function togglePack(id) {
+    const p = D.packs().find(x => x.id === id);
+    if (!p) return;
+    const keys = packKeys(p), full = keys.every(k => pk.sel.has(k));
+    if (full) { keys.forEach(k => togglePick(k, false)); return; }
+    keys.forEach((k, i) => {  // the pack price goes on its first item, so the card total counts each pack once
+      if (pk.sel.has(k)) return;
+      const it = { k: 'c', p: p.items[i] };
+      const price = pk.price === 'auto' ? (i === 0 && p.usd != null ? p.usd.toFixed(2) : '') : (i === 0 ? pk.price : '');
+      if (price) it.price = price;
+      pk.sel.set(k, it);
+    });
+  }
+
+  // CLOSET: category rail + item grid
+  function renderCloset() {
+    const q = pk.q.trim().toLowerCase();
+    const inSec = pk.catalog.filter(i => inSection(i, 'extra'));
+    const ok = i => (pk.season === 'all' || (pk.season === 'none' ? !i.season : i.season === pk.season)) && (!pk.only || pk.sel.has('c:' + i.path)) && matches(i, q);
+    const rail = [['all', t('全部')], ...D.CLOSET_CATS.map(c => [c, D.CAT_BY_ID[c].zh]), ['mine', t('我的圖示')]].map(([c, zh]) => {
+      const n = c === 'mine' ? lib.filter(id => assets[id]).length : inSec.filter(i => c === 'all' || i.cat === c).length;
+      const k = c === 'mine' ? lib.filter(id => pk.sel.has('u:' + id)).length : inSec.filter(i => (c === 'all' || i.cat === c) && pk.sel.has('c:' + i.path)).length;
+      return `<button type="button" data-rail="${c}" aria-pressed="${pk.cat === c}"><span>${zh}${k ? ` <span class="sel">· ${k}</span>` : ''}</span><span class="n">${n}</span></button>`;
+    }).join('');
+    let main;
+    if (pk.cat === 'mine') main = mineHTML();
+    else {
+      const list = inSec.filter(i => (pk.cat === 'all' || i.cat === pk.cat) && ok(i));
+      main = list.length ? groupsHTML(list, pk.group === 'season' || (pk.season !== 'all' && pk.season !== 'none')) : `<p class="picker-empty">${t('找不到符合的物品，換個關鍵字試試。')}</p>`;
+    }
+    pBody.innerHTML = `<div class="pk-split is-closet"><nav class="pk-nav" aria-label="${t('衣櫃分類')}">${rail}</nav><div class="pk-main">${main}</div></div>`;
+  }
+
   async function renderPicker() {
     updatePickerStatus();
     if (pk.mode === 'links') {
@@ -872,44 +1043,23 @@
       pBody.innerHTML = pk.cat === 'mine' ? mineHTML() : `<div class="picker-grid">${D.PINS.map(g => pickBtn('g:' + g.id, g.svg, g.zh)).join('')}</div>${mineHTML()}`;
       return;
     }
-    if (pk.cat === 'mine') { pBody.innerHTML = mineHTML(); return; }
+    if (pk.cat === 'mine' && pk.sec !== 'extra') { pBody.innerHTML = mineHTML(); return; }
     if (!pk.catalog) {
       pBody.innerHTML = `<p class="picker-empty">${t('正在載入物品圖示…')}</p>`;
       try { pk.catalog = await D.loadCatalog(); }
       catch { pBody.innerHTML = `<p class="picker-empty">${t('物品清單載入失敗，請檢查網路後再試一次。')}</p>`; return; }
       if (!pk || picker.hidden) return;
-      const seasons = [...new Set(pk.catalog.map(i => i.season).filter(Boolean))].sort();
+      const seasons = [...new Set(pk.catalog.map(i => i.season).filter(Boolean))].sort().reverse();
       $('#picker-season').innerHTML = `<option value="all">${t('全部季節')}</option><option value="none">${t('非季節物品（常駐、活動、內購）')}</option>`
         + seasons.map(c => `<option value="${c}">${esc(D.seasonFull(c))}</option>`).join('');
       $('#picker-season').value = pk.season;
     }
+    if (pk.sec === 'pass') return renderPass();
+    if (pk.sec === 'iap') return renderIap();
+    if (pk.sec === 'extra') return renderCloset();
     const q = pk.q.trim().toLowerCase();
-    let list = pk.catalog.filter(i => inSection(i, pk.sec) &&
-      (pk.cat === 'all' || pk.cat === 'pass' || i.cat === pk.cat) &&
-      (pk.season === 'all' || (pk.season === 'none' ? !i.season : i.season === pk.season)) &&
-      (!q || (i.label + ' ' + i.name + ' ' + i.catZh + ' ' + (i.season ? D.seasonFull(i.season) : '')).toLowerCase().includes(q)));
-    if (pk.sec === 'pass' && pk.season === 'all' && !q) list = list.filter(i => i.season);
-    // closet order: category order of the closet, then the game's own item order (OutfitDefs)
-    const catRank = c => { const r = D.CLOSET_CATS.indexOf(c); return r < 0 ? (c === 'pass' ? -1 : 99) : r; };
-    list.sort((a, b) => catRank(a.cat) - catRank(b.cat) || a.order - b.order);  // in PASS this puts the pendant first
-    const bySeason = pk.group === 'season' || (pk.season !== 'all' && pk.season !== 'none');
-    const groups = new Map();
-    list.forEach(i => {
-      const g = bySeason ? (i.season || '—') : i.cat;
-      if (!groups.has(g)) groups.set(g, []);
-      groups.get(g).push(i);
-    });
-    const keys = [...groups.keys()];
-    if (bySeason) keys.sort((a, b) => (a === '—') - (b === '—') || a.localeCompare(b));
-    else keys.sort((a, b) => catRank(a) - catRank(b));
-    const html = keys.map(g => {
-      const items = groups.get(g);
-      const head = bySeason ? (g === '—' ? t('非季節') : `<span class="mono">AP${g}</span>${esc(D.seasonLabel(g))}`)
-        : `${esc(D.CATS.find(c => c.id === g)?.zh || g)} <span class="mono">${items.length}</span>`;
-      return `<div class="picker-group"><p class="picker-group-head">${head}<button type="button" class="text-link" data-all="${esc(items.map(i => 'c:' + i.path).join('|'))}">${t('全選這組')}</button></p>
-        <div class="picker-grid">${items.map(i => pickBtn('c:' + i.path, `<img src="${esc(D.iconURL(i.path))}" alt="" loading="lazy" decoding="async">${pk.sec === 'iap' && usdLabel(i) ? `<span class="pick-price">${esc(usdLabel(i))}</span>` : ''}`, `${i.label}${i.season ? ' · ' + D.seasonName(i.season) : ''}${pk.sec === 'iap' && i.pack ? ' · ' + i.pack + (usdLabel(i) ? t('（') + usdLabel(i) + t('）') : '') : ''}`)).join('')}</div></div>`;
-    }).join('');
-    pBody.innerHTML = html || `<p class="picker-empty">${t('找不到符合的物品，換個關鍵字試試。')}</p>`;
+    const list = pk.catalog.filter(i => inSection(i, pk.sec) && matches(i, q));
+    pBody.innerHTML = groupsHTML(list, false) || `<p class="picker-empty">${t('找不到符合的物品，換個關鍵字試試。')}</p>`;
   }
   function keyToItem(key) {
     const i = key.indexOf(':'), k = key.slice(0, i), v = key.slice(i + 1);
@@ -929,16 +1079,44 @@
     if (!on) pk.sel.delete(key);
     $$(`.pick[data-key="${CSS.escape(key)}"]`, pBody).forEach(b => b.setAttribute('aria-pressed', on));
   }
+  function refreshPicker() { const top = pBody.scrollTop; renderPicker(); pBody.scrollTop = top; }
   pBody.addEventListener('click', e => {
+    const b2 = e.target.closest('[data-season-toggle], [data-ult], [data-pass-all], [data-series], [data-pack], [data-rail]');
+    if (b2) {
+      const d = b2.dataset;
+      if (d.seasonToggle) { const s = pk.seasons.find(x => x.code === d.seasonToggle); setSeason(d.seasonToggle, !seasonKeys(s).every(k => pk.sel.has(k))); }
+      else if (d.ult) {  // one ultimate gift; having any gift of a season means having its pendant
+        const on = !pk.sel.has(d.ult);
+        togglePick(d.ult, on);
+        const s = pk.seasons.find(x => x.code === d.season);
+        if (on && s && s.pend) togglePick('c:' + s.pend.path, true);
+      }
+      else if (b2.hasAttribute('data-pass-all')) pk.seasons.forEach(s => setSeason(s.code, true));
+      else if (d.series) { pk.series = d.series; pk.q = ''; $('#picker-q').value = ''; renderPicker(); pBody.scrollTop = 0; return; }
+      else if (d.pack) togglePack(d.pack);
+      else if (d.rail) { pk.cat = d.rail; renderPicker(); pBody.scrollTop = 0; return; }
+      refreshPicker(); return;
+    }
     const del = e.target.closest('[data-del]');
     if (del) { lib = lib.filter(id => id !== del.dataset.del); pk.sel.delete('u:' + del.dataset.del); save(); renderPicker(); return; }
     const all = e.target.closest('[data-all]');
     if (all) {
       const keys = all.dataset.all.split('|'), on = !keys.every(k => pk.sel.has(k));
-      keys.forEach(k => togglePick(k, on)); updatePickerStatus(); return;
+      keys.forEach(k => togglePick(k, on)); updatePickerStatus(); if (pk.sec === 'extra') refreshPicker(); return;
     }
     const b = e.target.closest('.pick');
-    if (b) { togglePick(b.dataset.key); updatePickerStatus(); }
+    if (b) { togglePick(b.dataset.key); updatePickerStatus(); if (pk.sec === 'extra' && pk.catalog) refreshPicker(); }
+  });
+  $('#picker-tray').addEventListener('click', e => {
+    const b = e.target.closest('[data-unpick]');
+    if (!b) return;
+    togglePick(b.dataset.unpick, false);
+    if (pk.mode === 'catalog' && pk.catalog) refreshPicker(); else updatePickerStatus();
+  });
+  $('#picker-only').addEventListener('click', e => {
+    pk.only = !pk.only;
+    e.currentTarget.setAttribute('aria-pressed', String(pk.only));
+    pBody.scrollTop = 0; renderPicker();
   });
   $('#picker-cats').addEventListener('click', e => {
     const b = e.target.closest('[data-cat]');
@@ -957,7 +1135,7 @@
     pk.price = b.dataset.price;
     $$('[data-price]', $('#price-chips')).forEach(x => x.setAttribute('aria-checked', String(x === b)));
   });
-  $('#picker-clear').addEventListener('click', () => { [...pk.sel.keys()].forEach(k => togglePick(k, false)); updatePickerStatus(); });
+  $('#picker-clear').addEventListener('click', () => { [...pk.sel.keys()].forEach(k => togglePick(k, false)); if (pk.mode === 'catalog' && pk.catalog) refreshPicker(); else updatePickerStatus(); });
   $('#picker-upload').addEventListener('click', () => $('#custom-input').click());
   $('#custom-input').addEventListener('change', async e => {
     const files = [...e.target.files].filter(f => /^image\//.test(f.type));

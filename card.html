@@ -264,6 +264,7 @@
           <option value="closet">依衣櫃順序</option>
           <option value="season">依季節分組</option>
         </select>
+        <button type="button" class="chip-btn" id="picker-only" aria-pressed="false" hidden>只看已選</button>
         <button type="button" class="btn btn-sm" id="picker-upload"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M10 14V4M6 7.8 10 4l4 3.8M4 13.5v1.6A1.9 1.9 0 0 0 5.9 17h8.2a1.9 1.9 0 0 0 1.9-1.9v-1.6"/></svg>上傳自己的圖示</button>
         <input type="file" id="custom-input" accept="image/*" multiple hidden>
       </div>
@@ -275,6 +276,7 @@
     <div class="picker-body" id="picker-body" tabindex="-1"></div>
     <div class="picker-foot">
       <span id="picker-status" aria-live="polite">已選 0 個</span>
+      <div class="picker-tray" id="picker-tray" aria-label="已選的物品"></div>
       <button type="button" class="text-link" id="picker-clear">全部取消</button>
     </div>
   </div>
