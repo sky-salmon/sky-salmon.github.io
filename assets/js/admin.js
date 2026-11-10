@@ -240,11 +240,14 @@
     $('#n-items').textContent = ITEMS.length;
     $('#n-packs').textContent = W.packs.length;
     document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === ui.tab)));
+    $('main.work').classList.toggle('is-update', ui.tab === 'update');
+    if (ui.tab === 'update') { renderUpdate(); return; }
     renderList();
     renderEditor();
   }
   function renderList() {
     const focus = document.activeElement && document.activeElement.id === 'q', pos = focus ? document.activeElement.selectionStart : 0;
+    if (ui.tab === 'update') { renderUpdate(); return; }
     const d = diff()[ui.tab];
     if (ui.tab === 'seasons') renderSeasons(d); else if (ui.tab === 'items') renderItems(d); else renderPacks(d);
     if (focus) { const q = $('#q'); q.focus(); q.setSelectionRange(pos, pos); }
@@ -668,6 +671,198 @@
       $('#rows').innerHTML = `<p class="empty"><b>載入失敗</b>${esc(e.message)}</p>`;
     }
   }
+
+  // ── game update: Sky.apks → icons, GLB models, icons.csv (assets/js/admin/extract-worker.js) → one commit ──
+  // Everything runs in this browser: the game file is never uploaded. assets/content-hashes.json holds the content
+  // hash (pixels / geometry) of every icon and GLB on the site, so only what really changed is committed.
+  const HASHES = 'assets/content-hashes.json', CSV = 'assets/icons/icons.csv';
+  const up = { stage: 'idle', glb: true, progress: {}, result: null, error: '', urls: [], sent: 0, total: 0, commit: null };
+  const PHASES = [['read', '讀取遊戲檔'], ['icons', '物品圖示'], ['textures', '模型貼圖'], ['glb', '3D 模型']];
+  const fmtMB = n => (n / 1048576).toFixed(n > 104857600 ? 0 : 1) + ' MB';
+  function parseCSV(text) {  // icons.csv has no quoted fields (the generator strips commas)
+    const lines = text.replace(/^﻿/, '').split(/\r?\n/).filter(Boolean), head = lines[0].split(',');
+    return lines.slice(1).map(l => { const f = l.split(','); return Object.fromEntries(head.map((h, i) => [h, f[i] || ''])); });
+  }
+  function renderUpdate() {
+    $('#filters').innerHTML = '<p class="up-title"><b>遊戲更新</b> 選擇新版的 Sky.apks，自動抽出物品圖示、3D 模型和物品清單，只把有變的檔案存回網站。</p>';
+    const bar = (done, total) => `<progress class="up-bar" max="${total || 1}" value="${Math.min(done, total || 1)}"></progress>`;
+    let h = '';
+    if (up.stage === 'idle' || up.stage === 'error') {
+      h = `<label class="drop" id="drop"><input type="file" id="apk-file" accept=".apks,.apk,.xapk,.zip">
+          <b>選擇或拖進遊戲安裝檔</b><span>Sky.apks（分割安裝包）、.xapk 或 .apk。檔案只在這台電腦上讀，不會上傳。</span></label>
+        <label class="switch"><input type="checkbox" id="up-glb" ${up.glb ? 'checked' : ''}><span>也更新 3D 模型（GLB）</span></label>
+        <p class="note">請用電腦版 Chrome / Edge / Firefox。整包約 3 GB，讀取約 30 秒到 1 分鐘，需要約 1 GB 記憶體；手機通常記憶體不夠。</p>
+        ${up.error ? `<p class="problems">${esc(up.error)}</p>` : ''}`;
+    } else if (up.stage === 'running') {
+      h = `<div class="up-steps">${PHASES.filter(([k]) => up.glb || (k !== 'textures' && k !== 'glb')).map(([k, z]) => {
+          const p = up.progress[k];
+          const n = !p ? '' : k === 'read' ? `${fmtMB(p.done)} / ${fmtMB(p.total)}` : `${p.done} / ${p.total}`;
+          return `<div class="up-step${p ? ' on' : ''}"><span>${z}</span>${bar(p ? p.done : 0, p ? p.total : 1)}<span class="mono-s">${n}</span></div>`;
+        }).join('')}</div>
+        <p class="note">${esc(up.file ? up.file.name + ' · ' + fmtMB(up.file.size) : '')}</p>
+        <button class="btn ghost small" type="button" id="up-cancel">取消</button>`;
+    } else if (up.stage === 'review' || up.stage === 'committing' || up.stage === 'done') {
+      const r = up.result, ch = r.changes;
+      const card = (n, label, sub) => `<div class="up-card${n ? ' hot' : ''}"><b>${n}</b><span>${label}</span>${sub ? `<small>${sub}</small>` : ''}</div>`;
+      h = `<div class="up-cards">
+          ${card(ch.newItems.length, '新物品', '遊戲裡新出現的')}
+          ${card(ch.iconsNew + ch.iconsChanged, '圖示要更新', `新增 ${ch.iconsNew} · 改變 ${ch.iconsChanged}`)}
+          ${up.glb ? card(ch.glbNew + ch.glbChanged, '3D 模型要更新', `新增 ${ch.glbNew} · 改變 ${ch.glbChanged}`) : ''}
+          ${card(ch.csvChanged ? 1 : 0, '物品清單', ch.csvChanged ? `icons.csv 有變更` : '沒有變更')}
+        </div>
+        ${ch.newSeasons.length ? `<p class="problems">遊戲裡出現新的季節：${ch.newSeasons.map(c => 'AP' + esc(c)).join('、')}。先到「季節」分頁新增名稱（季號 ${ch.newSeasons.map(esc).join('、')}），網站才會顯示季節名稱；物品可以先存。</p>` : ''}
+        ${ch.newItems.length ? `<p class="sub">新物品</p><div class="up-new">${ch.newItems.slice(0, 120).map(it => `<span class="up-it" title="${esc(it.name)}">${it.url ? `<img src="${it.url}" alt="">` : '<i></i>'}<span>${esc(it.label)}</span></span>`).join('')}${ch.newItems.length > 120 ? `<span class="note">…另外 ${ch.newItems.length - 120} 件</span>` : ''}</div>` : ''}
+        ${ch.gone ? `<p class="note">網站上有 ${ch.gone} 個檔案這一版遊戲沒有產生（可能是下架或改名），會保留不刪，已存的名片不受影響。</p>` : ''}
+        <p class="note">遊戲資料：${r.summary.outfits} 件裝扮、${r.summary.placeables} 件家具；讀取 ${r.summary.readSeconds.toFixed(1)} 秒。${r.summary.glbFailed && r.summary.glbFailed.length ? `有 ${r.summary.glbFailed.length} 個模型轉換失敗（略過）。` : ''}</p>`;
+      const files = up.files.length + up.texts.length;
+      if (up.stage === 'review') {
+        h += files ? `<div class="up-commit"><input class="input" id="up-msg" placeholder="${esc(defaultUpdateMessage())}" aria-label="commit 訊息（可留空）">
+            <button class="btn" type="button" id="up-commit">存回網站（${files} 個檔案）</button><button class="btn ghost" type="button" id="up-reset">換一個檔案</button></div>
+            <p class="note">GitHub 限制每分鐘約 75 個檔案，預計 ${Math.max(1, Math.ceil(files / 70))} 分鐘。${files > 450 ? '超過 450 個檔案可能碰到 GitHub 每小時上限，中途會自動等待。' : ''}</p>`
+          : `<p class="ok-line">網站已經是最新的，沒有需要存的檔案。</p><button class="btn ghost" type="button" id="up-reset">換一個檔案</button>`;
+      } else if (up.stage === 'committing') {
+        h += `<div class="up-steps"><div class="up-step on"><span>上傳檔案</span>${bar(up.sent, up.total)}<span class="mono-s">${up.sent} / ${up.total}</span></div></div>
+          <p class="note">${esc(up.note || '')}請不要關掉這一頁。</p>`;
+      } else {
+        h += `<p class="ok-line">已存回網站 · <a href="https://github.com/${esc(REPO)}/commit/${esc(up.commit)}" target="_blank" rel="noopener">${esc(up.commit.slice(0, 7))}</a> · 網站約 1–2 分鐘後更新。</p>
+          <button class="btn ghost" type="button" id="up-reset">再匯入一次</button>`;
+      }
+    }
+    $('#rows').innerHTML = `<div class="up">${h}</div>`;
+  }
+  function defaultUpdateMessage() {
+    const ch = up.result && up.result.changes;
+    return ch ? `遊戲更新：${up.result.version || ''}新物品 ${ch.newItems.length}、圖示 ${ch.iconsNew + ch.iconsChanged}、模型 ${ch.glbNew + ch.glbChanged}` : '遊戲更新';
+  }
+  function resetUpdate() {
+    if (up.worker) up.worker.terminate();
+    up.urls.forEach(u => URL.revokeObjectURL(u));
+    Object.assign(up, { stage: 'idle', progress: {}, result: null, error: '', urls: [], files: [], worker: null, file: null, commit: null });
+    renderUpdate();
+  }
+  let upTick = 0;
+  async function startUpdate(file) {
+    if (!file) return;
+    up.file = file; up.stage = 'running'; up.progress = {}; up.error = ''; renderUpdate();
+    let known, siteCSV;
+    try {
+      [known, siteCSV] = await Promise.all([
+        gh(`/repos/${REPO}/contents/${HASHES}?ref=${REMOTE.sha}`, { raw: true }).then(JSON.parse).catch(() => ({ icons: {}, glb: {} })),
+        gh(`/repos/${REPO}/contents/${CSV}?ref=${REMOTE.sha}`, { raw: true })
+      ]);
+    } catch (e) { up.stage = 'error'; up.error = '讀不到網站目前的檔案：' + e.message; renderUpdate(); return; }
+    const w = new Worker(new URL('admin/extract-worker.js', SDK_URL.replace(/vendor\/firebase\.js$/, '')), { type: 'module' });
+    up.worker = w;
+    w.onmessage = ev => {
+      const m = ev.data;
+      if (m.type === 'progress') {
+        up.progress[m.phase] = m;
+        if (Date.now() - upTick > 150 || m.done === m.total) { upTick = Date.now(); if (ui.tab === 'update') renderUpdate(); }
+      } else if (m.type === 'error') {
+        w.terminate(); up.worker = null; up.stage = 'error'; up.error = '解析失敗：' + m.message; renderUpdate();
+      } else if (m.type === 'done') {
+        w.terminate(); up.worker = null;
+        prepareCommit(m, known, siteCSV);
+      }
+    };
+    w.onerror = e => { up.stage = 'error'; up.error = '解析失敗：' + (e.message || '瀏覽器無法執行解析程式'); renderUpdate(); };
+    w.postMessage({ type: 'start', file, data: REMOTE.docs, options: { legacyNames: true, glb: up.glb, known } });
+  }
+  function prepareCommit(m, known, siteCSV) {
+    const oldRows = parseCSV(siteCSV), newRows = parseCSV(m.csv);
+    const oldNames = new Set(oldRows.map(r => r.name));
+    const iconByPath = new Map(m.icons.map(i => [i.path, i]));
+    const newItems = newRows.filter(r => !oldNames.has(r.name) && r.status === 'ok').map(r => {
+      const ic = iconByPath.get(`${r.category}/${r.name}.png`);
+      let url = '';
+      if (ic) { url = URL.createObjectURL(new Blob([ic.png], { type: 'image/png' })); up.urls.push(url); }
+      return { name: r.name, label: label(r.name), url };
+    });
+    const codes = new Set(W.seasons.map(s => s.code));
+    const newSeasons = [...new Set(newRows.map(r => r.game_season || r.season).filter(c => c && !codes.has(c)))].sort();
+    const ki = known.icons || {}, kg = known.glb || {};
+    const changes = {
+      newItems, newSeasons, csvChanged: m.csv.replace(/^\uFEFF/, '') !== siteCSV.replace(/^\uFEFF/, ''),  // fetch's text() drops the BOM
+      iconsNew: m.icons.filter(i => !(i.path in ki)).length, iconsChanged: m.icons.filter(i => i.path in ki).length,
+      glbNew: m.glbs.filter(g => !(g.path in kg)).length, glbChanged: m.glbs.filter(g => g.path in kg).length,
+      gone: m.notProduced ? m.notProduced.icons.length + m.notProduced.glb.filter(p => p.includes('/')).length : 0
+    };
+    const files = [
+      ...m.icons.map(i => ({ path: 'assets/icons/' + i.path, bytes: i.png })),
+      ...(up.glb ? m.glbs.map(g => ({ path: 'assets/glb/' + g.path, bytes: g.bytes })) : [])
+    ];
+    const hashes = { _about: known._about || 'Content hashes of assets/icons and assets/glb (pixels / geometry, not file bytes). Written by admin.html game updates.',
+      icons: Object.assign({}, ki, m.hashes.icons), glb: Object.assign({}, kg, up.glb ? m.hashes.glb : {}) };
+    const sortObj = o => Object.fromEntries(Object.keys(o).sort().map(k => [k, o[k]]));
+    hashes.icons = sortObj(hashes.icons); hashes.glb = sortObj(hashes.glb);
+    up.texts = [];
+    if (changes.csvChanged) up.texts.push({ path: CSV, content: m.csv });
+    if (files.length) up.texts.push({ path: HASHES, content: JSON.stringify(hashes, null, 0).replace(/,"/g, ',\n"') + '\n' });
+    up.files = files;
+    up.result = { changes, summary: m.defsSummary };
+    up.stage = 'review';
+    renderUpdate();
+  }
+  const toBase64 = bytes => new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(String(fr.result).slice(String(fr.result).indexOf(',') + 1));
+    fr.onerror = () => rej(fr.error);
+    fr.readAsDataURL(new Blob([bytes]));
+  });
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  async function createBlob(bytes) {  // GitHub's secondary limit is about 80 created objects a minute
+    for (let attempt = 0; ; attempt++) {
+      try { return (await gh(`/repos/${REPO}/git/blobs`, { method: 'POST', body: { content: await toBase64(bytes), encoding: 'base64' } })).sha; }
+      catch (e) {
+        if (!(e.status === 403 || e.status === 429) || attempt >= 8) throw e;
+        up.note = 'GitHub 要求放慢速度，等待一分鐘後繼續。'; renderUpdate();
+        await sleep(61000); up.note = '';
+      }
+    }
+  }
+  async function commitUpdate() {
+    const entries = [];
+    up.stage = 'committing'; up.sent = 0; up.total = up.files.length; up.note = ''; renderUpdate();
+    try {
+      for (const f of up.files) {
+        const t = Date.now();
+        entries.push({ path: f.path, mode: '100644', type: 'blob', sha: await createBlob(f.bytes) });
+        up.sent++; renderUpdate();
+        const wait = 820 - (Date.now() - t);
+        if (wait > 0 && up.sent < up.total) await sleep(wait);
+      }
+      up.note = '建立 commit…'; renderUpdate();
+      const msg = ($('#up-msg') && $('#up-msg').value.trim()) || defaultUpdateMessage();
+      for (let attempt = 0; attempt < 3; attempt++) {  // main can move during a long upload: rebuild on the new head
+        const ref = await gh(`/repos/${REPO}/git/ref/heads/${BRANCH}`), head = ref.object.sha;
+        const hc = await gh(`/repos/${REPO}/git/commits/${head}`);
+        const tree = await gh(`/repos/${REPO}/git/trees`, { method: 'POST', body: { base_tree: hc.tree.sha,
+          tree: [...entries, ...up.texts.map(x => ({ path: x.path, mode: '100644', type: 'blob', content: x.content }))] } });
+        const commit = await gh(`/repos/${REPO}/git/commits`, { method: 'POST', body: { message: msg + '\n\n由 admin.html 遊戲更新存入', tree: tree.sha, parents: [head] } });
+        try { await gh(`/repos/${REPO}/git/refs/heads/${BRANCH}`, { method: 'PATCH', body: { sha: commit.sha, force: false } }); }
+        catch (e) { if (e.status === 422 && attempt < 2) continue; throw e; }
+        up.commit = commit.sha; up.stage = 'done'; renderUpdate();
+        try { const fresh = await fetchRemote(); const moved = KINDS.some(k => fresh.text[PATH[k]] !== REMOTE.text[PATH[k]]); if (!moved) REMOTE = fresh; } catch { /* next save catches up */ }
+        return;
+      }
+    } catch (e) {
+      up.stage = 'review'; renderUpdate();
+      toast('存檔失敗：' + esc(writeHint(e)) + (up.sent ? `（已上傳 ${up.sent} 個，重試會重新上傳）` : ''), 9000);
+    }
+  }
+  $('#rows').addEventListener('change', e => {
+    if (e.target.id === 'apk-file') startUpdate(e.target.files[0]);
+    if (e.target.id === 'up-glb') up.glb = e.target.checked;
+  });
+  $('#rows').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.id === 'up-cancel' || b.id === 'up-reset') resetUpdate();
+    if (b.id === 'up-commit') commitUpdate();
+  });
+  $('#rows').addEventListener('dragover', e => { if (ui.tab === 'update' && up.stage !== 'running') { e.preventDefault(); const d = $('#drop'); if (d) d.classList.add('over'); } });
+  $('#rows').addEventListener('dragleave', () => { const d = $('#drop'); if (d) d.classList.remove('over'); });
+  $('#rows').addEventListener('drop', e => { if (ui.tab !== 'update' || up.stage === 'running') return; e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) startUpdate(f); });
+  window.addEventListener('beforeunload', e => { if (up.stage === 'running' || up.stage === 'committing') { e.preventDefault(); e.returnValue = ''; } });
 
   // ── sign-in: Google (Firebase); the GitHub token and repository live in Firestore config/github ──
   let fb = null, fauth = null, fdb = null, guser = null, mode = 'google';
