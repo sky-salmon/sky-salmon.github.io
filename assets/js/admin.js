@@ -14,10 +14,10 @@
   // the repository this site is published from: <owner>.github.io/<repo>/ (config/github can override it)
   function repoFromLocation() {
     const h = location.hostname.match(/^([^.]+)\.github\.io$/i), seg = location.pathname.split('/').filter(Boolean)[0];
-    if (!h) return 'chunhao0613/sky-cotl';
+    if (!h) return '';  // custom domain or local copy: the repository comes from config/github or the sign-in form
     return seg && !/\.html?$/.test(seg) ? `${h[1]}/${seg}` : `${h[1]}/${h[1]}.github.io`;
   }
-  let REPO = repoFromLocation();
+  let REPO = repoFromLocation() || (() => { try { return localStorage.getItem('candle.admin.repo') || ''; } catch { return ''; } })();
   const TOKEN_KEY = 'candle.admin.token', DRAFT_KEY = 'candle.admin.draft.v1';
   const KINDS = ['seasons', 'items', 'packs'];
   const PATH = { seasons: 'data/seasons.json', items: 'data/items.json', packs: 'data/packs.json' };
@@ -54,6 +54,7 @@
   async function signIn(t) {
     token = t;
     const me = await gh('/user').catch(e => { throw new Error(e.status === 401 ? '權杖無效或已過期。' : e.message); });
+    if (!REPO) throw new Error('還不知道網站的 GitHub repo，請填「帳號/名稱」。');
     const repo = await gh('/repos/' + REPO).catch(e => { throw new Error(e.status === 404 ? `權杖看不到 ${REPO}，請在 Repository access 加入它。` : e.message); });
     if (!repo.permissions || !repo.permissions.push) throw new Error(`這個帳號沒有 ${REPO} 的寫入權限。`);
     return me.login;
@@ -768,7 +769,8 @@
     mode = 'token';
     $('#g-setup-why').textContent = '用 GitHub 權杖登入：權杖只存在這個瀏覽器，只會送到 GitHub。';
     $('#remember-row').hidden = false;
-    $('#repo-row').hidden = true;
+    $('#repo-row').hidden = !!repoFromLocation();
+    $('#repo').value = REPO;
     $('#login-btn').textContent = '登入';
     tokenLink();
     gateShow('#g-setup'); $('#g-alt').hidden = true;
@@ -843,7 +845,7 @@
     if (!t) return;
     err.hidden = true; btn.disabled = true; btn.textContent = '確認中…';
     try {
-      if (mode === 'google') {
+      if (!$('#repo-row').hidden) {
         const repo = $('#repo').value.trim();
         if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('repo 格式是 帳號/名稱，例如 chunhao0613/sky-cotl');
         REPO = repo;
@@ -851,7 +853,10 @@
       const login = await signIn(t);
       if (mode === 'google' && guser) await saveGithub(t, REPO);
       if (mode === 'google' && guser) fb.deleteDoc(fb.doc(fdb, 'requests', guser.uid)).catch(() => {});
-      else { store.del(TOKEN_KEY); store.set(TOKEN_KEY, t, $('#remember').checked); }
+      else {
+        store.del(TOKEN_KEY); store.set(TOKEN_KEY, t, $('#remember').checked);
+        try { localStorage.setItem('candle.admin.repo', REPO); } catch { /* typed again next time */ }
+      }
       $('#token').value = '';
       open(login);
     } catch (ex) {

@@ -21,7 +21,7 @@ Authentication (Google sign-in) and Cloud Firestore on the free Spark plan; no s
 
 1. https://console.firebase.google.com → Add project (Google Analytics not needed).
 2. Build → Authentication → Get started → Sign-in method → Google → Enable.
-   Settings → Authorized domains → add `chunhao0613.github.io`.
+   Settings → Authorized domains → add the site's domain (e.g. `<account>.github.io`; add the new one if the site moves).
 3. Build → Firestore Database → Create database → Production mode, location `asia-east1` (Taiwan).
    Rules tab → paste `firebase/firestore.rules` → Publish.
 4. Project settings → Your apps → Web (`</>`) → register → copy the `firebaseConfig` object into
