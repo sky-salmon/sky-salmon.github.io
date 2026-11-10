@@ -10,6 +10,8 @@
  *          defsSummary}            (png / bytes are Uint8Array, transferred; paths are relative to assets/icons/
  *                                   and assets/glb/; hash = imageContentHash / glbContentHash from sky-decode.js, the
  *                                   same for a site file holding the same pixels / geometry: use it for the diff)
+ *         with options.known = {icons: {path: hash}, glb: {path: hash}}: only icons / glbs whose hash differs, plus
+ *         hashes (every output's hash), unchanged {icons, glb} counts and notProduced {icons, glb} (known paths not built)
  *         {type: 'error', message, stack}
  * In Node (tests) import runExtraction directly. */
 
@@ -214,9 +216,20 @@ if (typeof self !== 'undefined' && typeof WorkerGlobalScope !== 'undefined' && s
     try {
       const o = msg.options || {};
       const r = await runExtraction(msg.file, msg.data, { ...o, onProgress: p => self.postMessage({ type: 'progress', ...p }) });
+      // options.known = {icons: {path: hash}, glb: {path: hash}} (assets/content-hashes.json): send back only what differs,
+      // plus every hash so the caller can update that file
+      const hashes = { icons: Object.fromEntries(r.icons.map(i => [i.path, i.hash])), glb: Object.fromEntries(r.glbs.map(g => [g.path, g.hash])) };
+      if (o.known) {
+        const ki = o.known.icons || {}, kg = o.known.glb || {};
+        r.unchanged = { icons: r.icons.filter(i => ki[i.path] === i.hash).length, glb: r.glbs.filter(g => kg[g.path] === g.hash).length };
+        r.icons = r.icons.filter(i => ki[i.path] !== i.hash);
+        r.glbs = r.glbs.filter(g => kg[g.path] !== g.hash);
+        r.notProduced = { icons: Object.keys(ki).filter(p => !(p in hashes.icons)), glb: Object.keys(kg).filter(p => !(p in hashes.glb)) };
+      }
       const transfer = [...r.icons.map(i => i.png.buffer), ...r.glbs.map(g => g.bytes.buffer)];
       if (o.iconRGBA) for (const i of r.icons) if (i.rgba && !transfer.includes(i.rgba.buffer)) transfer.push(i.rgba.buffer);
-      self.postMessage({ type: 'done', csv: r.csv, icons: r.icons, glbs: r.glbs, defsSummary: r.defsSummary }, [...new Set(transfer)]);
+      self.postMessage({ type: 'done', csv: r.csv, icons: r.icons, glbs: r.glbs, defsSummary: r.defsSummary, hashes,
+        unchanged: r.unchanged, notProduced: r.notProduced }, [...new Set(transfer)]);
     } catch (e) {
       self.postMessage({ type: 'error', message: e && e.message || String(e), stack: e && e.stack });
     }
