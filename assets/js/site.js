@@ -5,6 +5,15 @@
   // i18n (assets/js/i18n.js); pages without it keep the Traditional Chinese source text
   const t = window.I18N ? window.I18N.t : (s, v) => (v ? s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
 
+  // the GitHub repository this copy of the site is published from (<owner>.github.io/<repo>/), so links follow a move
+  const REPO_URL = (() => {
+    const h = location.hostname.match(/^([^.]+)\.github\.io$/i), seg = location.pathname.split('/').filter(Boolean)[0];
+    if (!h) return 'https://github.com/chunhao0613/sky-cotl';
+    return `https://github.com/${h[1]}/` + (seg && !/\.html?$/.test(seg) ? seg : `${h[1]}.github.io`);
+  })();
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('a[href="https://github.com/chunhao0613/sky-cotl"]').forEach(a => { a.href = REPO_URL; });
+  });
   const PAGES = [
     { id: 'home', href: 'index.html', label: t('首頁') },
     { id: 'card', href: 'card.html', label: t('名片') },
@@ -52,7 +61,7 @@
     footer.className = 'site-footer';
     footer.innerHTML = `<div class="wrap">
       <div class="hand">Made with ♡ for every child of the light</div>
-      <div>candle·kit · ${t('粉絲自製工具，與 thatgamecompany 無關')} · <a href="https://github.com/chunhao0613/sky-cotl" target="_blank" rel="noopener">GitHub</a></div>
+      <div>candle·kit · ${t('粉絲自製工具，與 thatgamecompany 無關')} · <a href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a></div>
     </div>`;
     document.body.append(footer);
 

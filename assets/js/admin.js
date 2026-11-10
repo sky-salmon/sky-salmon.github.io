@@ -1,13 +1,23 @@
 /* candle·kit — catalogue admin (admin.html).
  * Edits data/seasons.json, data/items.json and data/packs.json and commits them straight to GitHub.
  *
- * Access: sign-in takes a GitHub token. The page only opens for the site owner (OWNER) with push access to REPO, and
+ * Access: Google sign-in (Firebase). Admin accounts are listed in Firestore config/admins (plus rootAdmins() in
+ * firebase/firestore.rules); config/github holds the GitHub token and the repository, readable by admins only. Saving
+ * needs push access to that repository, so GitHub itself still enforces who may change anything. Fallback: a GitHub
+ * token pasted here, kept in this browser. Either way the token is only sent to api.github.com, and
  * saving is a normal commit made with that token, so GitHub itself enforces who may change anything; the page holds no
  * secret of its own. The token is kept in sessionStorage (or localStorage with "remember") and is only sent to
  * api.github.com. The card editor applies data/ at runtime, so a save is live once GitHub Pages has rebuilt. */
 (function () {
   'use strict';
-  const OWNER = 'chunhao0613', REPO = OWNER + '/sky-cotl', BRANCH = 'main', API = 'https://api.github.com';
+  const BRANCH = 'main', API = 'https://api.github.com';
+  // the repository this site is published from: <owner>.github.io/<repo>/ (config/github can override it)
+  function repoFromLocation() {
+    const h = location.hostname.match(/^([^.]+)\.github\.io$/i), seg = location.pathname.split('/').filter(Boolean)[0];
+    if (!h) return 'chunhao0613/sky-cotl';
+    return seg && !/\.html?$/.test(seg) ? `${h[1]}/${seg}` : `${h[1]}/${h[1]}.github.io`;
+  }
+  let REPO = repoFromLocation();
   const TOKEN_KEY = 'candle.admin.token', DRAFT_KEY = 'candle.admin.draft.v1';
   const KINDS = ['seasons', 'items', 'packs'];
   const PATH = { seasons: 'data/seasons.json', items: 'data/items.json', packs: 'data/packs.json' };
@@ -44,7 +54,6 @@
   async function signIn(t) {
     token = t;
     const me = await gh('/user').catch(e => { throw new Error(e.status === 401 ? '權杖無效或已過期。' : e.message); });
-    if (String(me.login).toLowerCase() !== OWNER) throw new Error(`這個權杖屬於 @${me.login}，只有網站擁有者能管理。`);
     const repo = await gh('/repos/' + REPO).catch(e => { throw new Error(e.status === 404 ? `權杖看不到 ${REPO}，請在 Repository access 加入它。` : e.message); });
     if (!repo.permissions || !repo.permissions.push) throw new Error(`這個帳號沒有 ${REPO} 的寫入權限。`);
     return me.login;
@@ -518,6 +527,7 @@
     if (t.id === 'save') { save(); return; }
     if (t.id === 'reload') { reload(); return; }
     if (t.id === 'logout') { logout(); return; }
+    if (t.id === 'settings') { openSettings(); return; }
   }
 
   // ── changes drawer + save ────────────────────────────────────────────────
@@ -632,7 +642,7 @@
   let wired = false;
   async function open(login) {
     $('#gate').hidden = true; $('#app').hidden = false;
-    $('#who').innerHTML = `<b>@${esc(login)}</b><button class="btn ghost small" type="button" id="logout">登出</button>`;
+    $('#who').innerHTML = `<b title="${esc(REPO)}">${esc(guser ? labelOf(guser) : '@' + login)}</b>${guser ? '<button class="btn ghost small" type="button" id="settings">設定</button>' : ''}<button class="btn ghost small" type="button" id="logout">登出</button>`;
     if (!wired) {
       wired = true;
       document.addEventListener('input', onInput);
@@ -658,8 +668,7 @@
     }
   }
 
-  // ── sign-in: Google (Firebase) with the GitHub token kept in Firestore, or a GitHub token pasted here ──
-  // admin/{uid} in Firestore holds the token; firebase/firestore.rules lets only the listed admin accounts read it.
+  // ── sign-in: Google (Firebase); the GitHub token and repository live in Firestore config/github ──
   let fb = null, fauth = null, fdb = null, guser = null, mode = 'google';
   const gateShow = id => ['#g-start', '#g-denied', '#g-setup'].forEach(x => { $(x).hidden = x !== id; });
   const gateErr = msg => { $('#g-err').textContent = msg || ''; $('#g-err').hidden = !msg; };
@@ -673,44 +682,72 @@
       if (window.FIREBASE_EMULATOR) {  // test harness only
         m.connectAuthEmulator(fauth, 'http://127.0.0.1:9099', { disableWarnings: true });
         m.connectFirestoreEmulator(fdb, '127.0.0.1', 8080);
-        window.__adminTest = { signIn: (sub, email) => fb.signInWithCredential(fauth, fb.GoogleAuthProvider.credential(JSON.stringify({ sub, email, email_verified: true }))).then(r => afterGoogle(r.user)) };
+        window.__adminTest = { signIn: (sub, email) => fb.signInWithCredential(fauth, fb.GoogleAuthProvider.credential(JSON.stringify({ sub, email, email_verified: true }))).then(r => afterGoogle(r.user)), uid: () => guser && guser.uid };
       }
       return new Promise(res => { const off = m.onAuthStateChanged(fauth, u => { off(); res(u); }); });
     });
     return loadFirebase.p;
   }
-  const adminRef = () => fb.doc(fdb, 'admin', guser.uid);
+  const cfgRef = name => fb.doc(fdb, 'config', name);
+  const labelOf = u => u.email || u.displayName || u.uid;
+  const saveGithub = (tok, repo) => fb.setDoc(cfgRef('github'), { token: tok, repo, updatedAt: fb.serverTimestamp() });
   async function afterGoogle(user) {
     guser = user; gateErr('');
     let snap;
-    try { snap = await fb.getDoc(adminRef()); }
+    try { snap = await fb.getDoc(cfgRef('github')); }
     catch (e) {
       if (e.code === 'permission-denied') return showDenied(user);
       gateShow('#g-start'); gateErr('讀取管理設定失敗：' + (e.message || e.code)); return;
     }
-    const saved = snap.exists() && snap.data().githubToken;
-    if (!saved) return showSetup('第一次使用：貼上 GitHub 權杖。它會存在只有你的 Google 帳號讀得到的地方，之後用 Google 登入就好。');
-    try { open(await signIn(saved)); }
+    let cfg = snap.exists() ? snap.data() : null;
+    if (!cfg) {  // first version kept one token per account in admin/{uid}: move it to config/github
+      try {
+        const old = await fb.getDoc(fb.doc(fdb, 'admin', user.uid));
+        if (old.exists() && old.data().githubToken) {
+          cfg = { token: old.data().githubToken, repo: REPO };
+          await saveGithub(cfg.token, cfg.repo);
+          await fb.deleteDoc(fb.doc(fdb, 'admin', user.uid));
+        }
+      } catch (e) { console.warn('legacy token', e); }
+    }
+    if (cfg && cfg.repo) REPO = cfg.repo;
+    if (!cfg || !cfg.token) return showSetup('第一次使用：貼上 GitHub 權杖，確認要存檔的 repo。它們會存在只有管理員帳號讀得到的地方，之後任何管理員用 Google 登入就好。');
+    fb.deleteDoc(fb.doc(fdb, 'requests', user.uid)).catch(() => {});  // its own access request, if it made one before
+    try { open(await signIn(cfg.token)); }
     catch (ex) { token = null; showSetup('存著的 GitHub 權杖不能用了（' + ex.message + '）請貼一個新的。'); }
+  }
+  function tokenLink() {
+    const owner = REPO.split('/')[0];
+    $('#token-link').href = 'https://github.com/settings/personal-access-tokens/new?name=candle-kit%20admin&description=' +
+      encodeURIComponent(REPO + ' 目錄管理頁') + '&target_name=' + encodeURIComponent(owner) + '&expires_in=366&contents=write';
+    $('#token-repo').textContent = REPO.split('/')[1];
   }
   function showSetup(why) {
     mode = 'google';
     $('#g-setup-why').textContent = why;
     $('#remember-row').hidden = true;
+    $('#repo-row').hidden = false;
+    $('#repo').value = REPO;
     $('#login-btn').textContent = '儲存並進入';
+    tokenLink();
     gateShow('#g-setup');
     $('#g-alt').hidden = true;
   }
   async function showDenied(user) {
-    $('#g-who').textContent = user.email || user.uid;
+    $('#g-who').textContent = labelOf(user);
+    $('#g-uid').textContent = user.uid;
+    gateShow('#g-denied');
+    try {
+      await fb.setDoc(fb.doc(fdb, 'requests', user.uid), { label: labelOf(user), createdAt: fb.serverTimestamp() });
+      $('#g-req').textContent = '已送出申請。請用已經是管理員的 Google 帳號登入這一頁，到「設定 → 管理員」核准，之後這個帳號重新整理就能進來。';
+    } catch (e) { $('#g-req').textContent = '申請沒有送出（' + (e.code || e.message) + '）。可以把上面的帳號 ID 給管理員手動加入。'; }
     let rules = '';
     try { rules = await (await fetch('firebase/firestore.rules', { cache: 'no-cache' })).text(); } catch { /* shown empty */ }
-    $('#g-rules').value = rules.replace(/function isAdmin\(uid\) \{ return uid in \[(.*?)\]; \}/, (m, list) => {
+    $('#g-rules').value = rules.replace(/function rootAdmins\(\) \{ return \[(.*?)\]; \}/, (m, list) => {
       const ids = list.split(',').map(x => x.trim()).filter(Boolean);
       if (!ids.includes(`'${user.uid}'`)) ids.push(`'${user.uid}'`);
-      return `function isAdmin(uid) { return uid in [${ids.join(', ')}]; }`;
+      return `function rootAdmins() { return [${ids.join(', ')}]; }`;
     });
-    gateShow('#g-denied');
   }
   $('#g-signin').addEventListener('click', async () => {
     const b = $('#g-signin');
@@ -731,8 +768,73 @@
     mode = 'token';
     $('#g-setup-why').textContent = '用 GitHub 權杖登入：權杖只存在這個瀏覽器，只會送到 GitHub。';
     $('#remember-row').hidden = false;
+    $('#repo-row').hidden = true;
     $('#login-btn').textContent = '登入';
+    tokenLink();
     gateShow('#g-setup'); $('#g-alt').hidden = true;
+  });
+
+  // ── settings (Google mode): repository, token, admin accounts, access requests ──
+  async function openSettings() {
+    $('#drawer').innerHTML = `<div class="drawer-in" role="dialog" aria-modal="true" aria-label="設定"><div class="drawer-head"><b>設定</b><span class="spacer"></span><button class="btn ghost small" type="button" data-drawer-close>關閉</button></div><div class="drawer-body"><p class="note">讀取中…</p></div></div>`;
+    $('#drawer').hidden = false;
+    try { await renderSettings(); } catch (e) { $('#drawer .drawer-body').innerHTML = `<p class="problems">讀取失敗：${esc(e.code || e.message)}</p>`; }
+  }
+  async function renderSettings() {
+    const [ad, rq] = await Promise.all([fb.getDoc(cfgRef('admins')), fb.getDocs(fb.collection(fdb, 'requests'))]);
+    const a = ad.exists() ? ad.data() : { uids: [], labels: {} };
+    const labels = a.labels || {};
+    const me = guser.uid;
+    const reqs = rq.docs.map(d => ({ uid: d.id, label: d.data().label || '' })).filter(r => !a.uids.includes(r.uid));
+    const row = (uid, lbl, actions) => `<div class="chg"><span class="what mono-s">${esc(uid.slice(0, 8))}</span><span>${esc(lbl || '（未命名）')}${uid === me ? ' <span class="tag gold">你</span>' : ''}</span><span class="spacer"></span>${actions}</div>`;
+    $('#drawer .drawer-body').innerHTML = `
+      <div class="file"><div class="file-head"><span class="fn">管理員</span><span class="tag">${a.uids.length || 1} 個</span></div>
+        ${a.uids.length ? a.uids.map(u => row(u, labels[u], `<button type="button" class="what" data-set="remove" data-uid="${esc(u)}">移除</button>`)).join('')
+          : row(me, labelOf(guser), '<span class="what">規則裡的固定管理員</span>')}
+        <p class="note pad">固定管理員寫在 Firebase 規則的 rootAdmins()，永遠可以登入，不會被鎖在外面。</p></div>
+      <div class="file"><div class="file-head"><span class="fn">待核准的帳號</span><span class="tag">${reqs.length}</span></div>
+        ${reqs.map(r => row(r.uid, r.label, `<button type="button" class="btn small" data-set="approve" data-uid="${esc(r.uid)}" data-label="${esc(r.label)}">核准</button><button type="button" class="what" data-set="dismiss" data-uid="${esc(r.uid)}">拒絕</button>`)).join('')
+          || '<div class="chg"><span class="what">沒有申請。新帳號登入這一頁後會自動出現在這裡。</span></div>'}</div>
+      <div class="file"><div class="file-head"><span class="fn">GitHub</span></div>
+        <div class="pad grid-g">
+          <label class="field"><span>網站 repo（搬到別的 GitHub 帳號時改這裡）</span><input class="input" id="set-repo" value="${esc(REPO)}" spellcheck="false"></label>
+          <label class="field"><span>換一個權杖 <span class="hint">留空 = 沿用現在的</span></span><input class="input" id="set-token" type="password" placeholder="github_pat_…" spellcheck="false" autocapitalize="off"></label>
+          <div><button type="button" class="btn small" data-set="github">儲存</button></div>
+        </div></div>`;
+    pendingAdmins = a;
+  }
+  let pendingAdmins = null;
+  async function writeAdmins(uids, labels) {
+    await fb.setDoc(cfgRef('admins'), { uids, labels, updatedAt: fb.serverTimestamp() });
+  }
+  $('#drawer').addEventListener('click', async e => {
+    const b = e.target.closest('[data-set]'); if (!b || !guser) return;
+    const a = pendingAdmins || { uids: [], labels: {} }, uid = b.dataset.uid;
+    b.disabled = true;
+    try {
+      if (b.dataset.set === 'approve' || b.dataset.set === 'remove') {
+        let uids = a.uids.slice(), labels = Object.assign({}, a.labels || {});
+        if (!uids.includes(guser.uid)) { uids.push(guser.uid); labels[guser.uid] = labelOf(guser); }  // first write: keep the current admin listed
+        if (b.dataset.set === 'approve') { if (!uids.includes(uid)) uids.push(uid); labels[uid] = b.dataset.label || uid; }
+        else {
+          if (uid === guser.uid && !confirm('要移除你自己嗎？之後這個帳號就不能再進來（除非它是規則裡的固定管理員）。')) { b.disabled = false; return; }
+          uids = uids.filter(x => x !== uid); delete labels[uid];
+        }
+        await writeAdmins(uids, labels);
+        if (b.dataset.set === 'approve') await fb.deleteDoc(fb.doc(fdb, 'requests', uid));
+        toast(b.dataset.set === 'approve' ? '已核准' : '已移除');
+      } else if (b.dataset.set === 'dismiss') { await fb.deleteDoc(fb.doc(fdb, 'requests', uid)); toast('已拒絕'); }
+      else if (b.dataset.set === 'github') {
+        const repo = $('#set-repo').value.trim(), tok = $('#set-token').value.trim() || token;
+        if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { toast('repo 格式是 帳號/名稱'); b.disabled = false; return; }
+        const prevRepo = REPO; REPO = repo;
+        try { await signIn(tok); } catch (ex) { REPO = prevRepo; token = token; toast('不能用：' + esc(ex.message), 6000); b.disabled = false; return; }
+        await saveGithub(tok, repo);
+        toast('已儲存，重新載入資料…');
+        if (repo !== prevRepo) setTimeout(() => location.reload(), 800);
+      }
+      await renderSettings();
+    } catch (ex) { toast('操作失敗：' + esc(ex.code || ex.message), 6000); b.disabled = false; }
   });
 
   $('#login').addEventListener('submit', async e => {
@@ -741,8 +843,14 @@
     if (!t) return;
     err.hidden = true; btn.disabled = true; btn.textContent = '確認中…';
     try {
+      if (mode === 'google') {
+        const repo = $('#repo').value.trim();
+        if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('repo 格式是 帳號/名稱，例如 chunhao0613/sky-cotl');
+        REPO = repo;
+      }
       const login = await signIn(t);
-      if (mode === 'google' && guser) await fb.setDoc(adminRef(), { githubToken: t, updatedAt: fb.serverTimestamp() });
+      if (mode === 'google' && guser) await saveGithub(t, REPO);
+      if (mode === 'google' && guser) fb.deleteDoc(fb.doc(fdb, 'requests', guser.uid)).catch(() => {});
       else { store.del(TOKEN_KEY); store.set(TOKEN_KEY, t, $('#remember').checked); }
       $('#token').value = '';
       open(login);

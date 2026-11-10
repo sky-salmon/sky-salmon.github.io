@@ -159,3 +159,7 @@ textarea { width: 100%; resize: vertical; min-height: 54px; }
 .gate-alt { text-align: center; font-size: 12.5px; }
 .link { border: 0; background: none; padding: 0; color: var(--muted); text-decoration: underline; font-size: inherit; }
 .link:hover { color: var(--ink-soft); }
+.hint-s { font-size: 12.5px; color: var(--muted) !important; word-break: break-all; }
+.note.pad, .pad { padding: 8px 12px; }
+.grid-g { display: grid; gap: 10px; }
+.mono-s { font-family: var(--mono); }
