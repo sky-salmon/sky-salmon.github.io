@@ -20,17 +20,16 @@
     <form id="login" autocomplete="off">
       <label class="field"><span>GitHub 權杖（fine-grained token）</span>
         <input class="input" id="token" type="password" placeholder="github_pat_…" spellcheck="false" autocapitalize="off" required></label>
-      <label class="switch"><input type="checkbox" id="remember"><span>在這台裝置上記住（關掉分頁也保持登入）</span></label>
+      <label class="switch"><input type="checkbox" id="remember" checked><span>在這台裝置上記住（關掉分頁也保持登入）</span></label>
       <button class="btn" type="submit" id="login-btn">登入</button>
       <p class="err" id="login-err" role="alert" hidden></p>
     </form>
-    <details>
-      <summary>怎麼建立權杖</summary>
+    <details open>
+      <summary>還沒有權杖？</summary>
       <ol>
-        <li>打開 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Fine-grained token</a>。</li>
-        <li>Repository access 選 <b>Only select repositories</b> → <code>chunhao0613/sky-cotl</code>。</li>
-        <li>Permissions → Repository permissions → <b>Contents</b> 設成 <b>Read and write</b>（其他都不用開）。</li>
-        <li>期限建議 90 天以內，產生後貼到上面。權杖外洩時到同一頁按 Revoke 作廢即可。</li>
+        <li><a href="https://github.com/settings/personal-access-tokens/new?name=candle-kit%20admin&amp;description=sky-cotl%20%E7%9B%AE%E9%8C%84%E7%AE%A1%E7%90%86%E9%A0%81&amp;target_name=chunhao0613&amp;expires_in=366&amp;contents=write" target="_blank" rel="noopener">開啟已填好的建立頁</a>（名稱、一年期限、Contents 寫入都已設定）。</li>
+        <li>Repository access 選 <b>Only select repositories</b> → <code>sky-cotl</code>（只有這項要自己點）。</li>
+        <li>按 <b>Generate token</b>，複製後貼到上面，勾著「記住」登入。之後這台裝置就不用再貼。</li>
       </ol>
     </details>
   </div>

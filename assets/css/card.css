@@ -757,3 +757,50 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 @media (prefers-reduced-motion: reduce) {
   .style-tile:hover, .height-link:hover { transform: none; }
 }
+
+/* ── cloud save + share links (assets/js/cloud.js) ─────────────────────── */
+.cloud-btn { position: relative; }
+.cloud-dot { position: absolute; right: 7px; top: 7px; width: 8px; height: 8px; border-radius: 50%; background: transparent; box-shadow: 0 0 0 2px #161a19; }
+.cloud-dot[data-state="synced"] { background: #6fbf8e; }
+.cloud-dot[data-state="busy"], .cloud-dot[data-state="dirty"] { background: var(--gold); animation: cloud-pulse 1.2s ease-in-out infinite; }
+.cloud-dot[data-state="error"], .cloud-dot[data-state="toobig"] { background: var(--red); }
+@keyframes cloud-pulse { 50% { opacity: .35; } }
+.cloud-dialog { width: min(460px, 100%); }
+.cloud-body { display: grid; gap: 14px; }
+.cloud-body p { margin: 0; color: var(--ink-soft); line-height: 1.6; }
+.cloud-body .hint { font-size: 13px; color: var(--muted); }
+.cloud-warn { padding: 10px 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); background: rgba(226, 178, 92, .08); color: var(--ink) !important; }
+.g-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 11px 16px; border-radius: 12px; background: #fff; color: #1f1f1f; border: 1px solid #dadce0; font-weight: 600; }
+.g-btn:hover:not([disabled]) { background: #f6f8fb; }
+.g-btn .g-logo { width: 18px; height: 18px; flex: none; }
+.cloud-user { display: flex; align-items: center; gap: 12px; }
+.cloud-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--gold); color: #1a1408; font-weight: 700; flex: none; }
+.cloud-who { display: grid; min-width: 0; }
+.cloud-who b { font-size: 15px; }
+.cloud-who small { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cloud-status { font-size: 14px; }
+.cloud-status[data-state="synced"] { color: #8fd1a8 !important; }
+.cloud-status[data-state="error"], .cloud-status[data-state="toobig"] { color: color-mix(in srgb, var(--red) 80%, var(--ink)) !important; }
+.cloud-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cloud-opt { display: grid; gap: 4px; text-align: left; padding: 14px; border-radius: 14px; border: 1px solid var(--line-strong); background: rgba(255, 255, 255, .03); color: var(--ink); }
+.cloud-opt:hover { border-color: var(--gold); background: rgba(226, 178, 92, .08); }
+.cloud-opt b { font-size: 15px; }
+.cloud-opt span { font-size: 12.5px; color: var(--muted); }
+.cloud-link { display: flex; gap: 8px; }
+.cloud-link .input { flex: 1; min-width: 0; font-size: 13px; }
+#cloud-foot .spacer { flex: 1; }
+#cloud-foot .cloud-danger { color: color-mix(in srgb, var(--red) 85%, var(--ink)); }
+@media (max-width: 520px) { .cloud-choice { grid-template-columns: 1fr; } }
+
+/* someone's shared card (card.html?s=…): read-only, export still works */
+.share-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; margin-bottom: 14px; padding: 12px 14px 12px 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--gold) 50%, transparent); background: rgba(226, 178, 92, .08); }
+.share-banner p { margin: 0; font-size: 14px; color: var(--ink); }
+.share-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.is-viewing .styles, .is-viewing .controls-col, .is-viewing .stage-hint, .is-viewing [data-cloud],
+.is-viewing #btn-undo, .is-viewing #btn-redo, .is-viewing #btn-reset, .is-viewing .toolbar .tool:has(#btn-undo, #btn-redo, #btn-reset, #btn-preview), .is-viewing .toolbar .tool-sep { display: none !important; }
+.is-viewing .studio { grid-template-columns: minmax(0, 1fr); }
+/* phones: the cloud tools take a second toolbar row (the separator before them becomes the line break) */
+@media (max-width: 560px) {
+  .toolbar { flex-wrap: wrap; row-gap: 12px; }
+  .toolbar .tool-sep[data-cloud] { flex-basis: 100%; height: 0; margin: 0; background: none; }
+}

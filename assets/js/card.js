@@ -117,7 +117,10 @@
   }
   const assetURL = id => (id && assets[id]) || '';
 
-  let state = normalize(store.get(KEY, null)) || fromV2() || sample();
+  // card.html?s=<id> shows a card someone shared (assets/js/cloud.js loads it); nothing is saved while viewing one
+  const SHARE_ID = (new URLSearchParams(location.search).get('s') || '').replace(/[^\w-]/g, '').slice(0, 64) || null;
+  let viewing = !!SHARE_ID;
+  let state = viewing ? blank() : (normalize(store.get(KEY, null)) || fromV2() || sample());
 
   // ── history + persistence ────────────────────────────────────────────────
   const history = { stack: [], index: -1 };
@@ -134,6 +137,7 @@
   let saveTimer = 0, warned = false;
   function save() {
     clearTimeout(saveTimer);
+    if (viewing) return;
     saveTimer = setTimeout(() => {
       // drop assets nothing refers to any more (current state, undo history, icon library)
       const refs = new Set(lib);
@@ -141,6 +145,7 @@
       Object.keys(assets).forEach(id => { if (!refs.has(id)) delete assets[id]; });
       const ok = store.set(KEY, state) && store.set(KEY_ASSETS, assets) && store.set(KEY_LIB, lib);
       if (!ok && !warned) { warned = true; toast(t('瀏覽器空間不足或封鎖儲存，重新整理後可能遺失內容')); }
+      if (window.Cloud) window.Cloud.changed();
     }, 250);
   }
   let commitTimer = 0;
@@ -1443,6 +1448,51 @@
     }
   }
 
+  // ── cloud save + share links (assets/js/cloud.js) ────────────────────────
+  const refsIn = str => (str.match(/"a[0-9a-z]{6,}"/g) || []).map(m => m.slice(1, -1));
+  const isSampleState = s => JSON.stringify(s) === JSON.stringify(normalize(sample()));
+  // the card plus the images it uses; a share leaves out the private icon library
+  function cardData(forShare) {
+    flushText();
+    const s = snap(), used = new Set(refsIn(s));
+    if (!forShare) lib.forEach(id => used.add(id));
+    const a = {};
+    used.forEach(id => { if (assets[id]) a[id] = assets[id]; });
+    return forShare ? { state: JSON.parse(s), assets: a } : { state: JSON.parse(s), assets: a, lib: lib.filter(id => a[id]) };
+  }
+  function loadCardData(d, keep) {
+    const s = normalize(d && d.state);
+    if (!s) return false;
+    Object.keys(assets).forEach(k => delete assets[k]);
+    Object.entries((d && d.assets) || {}).forEach(([k, v]) => { if (/^a[0-9a-z]{6,}$/.test(k) && /^data:image\//.test(v)) assets[k] = v; });
+    if (Array.isArray(d.lib)) lib = d.lib.filter(id => assets[id]);
+    state = s;
+    history.stack = []; history.index = -1;
+    closePop(); renderAll(); pushHistory();
+    if (keep) save();
+    return true;
+  }
+  // keep the shared card being viewed as this device's card; the viewer's own icon library stays
+  function adoptShared() {
+    const mine = store.get(KEY_ASSETS, {}) || {}, myLib = (store.get(KEY_LIB, []) || []).filter(id => mine[id]);
+    myLib.forEach(id => { if (!assets[id]) assets[id] = mine[id]; });
+    lib = myLib;
+    flushText();
+    if (!(store.set(KEY, state) && store.set(KEY_ASSETS, assets) && store.set(KEY_LIB, lib))) { toast(t('瀏覽器空間不足或封鎖儲存，重新整理後可能遺失內容')); return; }
+    location.replace(location.pathname);
+  }
+  window.CardApp = {
+    data: cardData, load: loadCardData, adopt: adoptShared, openModal, closeModal,
+    viewing: () => (viewing ? SHARE_ID : null),
+    isSample: () => isSampleState(state),
+    ownIsSample: () => { const own = normalize(store.get(KEY, null)); return !own || isSampleState(own); }
+  };
+  if (viewing) {  // show exactly what the image would contain, without the editing controls
+    document.body.classList.add('is-viewing');
+    cardEl.inert = true;
+    previewMode = true;
+  }
+
   // ── boot ──────────────────────────────────────────────────────────────────
   function renderAll() { renderMain(); syncStrip(); renderCols(); syncThemeUI(); syncSizeUI(); renderThumbs(); }
   renderAll();
@@ -1451,5 +1501,5 @@
   D.loadCatalog().then(() => { renderMain(); renderCols(); renderThumbs(); }).catch(() => {});
   if (document.fonts) document.fonts.ready.then(() => { fitStage(); updateMeta(); renderThumbs(); });
   addEventListener('load', () => { fitStage(); renderThumbs(); });
-  window.addEventListener('pageshow', e => { if (e.persisted) { state = normalize(store.get(KEY, null)) || state; renderAll(); } });
+  window.addEventListener('pageshow', e => { if (e.persisted && !viewing) { state = normalize(store.get(KEY, null)) || state; renderAll(); } });
 })();
