@@ -5,27 +5,33 @@
   'use strict';
 
   // ── item catalogue (folders under assets/icons, listed in icons.csv) ──────────
-  // Icons live in one folder per game type (dir). icons.csv also carries `kind` (finer than the closet
-  // tabs; folded back into them via KIND_ALIAS) and `season` (from the game's
-  // OutfitDefs, so it is right even when the file name has no or a misleading APxx). Old saved cards keep
-  // working because file paths never change; their category/season are corrected once the catalogue loads.
-  // zh labels follow the closet tabs (hat = 髮飾, horn = 頭飾, face = 面飾); dirs are kept as-is for saved cards.
+  // Icons live in one folder per game type (dir); saved cards store those paths, so dirs never change.
+  // The display category comes from icons.csv `group` (built from the game's OutfitDefs):
+  //   pass   = season pendants; the season's ultimate gifts (畢業禮, csv `ultimate`) are listed here too
+  //   top    = outfits that can be worn with shoes; outfit = one-piece outfits that can't (isOnesie)
+  //   head   = hair and head accessories (game types hat + horn); ear = earrings
+  // `season` also comes from OutfitDefs (plus props the wiki attaches to a season), not from APxx in names.
   const CATS = [
-    { dir: '01_斗篷_Cape', id: 'cape', zh: '斗篷' },
-    { dir: '02_面具_Mask', id: 'mask', zh: '面具' },
-    { dir: '03_髮型_Hair', id: 'hair', zh: '髮型' },
-    { dir: '04_服裝_Outfit', id: 'outfit', zh: '服裝' },
-    { dir: '05_頭飾_Headwear', id: 'hat', zh: '髮飾' },
-    { dir: '06_項鍊_Necklace', id: 'neck', zh: '項鍊' },
-    { dir: '07_角_Horn', id: 'horn', zh: '頭飾' },
-    { dir: '08_鞋子_Shoes', id: 'shoes', zh: '鞋子' },
-    { dir: '09_臉飾_FaceAccessory', id: 'face', zh: '面飾' },
-    { dir: '10_道具_Prop', id: 'prop', zh: '道具' }
+    { id: 'pass', zh: '項鍊（含畢業禮）' },
+    { id: 'top', zh: '上衣' },
+    { id: 'shoes', zh: '鞋子' },
+    { id: 'outfit', zh: '服裝' },
+    { id: 'mask', zh: '面具' },
+    { id: 'face', zh: '面飾' },
+    { id: 'neck', zh: '項鍊' },
+    { id: 'hair', zh: '頭髮' },
+    { id: 'head', zh: '頭飾' },
+    { id: 'ear', zh: '耳飾' },
+    { id: 'cape', zh: '斗篷' },
+    { id: 'prop', zh: '道具' }
   ];
-  const CAT_BY_DIR = Object.fromEntries(CATS.filter(c => c.dir).map(c => [c.dir, c]));
   const CAT_BY_ID = Object.fromEntries(CATS.map(c => [c.id, c]));
-  // The closet lists instruments, fireworks and everything placeable under props, so the site does too.
-  const KIND_ALIAS = { fireworks: 'prop', instrument: 'prop', placeable: 'prop', furniture: 'prop' };
+  // icon folder → category, used until icons.csv has loaded (and as the fallback for older csv files)
+  const DIR_CAT = {
+    '01_斗篷_Cape': 'cape', '02_面具_Mask': 'mask', '03_髮型_Hair': 'hair', '04_服裝_Outfit': 'top',
+    '05_頭飾_Headwear': 'head', '06_項鍊_Necklace': 'neck', '07_角_Horn': 'head', '08_鞋子_Shoes': 'shoes',
+    '09_臉飾_FaceAccessory': 'face', '10_道具_Prop': 'prop'
+  };
 
   // Season number as used in the game data (season_NN = the (N-1)th season since global launch).
   // Traditional Chinese names follow the zh Sky fan wiki; 32 (Season of Pearl) has no published
@@ -73,7 +79,7 @@
     return [`AP${code}`, s.zh, s.en].filter(Boolean).join(' · ');
   }
 
-  // path → { cat, season } from icons.csv, filled by loadCatalog()
+  // path → { cat, season, ult } from icons.csv, filled by loadCatalog()
   const META = new Map();
 
   // "03_髮型_Hair/CharSkyKid_Hair_AP21FancyUpdo" → readable bits
@@ -90,17 +96,18 @@
       .replace(/([a-z])([A-Z0-9])/g, '$1 $2')
       .replace(/\s+/g, ' ').trim() || name;
     const meta = META.get(path);
-    let season, catId;
+    let season, catId, ult = false;
     if (meta) {
       season = meta.season;
       catId = meta.cat;
-    } else { // catalogue not loaded yet (or an old csv): fall back to the file name
+      ult = meta.ult;
+    } else { // catalogue not loaded yet (or an old csv): fall back to the folder and the file name
       const m = name.match(/_AP(\d{2})/);
       season = m ? m[1] : null;
-      catId = CAT_BY_DIR[dir] ? CAT_BY_DIR[dir].id : 'prop';
+      catId = DIR_CAT[dir] || 'prop';
     }
     const cat = CAT_BY_ID[catId];
-    return { dir, name, season, label, cat: catId, catZh: cat ? cat.zh : '' };
+    return { dir, name, season, label, cat: catId, catZh: (cat ? cat.zh : '') + (ult ? '・畢業禮' : ''), ult };
   }
   function iconURL(path) {
     return 'assets/icons/' + path.split('/').map(encodeURIComponent).join('/') + '.png';
@@ -117,18 +124,19 @@
         const head = lines[0].split(',').map(h => h.trim());
         const col = n => head.indexOf(n);
         const iDir = col('category'), iName = col('name'), iIcon = col('icon'), iStatus = col('status'),
-          iKind = col('kind'), iSeason = col('season');
+          iSeason = col('season'), iGroup = col('group'), iUlt = col('ultimate');
         const rows = [];
         lines.slice(1).forEach(line => {
           const f = line.split(',');
           const dir = f[iDir], name = f[iName], status = (f[iStatus] || '').trim();
-          if (!dir || !name || (status && status !== 'ok') || !CAT_BY_DIR[dir]) return;
+          if (!dir || !name || (status && status !== 'ok') || !DIR_CAT[dir]) return;
           const path = dir + '/' + name;
-          const kind = iKind >= 0 ? (KIND_ALIAS[f[iKind]] || f[iKind]) : '';
+          const group = iGroup >= 0 ? (f[iGroup] || '').trim() : '';
           const season = iSeason >= 0 ? ((f[iSeason] || '').trim() || null) : undefined;
-          if (kind || season !== undefined) META.set(path, {
-            cat: CAT_BY_ID[kind] ? kind : CAT_BY_DIR[dir].id,
-            season: season === undefined ? ((name.match(/_AP(\d{2})/) || [])[1] || null) : season
+          if (group || season !== undefined) META.set(path, {
+            cat: CAT_BY_ID[group] ? group : DIR_CAT[dir],
+            season: season === undefined ? ((name.match(/_AP(\d{2})/) || [])[1] || null) : season,
+            ult: iUlt >= 0 && (f[iUlt] || '').trim() === '1'
           });
           rows.push({ path, dir, icon: f[iIcon] || name });
         });
@@ -344,7 +352,7 @@
   ];
 
   window.CardData = {
-    CATS, SEASONS, seasonName, seasonFull, parsePath, iconURL, loadCatalog,
+    CATS, CAT_BY_ID, SEASONS, seasonName, seasonFull, parsePath, iconURL, loadCatalog,
     CURRENCIES, GLYPH, PINS, LINKS, GRADIENTS, gradientCSS, SOLIDS, FONTS,
     WALLPAPERS, wallpaperURL, textureURL, PAPERS
   };

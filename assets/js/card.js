@@ -864,10 +864,11 @@
     }
     const q = pk.q.trim().toLowerCase();
     let list = pk.catalog.filter(i =>
-      (pk.cat === 'all' || i.cat === pk.cat) &&
+      (pk.cat === 'all' || i.cat === pk.cat || (pk.cat === 'pass' && i.ult)) &&  // 畢業禮 also listed under 項鍊（含畢業禮）
       (pk.season === 'all' || (pk.season === 'none' ? !i.season : i.season === pk.season)) &&
       (!q || (i.label + ' ' + i.name + ' ' + i.catZh + ' ' + (i.season ? D.seasonFull(i.season) : '')).toLowerCase().includes(q)));
     if (pk.sec === 'pass' && pk.season === 'all' && !q) list = list.filter(i => i.season);
+    if (pk.cat === 'pass') list.sort((a, b) => (b.cat === 'pass') - (a.cat === 'pass')); // pendant first, then 畢業禮
     const bySeason = pk.sec === 'pass' || (pk.season !== 'all' && pk.season !== 'none');
     const groups = new Map();
     list.forEach(i => {
