@@ -1,0 +1,429 @@
+{
+ "_about": "季節清單：網站、翻譯與抽取腳本的唯一來源。code = 遊戲資料的 season_NN（第 NN-1 個季節）。",
+ "_fields": {
+  "code": "兩位數季號",
+  "zh": "繁中名（粉絲 wiki 譯名）",
+  "zh_hans": "簡中名；留空時由 OpenCC 從 zh 轉換",
+  "en": "英文名",
+  "ultimates": "畢業禮（物品內部名稱）",
+  "start": "開始日期 YYYY-MM-DD",
+  "end": "結束日期",
+  "note": "備註"
+ },
+ "seasons": [
+  {
+   "code": "02",
+   "zh": "感恩季",
+   "zh_hans": "",
+   "en": "Gratitude",
+   "ultimates": [
+    "CharSkyKid_Mask_AP02Deer_01"
+   ],
+   "start": "2019-07-19",
+   "end": "2019-09-02",
+   "note": ""
+  },
+  {
+   "code": "03",
+   "zh": "追光季",
+   "zh_hans": "",
+   "en": "Lightseekers",
+   "ultimates": [
+    "CharSkyKid_Prop_AP03Umbrella_02"
+   ],
+   "start": "2019-09-23",
+   "end": "2019-11-10",
+   "note": ""
+  },
+  {
+   "code": "04",
+   "zh": "歸屬季",
+   "zh_hans": "",
+   "en": "Belonging",
+   "ultimates": [
+    "CharSkyKid_Prop_AP04Bonfire"
+   ],
+   "start": "2019-11-18",
+   "end": "2020-01-12",
+   "note": ""
+  },
+  {
+   "code": "05",
+   "zh": "音韻季",
+   "zh_hans": "",
+   "en": "Rhythm",
+   "ultimates": [
+    "CharSkyKid_Mask_APDefault",
+    "CharSkyKid_Hair_AP05Director_01"
+   ],
+   "start": "2020-01-24",
+   "end": "2020-04-05",
+   "note": ""
+  },
+  {
+   "code": "06",
+   "zh": "魔法季",
+   "zh_hans": "",
+   "en": "Enchantment",
+   "ultimates": [
+    "CharSkyKid_Horn_AP06Tassel",
+    "CharSkyKid_Hair_AP06Turban_01"
+   ],
+   "start": "2020-04-20",
+   "end": "2020-06-21",
+   "note": ""
+  },
+  {
+   "code": "07",
+   "zh": "聖島季",
+   "zh_hans": "",
+   "en": "Sanctuary",
+   "ultimates": [
+    "CharSkyKid_Prop_AP07HandPan",
+    "CharSkyKid_Wing_AP07Manta_01"
+   ],
+   "start": "2020-07-13",
+   "end": "2020-09-20",
+   "note": ""
+  },
+  {
+   "code": "08",
+   "zh": "預言季",
+   "zh_hans": "",
+   "en": "Prophecy",
+   "ultimates": [
+    "CharSkyKid_Prop_AP08Dundun",
+    "CharSkyKid_Mask_AP08Wolf"
+   ],
+   "start": "2020-10-05",
+   "end": "2020-12-13",
+   "note": ""
+  },
+  {
+   "code": "09",
+   "zh": "夢想季",
+   "zh_hans": "",
+   "en": "Dreams",
+   "ultimates": [
+    "CharSkyKid_Mask_AP09Phoenix_01",
+    "CharSkyKid_Wing_AP09Phoenix_01"
+   ],
+   "start": "2021-01-04",
+   "end": "2021-03-14",
+   "note": ""
+  },
+  {
+   "code": "10",
+   "zh": "集結季",
+   "zh_hans": "",
+   "en": "Assembly",
+   "ultimates": [
+    "CharSkyKid_Mask_AP10QuestGiver_01",
+    "CharSkyKid_Hair_AP10PotHat_01",
+    "CharSkyKid_Prop_AP10Bugle_01",
+    "CharSkyKid_Wing_AP10YellowCape_01"
+   ],
+   "start": "2021-04-05",
+   "end": "2021-06-13",
+   "note": ""
+  },
+  {
+   "code": "11",
+   "zh": "小王子季",
+   "zh_hans": "",
+   "en": "The Little Prince",
+   "ultimates": [
+    "CharSkyKid_Hair_AP11Prince_01",
+    "CharSkyKid_Body_AP11GreenPajama_01",
+    "CharSkyKid_Prop_AP11Rose_01"
+   ],
+   "start": "2021-07-06",
+   "end": "2021-09-19",
+   "note": ""
+  },
+  {
+   "code": "12",
+   "zh": "飛翔季",
+   "zh_hans": "",
+   "en": "Flight",
+   "ultimates": [
+    "CharSkyKid_Horn_AP12DeluxeFeather_01",
+    "CharSkyKid_Body_AP12GradientTunic_01"
+   ],
+   "start": "2021-10-04",
+   "end": "2021-12-19",
+   "note": ""
+  },
+  {
+   "code": "13",
+   "zh": "深淵季",
+   "zh_hans": "",
+   "en": "Abyss",
+   "ultimates": [
+    "CharSkyKid_Horn_AP13Braids_01",
+    "CharSkyKid_Mask_AP13Snorkel_01",
+    "CharSkyKid_Wing_AP13NobleCloak_01"
+   ],
+   "start": "2022-01-17",
+   "end": "2022-03-27",
+   "note": ""
+  },
+  {
+   "code": "14",
+   "zh": "表演季",
+   "zh_hans": "",
+   "en": "Performance",
+   "ultimates": [
+    "CharSkyKid_Mask_AP14LongTufts_01",
+    "CharSkyKid_Wing_AP14Tuxedo_01",
+    "CharSkyKid_Hair_AP14TuftedDirector_01"
+   ],
+   "start": "2022-04-11",
+   "end": "2022-06-26",
+   "note": ""
+  },
+  {
+   "code": "15",
+   "zh": "破曉季",
+   "zh_hans": "",
+   "en": "Shattering",
+   "ultimates": [
+    "CharSkyKid_Wing_AP15BigManta_01",
+    "CharSkyKid_Wing_AP15Krill_01"
+   ],
+   "start": "2022-07-11",
+   "end": "2022-09-26",
+   "note": ""
+  },
+  {
+   "code": "16",
+   "zh": "AURORA季",
+   "zh_hans": "",
+   "en": "AURORA",
+   "ultimates": [
+    "CharSkyKid_Hair_AP16ClassicAurora",
+    "CharSkyKid_Body_AP16BlueSeed",
+    "CharSkyKid_Wing_AP16ButterflyBlue"
+   ],
+   "start": "2022-10-17",
+   "end": "2023-01-02",
+   "note": ""
+  },
+  {
+   "code": "17",
+   "zh": "緬懷季",
+   "zh_hans": "",
+   "en": "Remembrance",
+   "ultimates": [
+    "CharSkyKid_Neck_AP17Sash",
+    "CharSkyKid_Prop_AP17UltimateMemoryBook"
+   ],
+   "start": "2023-01-16",
+   "end": "2023-04-02",
+   "note": ""
+  },
+  {
+   "code": "18",
+   "zh": "夜行季",
+   "zh_hans": "",
+   "en": "Passage",
+   "ultimates": [
+    "CharSkyKid_Mask_AP18Bear",
+    "CharSkyKid_Wing_AP18FurryGuard"
+   ],
+   "start": "2023-04-17",
+   "end": "2023-07-02",
+   "note": ""
+  },
+  {
+   "code": "19",
+   "zh": "拾光季",
+   "zh_hans": "",
+   "en": "Moments",
+   "ultimates": [
+    "CharSkyKid_Horn_AP19Glasses",
+    "CharSkyKid_Prop_AP19UltimateCamera",
+    "CharSkyKid_Horn_AP19WesternHat"
+   ],
+   "start": "2023-07-17",
+   "end": "2023-10-01",
+   "note": ""
+  },
+  {
+   "code": "20",
+   "zh": "歸巢季",
+   "zh_hans": "",
+   "en": "Revival",
+   "ultimates": [
+    "CharSkyKid_Hair_AP20Maypole",
+    "CharSkyKid_Wing_AP20MaypoleScarf"
+   ],
+   "start": "2023-10-16",
+   "end": "2023-12-31",
+   "note": ""
+  },
+  {
+   "code": "21",
+   "zh": "九色鹿季",
+   "zh_hans": "",
+   "en": "Nine-Colored Deer",
+   "ultimates": [
+    "CharSkyKid_Hair_AP21FancyUpdo",
+    "CharSkyKid_Body_AP21SilkRaiment",
+    "CharSkyKid_Wing_AP21SilkSash"
+   ],
+   "start": "2024-01-15",
+   "end": "2024-03-31",
+   "note": ""
+  },
+  {
+   "code": "22",
+   "zh": "築巢季",
+   "zh_hans": "",
+   "en": "Nesting",
+   "ultimates": [
+    "CharSkyKid_Body_AP22Designer",
+    "CharSkyKid_Prop_MannequinFigurine"
+   ],
+   "start": "2024-04-15",
+   "end": "2024-06-30",
+   "note": ""
+  },
+  {
+   "code": "23",
+   "zh": "二重奏季",
+   "zh_hans": "",
+   "en": "Duets",
+   "ultimates": [
+    "CharSkyKid_Prop_AP23WallPosterDuet",
+    "CharSkyKid_Wing_AP23PianistCloak",
+    "CharSkyKid_Prop_AP23PlaceablePianoFancy"
+   ],
+   "start": "2024-07-15",
+   "end": "2024-09-29",
+   "note": ""
+  },
+  {
+   "code": "24",
+   "zh": "姆明季",
+   "zh_hans": "",
+   "en": "Moomin",
+   "ultimates": [
+    "CharSkyKid_Prop_AP24Umbrella",
+    "CharSkyKid_Prop_AP24ClassicPlush",
+    "CharSkyKid_Body_AP24Bell"
+   ],
+   "start": "2024-10-14",
+   "end": "2024-12-29",
+   "note": ""
+  },
+  {
+   "code": "25",
+   "zh": "彩染季",
+   "zh_hans": "",
+   "en": "Radiance",
+   "ultimates": [
+    "CharSkyKid_Wing_AP25DyeCloth",
+    "CharSkyKid_Mask_AP25Gazelle"
+   ],
+   "start": "2025-01-20",
+   "end": "2025-04-06",
+   "note": ""
+  },
+  {
+   "code": "26",
+   "zh": "青鳥季",
+   "zh_hans": "",
+   "en": "Blue Bird",
+   "ultimates": [
+    "CharSkyKid_Face_AP26BlueWings",
+    "CharSkyKid_Wing_AP26BlueBird"
+   ],
+   "start": "2025-04-21",
+   "end": "2025-07-06",
+   "note": ""
+  },
+  {
+   "code": "27",
+   "zh": "雙星季",
+   "zh_hans": "",
+   "en": "Two Embers",
+   "ultimates": [
+    "CharSkyKid_Hat_AP27Constellation",
+    "CharSkyKid_Wing_AP27NightElder"
+   ],
+   "start": "2025-07-21",
+   "end": "2025-10-05",
+   "note": ""
+  },
+  {
+   "code": "28",
+   "zh": "遷徙季",
+   "zh_hans": "",
+   "en": "Migration",
+   "ultimates": [
+    "CharSkyKid_Feet_AP28FluffyBoots",
+    "CharSkyKid_Body_AP28FurTrim",
+    "CharSkyKid_Face_AP28AntlerHelm"
+   ],
+   "start": "2025-10-20",
+   "end": "2026-01-04",
+   "note": ""
+  },
+  {
+   "code": "29",
+   "zh": "織光季",
+   "zh_hans": "",
+   "en": "Lightmending",
+   "ultimates": [
+    "CharSkyKid_Mask_AP29RepairedA",
+    "CharSkyKid_Hair_AP29Highlights",
+    "CharSkyKid_Wing_AP29LightStrands"
+   ],
+   "start": "2026-01-16",
+   "end": "2026-04-02",
+   "note": ""
+  },
+  {
+   "code": "30",
+   "zh": "狂歡季",
+   "zh_hans": "",
+   "en": "Carnival",
+   "ultimates": [
+    "CharSkyKid_Hair_AP30TaperDirector",
+    "CharSkyKid_Wing_AP30SpiritBird"
+   ],
+   "start": "2026-04-17",
+   "end": "2026-07-02",
+   "note": ""
+  },
+  {
+   "code": "31",
+   "zh": "致梵谷",
+   "zh_hans": "",
+   "en": "Dear Van Gogh",
+   "ultimates": [
+    "CharSkyKid_Hair_AP31AlmondBlossom",
+    "CharSkyKid_Wing_AP31AlmondBlossom",
+    "CharSkyKid_Prop_AP31BlossomTea"
+   ],
+   "start": "2026-07-17",
+   "end": "2026-10-01",
+   "note": ""
+  },
+  {
+   "code": "32",
+   "zh": "珍珠季",
+   "zh_hans": "",
+   "en": "Pearl",
+   "ultimates": [
+    "CharSkyKid_Hat_AP32Pearl",
+    "CharSkyKid_Prop_AP32PearlCouch",
+    "CharSkyKid_Wing_AP32BlueTear"
+   ],
+   "start": "2026-10-16",
+   "end": "2026-12-31",
+   "note": "暫譯：官方中文名稱尚未公布"
+  }
+ ]
+}

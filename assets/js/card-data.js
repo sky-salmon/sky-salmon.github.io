@@ -38,43 +38,14 @@
     '09_臉飾_FaceAccessory': 'face', '10_道具_Prop': 'prop', '11_魔法_Spells': 'spell'
   };
 
-  // Season number as used in the game data (season_NN = the (N-1)th season since global launch).
-  // Traditional Chinese names follow the zh Sky fan wiki; 32 (Season of Pearl) has no published
-  // Chinese name yet, so 珍珠季 is provisional.
-  const SEASONS = {
-    '01': { en: '' },
-    '02': { zh: t('感恩季'), en: 'Gratitude' },
-    '03': { zh: t('追光季'), en: 'Lightseekers' },
-    '04': { zh: t('歸屬季'), en: 'Belonging' },
-    '05': { zh: t('音韻季'), en: 'Rhythm' },
-    '06': { zh: t('魔法季'), en: 'Enchantment' },
-    '07': { zh: t('聖島季'), en: 'Sanctuary' },
-    '08': { zh: t('預言季'), en: 'Prophecy' },
-    '09': { zh: t('夢想季'), en: 'Dreams' },
-    '10': { zh: t('集結季'), en: 'Assembly' },
-    '11': { zh: t('小王子季'), en: 'The Little Prince' },
-    '12': { zh: t('飛翔季'), en: 'Flight' },
-    '13': { zh: t('深淵季'), en: 'Abyss' },
-    '14': { zh: t('表演季'), en: 'Performance' },
-    '15': { zh: t('破曉季'), en: 'Shattering' },
-    '16': { zh: t('AURORA季'), en: 'AURORA' },
-    '17': { zh: t('緬懷季'), en: 'Remembrance' },
-    '18': { zh: t('夜行季'), en: 'Passage' },
-    '19': { zh: t('拾光季'), en: 'Moments' },
-    '20': { zh: t('歸巢季'), en: 'Revival' },
-    '21': { zh: t('九色鹿季'), en: 'Nine-Colored Deer' },
-    '22': { zh: t('築巢季'), en: 'Nesting' },
-    '23': { zh: t('二重奏季'), en: 'Duets' },
-    '24': { zh: t('姆明季'), en: 'Moomin' },
-    '25': { zh: t('彩染季'), en: 'Radiance' },
-    '26': { zh: t('青鳥季'), en: 'Blue Bird' },
-    '27': { zh: t('雙星季'), en: 'Two Embers' },
-    '28': { zh: t('遷徙季'), en: 'Migration' },
-    '29': { zh: t('織光季'), en: 'Lightmending' },
-    '30': { zh: t('狂歡季'), en: 'Carnival' },
-    '31': { zh: t('致梵谷'), en: 'Dear Van Gogh' },
-    '32': { zh: t('珍珠季'), en: 'Pearl' }
-  };
+  // Seasons come from data/seasons.json via assets/js/seasons-data.js (scripts/build_catalog.py).
+  // season_NN in the game data = the (N-1)th season since global launch. Each entry: { zh, en } in the page language
+  // (zh is the Simplified name in 简体中文 and the English name in English, so labels don't double up).
+  const LANG = window.I18N ? window.I18N.lang : 'zh-Hant';
+  const SEASONS = { '01': { en: '' } };
+  (window.SKY_SEASONS || []).forEach(s => {
+    SEASONS[s.code] = { zh: LANG === 'en' ? s.en : LANG === 'zh-Hans' ? s.zh_hans : s.zh, en: s.en, start: s.start, end: s.end };
+  });
   function seasonName(code) {
     const s = SEASONS[code];
     return (s && (s.zh || s.en)) || `AP${code}`;
@@ -106,6 +77,7 @@
       .replace(/([a-z])([A-Z0-9])/g, '$1 $2')
       .replace(/\s+/g, ' ').trim() || name;
     const meta = META.get(path);
+    const shown = meta && (LANG === 'en' ? meta.nameEn : meta.nameZh);  // name set in data/items.json
     let season, catId, ult = false;
     if (meta) {
       season = meta.season;
@@ -117,7 +89,7 @@
       catId = DIR_CAT[dir] || 'prop';
     }
     const cat = CAT_BY_ID[catId];
-    return { dir, name, season, label, cat: catId, catZh: (cat ? cat.zh : '') + (ult ? t('・畢業禮') : ''), ult,
+    return { dir, name, season, label: shown || label, cat: catId, catZh: (cat ? cat.zh : '') + (ult ? t('・畢業禮') : ''), ult,
       order: meta ? meta.order : 1e9, usd: meta ? meta.usd : '', pack: meta ? meta.pack : '', iap: meta ? meta.iap : '' };
   }
   function iconURL(path) {
@@ -136,7 +108,8 @@
         const col = n => head.indexOf(n);
         const iDir = col('category'), iName = col('name'), iIcon = col('icon'), iStatus = col('status'),
           iSeason = col('season'), iGroup = col('group'), iUlt = col('ultimate'), iOrder = col('order'),
-          iUsd = col('iap_usd'), iPack = col('iap_pack'), iIap = col('iap_status');
+          iUsd = col('iap_usd'), iPack = col('iap_pack'), iIap = col('iap_status'),
+          iNameZh = col('name_zh'), iNameEn = col('name_en'), iPackZh = col('iap_pack_zh');
         const rows = [];
         lines.slice(1).forEach(line => {
           const f = line.split(',');
@@ -151,7 +124,9 @@
             ult: iUlt >= 0 && (f[iUlt] || '').trim() === '1',
             order: iOrder >= 0 ? (parseInt(f[iOrder], 10) || 0) : 0,
             usd: iUsd >= 0 ? (f[iUsd] || '').trim() : '',   // pack price in USD, '?' = paid but price unknown
-            pack: iPack >= 0 ? (f[iPack] || '').trim() : '',
+            pack: (LANG !== 'en' && iPackZh >= 0 && (f[iPackZh] || '').trim()) || (iPack >= 0 ? (f[iPack] || '').trim() : ''),
+            nameZh: iNameZh >= 0 ? (f[iNameZh] || '').trim() : '',
+            nameEn: iNameEn >= 0 ? (f[iNameEn] || '').trim() : '',
             iap: iIap >= 0 ? (f[iIap] || '').trim() : ''    // confirmed / game-only / wiki-only
           });
           rows.push({ path, dir, icon: f[iIcon] || name });

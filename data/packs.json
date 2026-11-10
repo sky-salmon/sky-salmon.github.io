@@ -1,0 +1,2724 @@
+{
+ "_about": "內購禮包。usd 是整包價格；items 是禮包內容（物品內部名稱）。",
+ "_fields": {
+  "id": "遊戲內購 ID（wiki-only 的以 wiki: 開頭）",
+  "name_en": "英文名稱",
+  "name_zh": "繁中名稱",
+  "usd": "美金價格；null = 未知",
+  "items": "內容物",
+  "event": "季節或活動標記（遊戲資料，如 season_31、mischief_26）",
+  "year": "年份",
+  "status": "confirmed / game-only / wiki-only",
+  "note": "備註"
+ },
+ "packs": [
+  {
+   "id": "XSNC01",
+   "name_en": "Sunheadband",
+   "name_zh": "",
+   "usd": null,
+   "items": [
+    "CharSkyKid_Hat_SunflowerHeadband"
+   ],
+   "event": "",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "XSNC02",
+   "name_en": "Sprouthat",
+   "name_zh": "",
+   "usd": null,
+   "items": [
+    "CharSkyKid_Hat_Sprout"
+   ],
+   "event": "",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "XSNC03",
+   "name_en": "Sunflowerneck",
+   "name_zh": "",
+   "usd": null,
+   "items": [
+    "CharSkyKid_Neck_SunflowerTie"
+   ],
+   "event": "",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "XSNC04",
+   "name_en": "Sunflowerskirt",
+   "name_zh": "",
+   "usd": null,
+   "items": [
+    "CharSkyKid_Body_SunflowerSkirt"
+   ],
+   "event": "",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC72",
+   "name_en": "Flower + FlOw Pack",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Horn_FlowerPS",
+    "CharSkyKid_Wing_Flow"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC71",
+   "name_en": "Transcendent Journey Pack",
+   "name_zh": "",
+   "usd": 24.99,
+   "items": [
+    "CharSkyKid_Hair_Traveler_02",
+    "CharSkyKid_Wing_Traveler_02",
+    "CharSkyKid_Mask_Traveler_02"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC70",
+   "name_en": "Journey Pack",
+   "name_zh": "",
+   "usd": 24.99,
+   "items": [
+    "CharSkyKid_Hair_Traveler_01",
+    "CharSkyKid_Wing_Traveler_01",
+    "CharSkyKid_Mask_Traveler_01"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC32",
+   "name_en": "Little Prince Asteroid Jacket",
+   "name_zh": "",
+   "usd": 24.99,
+   "items": [
+    "CharSkyKid_Wing_AP11GreenCoat_01"
+   ],
+   "event": "season_11",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC29",
+   "name_en": "Little Prince Scarf Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_AP11Scarf_01"
+   ],
+   "event": "season_11",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC30",
+   "name_en": "Little Prince Fox",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Prop_AP11Fox_01"
+   ],
+   "event": "season_11",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC68",
+   "name_en": "Wings of AURORA",
+   "name_zh": "",
+   "usd": 24.99,
+   "items": [
+    "CharSkyKid_Wing_AP16ButterflyYellow"
+   ],
+   "event": "season_16",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC65",
+   "name_en": "Voice of AURORA",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_AP16Microphone"
+   ],
+   "event": "season_16",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC67",
+   "name_en": "Giving In Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_AP16OrangeLove"
+   ],
+   "event": "season_16",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC66",
+   "name_en": "To the Love Outfit",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Body_AP16OrangeLove"
+   ],
+   "event": "season_16",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC88",
+   "name_en": "Musical Voyage Sneakers",
+   "name_zh": "",
+   "usd": 6.99,
+   "items": [
+    "CharSkyKid_Feet_AuroraSneakers"
+   ],
+   "event": "gamescom_23",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC63",
+   "name_en": "Tiara We Can Touch",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Horn_AP16MoonStar"
+   ],
+   "event": "season_16",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC69",
+   "name_en": "Runaway Outfit",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Body_AP16SlateRunaway"
+   ],
+   "event": "season_16",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC64",
+   "name_en": "Runaway Hairstyle",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Hair_AP16RunawayBob"
+   ],
+   "event": "season_16",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC107",
+   "name_en": "Gift of the Nine-Colored Deer",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Mask_AP21Crescent",
+    "CharSkyKid_Horn_AP21Deer"
+   ],
+   "event": "season_21",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC108",
+   "name_en": "Radiance of the Nine-Colored Deer",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Wing_AP21Deer"
+   ],
+   "event": "season_21",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC130",
+   "name_en": "Moominmamma's Masterpiece",
+   "name_zh": "",
+   "usd": 24.99,
+   "items": [
+    "CharSkyKid_Wing_AP24Bell"
+   ],
+   "event": "season_24",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC131",
+   "name_en": "Moomintroll Accessory Set",
+   "name_zh": "",
+   "usd": 11.99,
+   "items": [
+    "CharSkyKid_Hat_AP24ClassicEars",
+    "CharSkyKid_Tail_AP24Classic"
+   ],
+   "event": "season_24",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC132",
+   "name_en": "Roving Snufkin Robe Set",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Neck_AP24TriangleScarf",
+    "CharSkyKid_Body_AP24Triangle"
+   ],
+   "event": "season_24",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC133",
+   "name_en": "Pointed Snufkin Hat",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Hat_AP24TriangleHat"
+   ],
+   "event": "season_24",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC134",
+   "name_en": "Hattifattener Shoulder Buddy",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Neck_AP24Arms"
+   ],
+   "event": "season_24",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC153",
+   "name_en": "Butterfly Blossom Memento",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Hat_AP27MemoryFlowers"
+   ],
+   "event": "season_27",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC154",
+   "name_en": "Cloak of Darkness",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_AP27Darkness"
+   ],
+   "event": "season_27",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC155",
+   "name_en": "Mini Manatee Accessory",
+   "name_zh": "",
+   "usd": 3.99,
+   "items": [
+    "CharSkyKid_Hat_AP27ManateeChibi"
+   ],
+   "event": "season_27",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC156",
+   "name_en": "Manatee Plush",
+   "name_zh": "",
+   "usd": 6.99,
+   "items": [
+    "CharSkyKid_Prop_AP27ManateePlush"
+   ],
+   "event": "season_27",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC157",
+   "name_en": "Spirited Manatee Ensemble",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Tail_AP27ManateeTail",
+    "CharSkyKid_Horn_AP27ManateeFins"
+   ],
+   "event": "season_27",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC158",
+   "name_en": "Vestige of Dark Dragons",
+   "name_zh": "",
+   "usd": 11.99,
+   "items": [
+    "CharSkyKid_Tail_AP27KrillTail",
+    "CharSkyKid_Horn_AP27KrillHorns"
+   ],
+   "event": "season_27",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC159",
+   "name_en": "Projector of Memories",
+   "name_zh": "",
+   "usd": 24.99,
+   "items": [
+    "CharSkyKid_Prop_AP27Projector"
+   ],
+   "event": "season_27",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC206",
+   "name_en": "Starry Night's Visage",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Mask_AP31Starry"
+   ],
+   "event": "season_31",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC207",
+   "name_en": "Starry Night's Kiss",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Horn_AP31StarryEarring"
+   ],
+   "event": "season_31",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC208",
+   "name_en": "Wheatfield Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_AP31Wheat"
+   ],
+   "event": "season_31",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC209",
+   "name_en": "Starry Night's Mantle",
+   "name_zh": "",
+   "usd": 24.99,
+   "items": [
+    "CharSkyKid_Neck_AP31Starry",
+    "CharSkyKid_Wing_AP31Starry"
+   ],
+   "event": "season_31",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC210",
+   "name_en": "Starry Night's Canopy",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_AP31StarryUmbrella"
+   ],
+   "event": "season_31",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC218",
+   "name_en": "Cafe Ivoryswing",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_IvorySwing"
+   ],
+   "event": "ivory_26",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC219",
+   "name_en": "Cafe Ivoryoveralls",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Body_IvoryOveralls"
+   ],
+   "event": "ivory_26",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC112",
+   "name_en": "Cinnamoroll Pop-Up Cafe Combo",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Hair_PastryShort",
+    "CharSkyKid_Horn_PastryEars"
+   ],
+   "event": "sanrio_24",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC113",
+   "name_en": "Cinnamoroll Pop-Up Cafe Plushie",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_PastryPlush"
+   ],
+   "event": "sanrio_24",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC114",
+   "name_en": "Cinnamoroll Pop-Up Cafe Mini Companion",
+   "name_zh": "",
+   "usd": 6.99,
+   "items": [
+    "CharSkyKid_Horn_PastryMini"
+   ],
+   "event": "sanrio_24",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC115",
+   "name_en": "Cinnamoroll Pop-Up Cafe Bowtie and Cloud Cape Pack",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Neck_PastryBow",
+    "CharSkyKid_Wing_PastryCloud"
+   ],
+   "event": "sanrio_24",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC175",
+   "name_en": "Twinribbon Pink",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Wing_RibbonDressCape",
+    "CharSkyKid_Body_RibbonTieredDress"
+   ],
+   "event": "ribbon_25",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC176",
+   "name_en": "Twinribbon Red",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Wing_RibbonBow",
+    "CharSkyKid_Body_RibbonSkirt"
+   ],
+   "event": "ribbon_25",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC177",
+   "name_en": "Twinribbon Tele",
+   "name_zh": "",
+   "usd": 11.99,
+   "items": [
+    "CharSkyKid_Prop_KizunaAiTVPillow"
+   ],
+   "event": "ribbon_25",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC12",
+   "name_en": "Kizuna AI Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Horn_KizunaAi",
+    "CharSkyKid_Wing_KizunaAi_Pink",
+    "CharSkyKid_Hair_KizunaAi_Pink"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC215",
+   "name_en": "Mischief Batwingcape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_MischiefBatWing"
+   ],
+   "event": "mischief_26",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC216",
+   "name_en": "Mischief Magichat",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Hat_MischiefMagicHat"
+   ],
+   "event": "mischief_26",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC217",
+   "name_en": "Mischief Catbuddy",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Neck_MischiefCat"
+   ],
+   "event": "mischief_26",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC170",
+   "name_en": "Mischief Cattail",
+   "name_zh": "",
+   "usd": 11.99,
+   "items": [
+    "CharSkyKid_Tail_MischiefCat",
+    "CharSkyKid_Hat_MischiefCatEars"
+   ],
+   "event": "mischief_25",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC171",
+   "name_en": "Mischief Featherhat",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Hair_MischiefFeatherHat"
+   ],
+   "event": "mischief_25",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC128",
+   "name_en": "Mischief Broomprop",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_MischiefBroom"
+   ],
+   "event": "mischief_24",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC129",
+   "name_en": "Mischief Ravencape",
+   "name_zh": "",
+   "usd": 17.99,
+   "items": [
+    "CharSkyKid_Wing_Raven"
+   ],
+   "event": "mischief_24",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC36",
+   "name_en": "Mischief Withered Antlers",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Horn_Withered_01"
+   ],
+   "event": "mischief_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC37",
+   "name_en": "Mischief Witch Jumper Pack",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Feet_Witch",
+    "CharSkyKid_Body_Witch"
+   ],
+   "event": "mischief_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC38",
+   "name_en": "Mischief Spider Quiff",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Hair_Spider_01"
+   ],
+   "event": "mischief_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC39",
+   "name_en": "Mischief Pumpkin Prop",
+   "name_zh": "",
+   "usd": 1.99,
+   "items": [
+    "CharSkyKid_Prop_MischiefPumpkin"
+   ],
+   "event": "",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC61",
+   "name_en": "Cat Costume Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Mask_MischiefCat",
+    "CharSkyKid_Wing_MischiefCat"
+   ],
+   "event": "mischief_22",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC62",
+   "name_en": "Feline Familiar Prop",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Prop_MischiefCat"
+   ],
+   "event": "",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC97",
+   "name_en": "Mischief Crabula Mask",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Mask_Crabula"
+   ],
+   "event": "mischief_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC98",
+   "name_en": "Mischief Crabula Cloak",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_Crabula"
+   ],
+   "event": "mischief_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC96",
+   "name_en": "Mischief Gossamer Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_Cobweb"
+   ],
+   "event": "mischief_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC14",
+   "name_en": "Mischief Witch Hat",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Hair_WitchHat_01"
+   ],
+   "event": "mischief_20",
+   "year": "2020",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC15",
+   "name_en": "Mischief Web Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_SpiderWeb_01"
+   ],
+   "event": "mischief_20",
+   "year": "2020",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC06",
+   "name_en": "Hungry Pumpkin Hat (2020 re-release)",
+   "name_zh": "",
+   "usd": 11.99,
+   "items": [
+    "CharSkyKid_Hair_AP04Pumpkin_01"
+   ],
+   "event": "mischief_19",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC05",
+   "name_en": "Spooky Bat Cape",
+   "name_zh": "",
+   "usd": 17.99,
+   "items": [
+    "CharSkyKid_Wing_Bat"
+   ],
+   "event": "mischief_19",
+   "year": "2020",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC136",
+   "name_en": "Music Marching Uniform Outfit",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Body_BandUniform"
+   ],
+   "event": "music_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC135",
+   "name_en": "Fledgling Upright Piano",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Prop_PianoUpright"
+   ],
+   "event": "music_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC86",
+   "name_en": "Triumph Violin",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_Violin"
+   ],
+   "event": "",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC57",
+   "name_en": "Fledgling Harp",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Prop_Harp_02"
+   ],
+   "event": "",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC56",
+   "name_en": "Rhythm Guitar",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_AP04Guitar_02"
+   ],
+   "event": "",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC51",
+   "name_en": "Triumph Handpan",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_AP07HandPan_02"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC172",
+   "name_en": "Winter Scarf Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_FeastScarf"
+   ],
+   "event": "feast_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC173",
+   "name_en": "Fluffy Winter Wear Bundle",
+   "name_zh": "",
+   "usd": 6.99,
+   "items": [
+    "CharSkyKid_Feet_FeastLegWarmers",
+    "CharSkyKid_Hat_FeastFurHat"
+   ],
+   "event": "feast_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC174",
+   "name_en": "Snowkid Accessory",
+   "name_zh": "",
+   "usd": 1.99,
+   "items": [
+    "CharSkyKid_Hat_FeastSnowman"
+   ],
+   "event": "feast_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC138",
+   "name_en": "Wonderland Cafe Corridor",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_CrabbitPortal"
+   ],
+   "event": "feast_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC137",
+   "name_en": "Wonderland Primrose Pinafore Set",
+   "name_zh": "",
+   "usd": 11.99,
+   "items": [
+    "CharSkyKid_Hat_BlueBow",
+    "CharSkyKid_Body_YellowPinafore"
+   ],
+   "event": "feast_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC101",
+   "name_en": "Cozy Hermit Boots",
+   "name_zh": "",
+   "usd": 6.99,
+   "items": [
+    "CharSkyKid_Feet_YetiBoots"
+   ],
+   "event": "feast_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC102",
+   "name_en": "Winter Quilted Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_WinterPuffer"
+   ],
+   "event": "feast_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC73",
+   "name_en": "Tournament Skyball Set",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_SkyBallGoals"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC76",
+   "name_en": "Cozy Hermit Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_YetiFur"
+   ],
+   "event": "feast_22",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC40",
+   "name_en": "Winter Feast Snowglobe",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Prop_SnowGlobe"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC41",
+   "name_en": "Winter Ancestor Cape",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Wing_WinterElder_01"
+   ],
+   "event": "feast_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC42",
+   "name_en": "Snowflake Hair Accessory",
+   "name_zh": "",
+   "usd": 1.99,
+   "items": [
+    "CharSkyKid_Horn_Snowflake_01"
+   ],
+   "event": "feast_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC17",
+   "name_en": "Days of Feast Horns",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Horn_Elk"
+   ],
+   "event": "feast_20",
+   "year": "2020",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC18",
+   "name_en": "Snowflake Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_Snowflake"
+   ],
+   "event": "feast_20",
+   "year": "2020",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC03",
+   "name_en": "Days of Feast Pack",
+   "name_zh": "",
+   "usd": 6.99,
+   "items": [
+    "CharSkyKid_Hair_Xmas"
+   ],
+   "event": "feast_19",
+   "year": "2019",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC184",
+   "name_en": "Blue Pinned Cap",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Hat_PersonalityNurseCap"
+   ],
+   "event": "personality_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC185",
+   "name_en": "Purple Spectacles",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Face_PersonalityPurpleGlasses"
+   ],
+   "event": "personality_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC186",
+   "name_en": "Green Folded Ears",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Hat_PersonalityPuppyEars"
+   ],
+   "event": "personality_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC187",
+   "name_en": "Yellow Paintbrush",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Hat_PersonalityPaintbrush"
+   ],
+   "event": "personality_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC183",
+   "name_en": "Fortune Plush Mount Bundle",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_FortunePony"
+   ],
+   "event": "fortune_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC182",
+   "name_en": "Fortune Pleated Dress",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Body_FortunePanelDress"
+   ],
+   "event": "fortune_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC181",
+   "name_en": "Fortune Ribboned Ponytail",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Hair_FortunePonytail"
+   ],
+   "event": "fortune_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC180",
+   "name_en": "Fortune Token Glasses",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Horn_FortuneGlasses"
+   ],
+   "event": "fortune_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC139",
+   "name_en": "Fortune Snake Coif and Cloak",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Hair_FortuneSnake",
+    "CharSkyKid_Wing_FortuneSnake"
+   ],
+   "event": "fortune_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC140",
+   "name_en": "Fortune Hand Fan",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Prop_FortuneFan"
+   ],
+   "event": "fortune_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC103",
+   "name_en": "Days of Fortune Dragon Vestment",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Body_FortuneDragonRobe"
+   ],
+   "event": "fortune_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC104",
+   "name_en": "Days of Fortune Dragon Stole",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_FortuneDragon"
+   ],
+   "event": "fortune_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC105",
+   "name_en": "Days of Fortune Dragon Bangles",
+   "name_zh": "",
+   "usd": 1.99,
+   "items": [
+    "CharSkyKid_Horn_DragonEarring"
+   ],
+   "event": "fortune_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC19",
+   "name_en": "Days of Fortune Orange",
+   "name_zh": "",
+   "usd": 0.99,
+   "items": [
+    "CharSkyKid_Horn_Orange"
+   ],
+   "event": "fortune_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC21",
+   "name_en": "Days of Fortune Pack",
+   "name_zh": "",
+   "usd": 24.99,
+   "items": [
+    "CharSkyKid_Mask_RedFace",
+    "CharSkyKid_Wing_Fortune",
+    "CharSkyKid_Hair_DoubleBun"
+   ],
+   "event": "fortune_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC20",
+   "name_en": "Days of Fortune Wool Hat",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Hair_WoolHat"
+   ],
+   "event": "fortune_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC43",
+   "name_en": "Days of Fortune Fish Accessory",
+   "name_zh": "",
+   "usd": 1.99,
+   "items": [
+    "CharSkyKid_Horn_Fish_01"
+   ],
+   "event": "fortune_22",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC44",
+   "name_en": "Days of Fortune Fish Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Hair_Fish_01",
+    "CharSkyKid_Wing_Fish_01"
+   ],
+   "event": "fortune_22",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC74",
+   "name_en": "Days of Fortune Enchanted Umbrella",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_FortuneUmbrella"
+   ],
+   "event": "fortune_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC75",
+   "name_en": "Days of Fortune Muralist's Smock",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Body_FortuneMuralist"
+   ],
+   "event": "fortune_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC141",
+   "name_en": "Days of Love Amethyst-Tipped Tails",
+   "name_zh": "",
+   "usd": 6.99,
+   "items": [
+    "CharSkyKid_Hair_MeteorPigtails"
+   ],
+   "event": "love_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC142",
+   "name_en": "Days of Love Amethyst Accessory",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Hat_CrystalHearts"
+   ],
+   "event": "love_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC106",
+   "name_en": "Days of Love Meteor Mantle",
+   "name_zh": "",
+   "usd": 17.99,
+   "items": [
+    "CharSkyKid_Wing_Meteor"
+   ],
+   "event": "love_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC22",
+   "name_en": "Days of Love Seesaw Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_Seesaw"
+   ],
+   "event": "",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC08",
+   "name_en": "Love Swing",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_Swing"
+   ],
+   "event": "",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC45",
+   "name_en": "Love Gondola",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_LoveBoat"
+   ],
+   "event": "",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC77",
+   "name_en": "Days of Love Serendipitous Scepter",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_HeartFirework"
+   ],
+   "event": "love_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC79",
+   "name_en": "Days of Love Classy Cravat",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Neck_Bow"
+   ],
+   "event": "love_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC194",
+   "name_en": "Treasure Coin Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_TreasureCoin"
+   ],
+   "event": "treasure_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC195",
+   "name_en": "Treasure Seeker’s Hat",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Hat_TreasurePirate"
+   ],
+   "event": "treasure_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC196",
+   "name_en": "Treasure Mate Companion",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Neck_CrabBandana"
+   ],
+   "event": "treasure_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC143",
+   "name_en": "Treasure Seeker's Bounty",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Body_TreasurePants",
+    "CharSkyKid_Mask_TreasureEyePatch"
+   ],
+   "event": "treasure_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC188",
+   "name_en": "Bloom Sunflower Sundress",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Body_BloomSunflowerDress"
+   ],
+   "event": "bloom_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC189",
+   "name_en": "Bloom Sunflower Umbrella",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_BloomSunflowerUmbrella"
+   ],
+   "event": "bloom_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC190",
+   "name_en": "Bloom Sunflower Studs",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Horn_BloomSunflowerEarring"
+   ],
+   "event": "bloom_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC144",
+   "name_en": "Bloom Rose-Embroidered Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_RosePattern"
+   ],
+   "event": "bloom_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC109",
+   "name_en": "Bloom Lilypad Umbrella",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_LilyUmbrella"
+   ],
+   "event": "bloom_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC23",
+   "name_en": "Bloom Teatable",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_TeaTable"
+   ],
+   "event": "",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC46",
+   "name_en": "Bloom Wisteriatable",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_WisteriaTeaTable"
+   ],
+   "event": "",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC80",
+   "name_en": "Bloom Picnic Basket Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_PicnicBlanket"
+   ],
+   "event": "",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC81",
+   "name_en": "Bloom Gardening Tunic",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Body_Gardener"
+   ],
+   "event": "bloom_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC192",
+   "name_en": "Ocean Veil Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Hat_NatureWaterVeil"
+   ],
+   "event": "nature_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC193",
+   "name_en": "Charming Creature Pack",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Horn_NatureFins",
+    "CharSkyKid_Body_NatureFlowyDress"
+   ],
+   "event": "nature_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC145",
+   "name_en": "Ocean Waves Mask",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Mask_OceanWaves"
+   ],
+   "event": "nature_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC146",
+   "name_en": "Ocean Sea Foam Set",
+   "name_zh": "",
+   "usd": 24.99,
+   "items": [
+    "CharSkyKid_Feet_SeaFoam",
+    "CharSkyKid_Wing_SeaFoam"
+   ],
+   "event": "nature_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC110",
+   "name_en": "Nature Wave Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Wing_WaterWave"
+   ],
+   "event": "nature_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC111",
+   "name_en": "Nature Wave-Touched Hair",
+   "name_zh": "",
+   "usd": 6.99,
+   "items": [
+    "CharSkyKid_Hair_NatureWater"
+   ],
+   "event": "nature_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC82",
+   "name_en": "Nature Bluesunglasses",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Mask_BlueSunglasses"
+   ],
+   "event": "nature_21",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC83",
+   "name_en": "Nature Sonorous Seashell Prop",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Prop_MusicShell"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC47",
+   "name_en": "Nature Turtle Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Neck_SeaTurtle_01"
+   ],
+   "event": "nature_22",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC48",
+   "name_en": "Nature Turtle Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_SeaTurtle_01"
+   ],
+   "event": "nature_22",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC24",
+   "name_en": "Ocean Necklace",
+   "name_zh": "",
+   "usd": 1.99,
+   "items": [
+    "CharSkyKid_Neck_Ocean_01"
+   ],
+   "event": "nature_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC25",
+   "name_en": "Ocean Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_Ocean_01"
+   ],
+   "event": "nature_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC09",
+   "name_en": "Earth Cape",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Wing_ClassicOne_EarthDay"
+   ],
+   "event": "nature_20",
+   "year": "2020",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC197",
+   "name_en": "Rainbow Beret",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Hat_ColorBeret"
+   ],
+   "event": "color_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC198",
+   "name_en": "Rainbow Tied Jumpsuit",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Body_ColorTiedJumpsuit"
+   ],
+   "event": "color_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC199",
+   "name_en": "Rainbow Mask",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Mask_ColorSleek"
+   ],
+   "event": "color_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC147",
+   "name_en": "Rainbow Facepaint",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Mask_ColorFacepaint"
+   ],
+   "event": "color_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC148",
+   "name_en": "Rainbow Shawl",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_ColorShawl"
+   ],
+   "event": "color_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC116",
+   "name_en": "Dark Rainbow Loafers",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Feet_RainbowDarkLoafers"
+   ],
+   "event": "color_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC117",
+   "name_en": "Color Bubble Machine",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_JarBubbleMachine"
+   ],
+   "event": "",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC27",
+   "name_en": "Rainbow Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Horn_RainbowPoppy_01"
+   ],
+   "event": "color_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC28",
+   "name_en": "Rainbow Hat",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Hair_RainbowHat_01"
+   ],
+   "event": "color_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC49",
+   "name_en": "Rainbow Earring",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Horn_RainbowEarring_01"
+   ],
+   "event": "color_22",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC55",
+   "name_en": "Double Rainbow Pack",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Horn_RainbowPoppy_02"
+   ],
+   "event": "color_22",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC58",
+   "name_en": "Rainbow Headphones",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Horn_RainbowHeadphones_01"
+   ],
+   "event": "color_22",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC84",
+   "name_en": "Dark Rainbow Pack",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Horn_DarkRainbowEarring"
+   ],
+   "event": "color_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC85",
+   "name_en": "Dark Rainbow Tunic",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Body_DarkRainbow"
+   ],
+   "event": "rainbow_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC200",
+   "name_en": "Black and Blue Swag Hoodie",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_TGCBlackHoodie"
+   ],
+   "event": "anniv_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC201",
+   "name_en": "Oreo Slippers",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Feet_OreoSlipper"
+   ],
+   "event": "anniv_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC202",
+   "name_en": "Moth Plush",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Prop_SkykidPlushie"
+   ],
+   "event": "anniv_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC152",
+   "name_en": "Anniversary Gown Ensemble",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Feet_AnnivButterfly",
+    "CharSkyKid_Body_AnnivYellowGown"
+   ],
+   "event": "anniv_25",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC151",
+   "name_en": "Anniversary Tuxedo Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_AnnivTuxedo"
+   ],
+   "event": "anniv_25",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC149",
+   "name_en": "Anniversary Cinema Set",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Prop_AnniversaryPopcorn",
+    "CharSkyKid_Face_Anniversary3DGlasses"
+   ],
+   "event": "anniv_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC118",
+   "name_en": "Oreo Headband",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Horn_OreoHeadband"
+   ],
+   "event": "anniv_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC87",
+   "name_en": "Anniversary Plush",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Prop_BirthdayOreo"
+   ],
+   "event": "",
+   "year": "2023",
+   "status": "confirmed",
+   "note": "wiki 'Anniversary Plush' ($9.99, 2023) is probably this Oreo plush"
+  },
+  {
+   "id": "SNC150",
+   "name_en": "TGC Wireframe Cape",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Wing_TGCWireframeEvergreen"
+   ],
+   "event": "anniv_25",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC178",
+   "name_en": "Tournament Crystalline Cape",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Wing_TriumphIce"
+   ],
+   "event": "tot_25",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC179",
+   "name_en": "Tournament Sleek Skating Set",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Feet_TriumphIceSkates",
+    "CharSkyKid_Body_TriumphSkateOutfit"
+   ],
+   "event": "tot_25",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC120",
+   "name_en": "Tournament Tunic",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Body_GreekRobe"
+   ],
+   "event": "tot_24",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC121",
+   "name_en": "Tournament Golden Garland",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Horn_Laurel"
+   ],
+   "event": "tot_24",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC203",
+   "name_en": "Sunlight Diver Duo",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Feet_SunlightDuckFlippers",
+    "CharSkyKid_Body_SunlightWetsuit"
+   ],
+   "event": "sunlight_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC204",
+   "name_en": "Sunlight Crab Float",
+   "name_zh": "",
+   "usd": 3.99,
+   "items": [
+    "CharSkyKid_Prop_CrabFloat"
+   ],
+   "event": "sunlight_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC205",
+   "name_en": "Sunlight Sporty Sunglasses",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Hat_SunlightSunglasses"
+   ],
+   "event": "sunlight_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC161",
+   "name_en": "Sunlight Bonnet Bundle",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Body_SunlightDress",
+    "CharSkyKid_Hat_SunlightJelly"
+   ],
+   "event": "sunlight_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC127",
+   "name_en": "Sunlight Woven Wrap",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_LinenCover"
+   ],
+   "event": "sunlight_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC126",
+   "name_en": "Sunlight Helios Hoops",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Horn_SunnyEarring"
+   ],
+   "event": "sunlight_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC89",
+   "name_en": "Sunlight Surfboard",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_Surfboard"
+   ],
+   "event": "",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC90",
+   "name_en": "Sunlight Chunky Sandals",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Feet_SunlightSandals"
+   ],
+   "event": "sunlight_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC59",
+   "name_en": "Sunlight Campfire Snack Kit Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_MarshmallowSet"
+   ],
+   "event": "sunlight_22",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC60",
+   "name_en": "Sunlight Jelly Shoulder Buddy",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Neck_Jellyfish_01"
+   ],
+   "event": "sunlight_22",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC34",
+   "name_en": "Summer Seashell Hairpin",
+   "name_zh": "",
+   "usd": 0.99,
+   "items": [
+    "CharSkyKid_Horn_Shell_01"
+   ],
+   "event": "summer_21",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC33",
+   "name_en": "Summer Umbrella Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_SummerUmbrella_01"
+   ],
+   "event": "summer_21",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC211",
+   "name_en": "Feathery Lash Mask",
+   "name_zh": "",
+   "usd": 1.99,
+   "items": [
+    "CharSkyKid_Mask_ChildrenWhiteEyelash"
+   ],
+   "event": "camping_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC212",
+   "name_en": "Moonlight Lute",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Prop_MoonlightLute"
+   ],
+   "event": "moonlight_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC213",
+   "name_en": "Moonlight Nimbus",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Hat_MoonlightHalo"
+   ],
+   "event": "moonlight_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC214",
+   "name_en": "Moonlight Veil",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Mask_MoonlightVeil"
+   ],
+   "event": "moonlight_26",
+   "year": "2026",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC162",
+   "name_en": "Moonlight Garland Cape",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Wing_Moonlight"
+   ],
+   "event": "moonlight_25",
+   "year": "2025",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC124",
+   "name_en": "Moonlight Frock and Updo",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Hair_MoonlightUpdo",
+    "CharSkyKid_Body_MoonlightDress"
+   ],
+   "event": "moonlight_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC123",
+   "name_en": "Moonlight Earring",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Horn_MoonEarring"
+   ],
+   "event": "moonlight_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC13",
+   "name_en": "Moonlight Lantern Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Prop_Lantern"
+   ],
+   "event": "summer_20",
+   "year": "2020",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC35",
+   "name_en": "Moonlight Bunny Accessory",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Horn_Bunny_01"
+   ],
+   "event": "summer_21",
+   "year": "2021",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC95",
+   "name_en": "Moonlight Bunny Slippers",
+   "name_zh": "",
+   "usd": 6.99,
+   "items": [
+    "CharSkyKid_Feet_BunnySlippers"
+   ],
+   "event": "style_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC125",
+   "name_en": "Style Dapper Trio",
+   "name_zh": "",
+   "usd": 14.99,
+   "items": [
+    "CharSkyKid_Face_Monocle",
+    "CharSkyKid_Body_CrystalSuit",
+    "CharSkyKid_Neck_KrillTie"
+   ],
+   "event": "style_24",
+   "year": "2024",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC91",
+   "name_en": "Style Wide-Leg Jeans",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Body_FashionJeans"
+   ],
+   "event": "style_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC92",
+   "name_en": "Style Flame Sunglasses",
+   "name_zh": "",
+   "usd": 2.99,
+   "items": [
+    "CharSkyKid_Horn_FlameSunglasses"
+   ],
+   "event": "style_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC93",
+   "name_en": "Style Heart Sunglasses",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Horn_HeartSunglasses"
+   ],
+   "event": "style_23",
+   "year": "2023",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC26",
+   "name_en": "Red & Blue Starter Pack",
+   "name_zh": "",
+   "usd": 29.99,
+   "items": [
+    "CharSkyKid_Wing_SwitchRed_01",
+    "CharSkyKid_Wing_SwitchBlue_01",
+    "CharSkyKid_Prop_Ocarina_01",
+    "CharSkyKid_Hair_Elf_01"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC99",
+   "name_en": "Moth Appreciation Pack",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Horn_MothAntenna",
+    "CharSkyKid_Wing_Moth"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC100",
+   "name_en": "Sparrow Appreciation Pack",
+   "name_zh": "",
+   "usd": 9.99,
+   "items": [
+    "CharSkyKid_Mask_SparrowCheeks",
+    "CharSkyKid_Wing_Sparrow"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC00",
+   "name_en": "Starter Pack",
+   "name_zh": "",
+   "usd": 4.99,
+   "items": [
+    "CharSkyKid_Wing_ClassicOne_Orange"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC10",
+   "name_en": "Healing Pack",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Horn_FlowerPoppy_01"
+   ],
+   "event": "",
+   "year": "",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "SNC01",
+   "name_en": "Founder Pack",
+   "name_zh": "",
+   "usd": 29.99,
+   "items": [
+    "CharSkyKid_Wing_ClassicOne_TGCBlue$"
+   ],
+   "event": "",
+   "year": "",
+   "status": "game-only",
+   "note": ""
+  },
+  {
+   "id": "SNC54",
+   "name_en": "TGC Guitar Pack",
+   "name_zh": "",
+   "usd": 29.99,
+   "items": [
+    "CharSkyKid_Prop_AP14Guitar_02"
+   ],
+   "event": "",
+   "year": "2022",
+   "status": "confirmed",
+   "note": ""
+  },
+  {
+   "id": "wiki:skyfest-wireframe",
+   "name_en": "SkyFest Wireframe Cape",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Wing_TGCWireframe"
+   ],
+   "event": "anniv_24",
+   "year": "2024",
+   "status": "wiki-only",
+   "note": "retired; items mapped by hand"
+  },
+  {
+   "id": "wiki:winter-musician",
+   "name_en": "Winter Musician Pack (2019-2020)",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Hair_APMusician_01",
+    "CharSkyKid_Prop_APPiano_01"
+   ],
+   "event": "season_05",
+   "year": "2019",
+   "status": "wiki-only",
+   "note": "retired; items mapped by hand"
+  },
+  {
+   "id": "wiki:gratitude-fur",
+   "name_en": "Gratitude Fur Pack (2020)",
+   "name_zh": "",
+   "usd": 19.99,
+   "items": [
+    "CharSkyKid_Wing_AP02Fur_01"
+   ],
+   "event": "season_02",
+   "year": "2020",
+   "status": "wiki-only",
+   "note": "retired; items mapped by hand"
+  }
+ ]
+}

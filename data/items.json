@@ -1,0 +1,250 @@
+{
+ "_about": "物品修正：只列需要覆寫遊戲資料的物品，key 是物品內部名稱（OutfitDefs name）。沒列到的欄位沿用遊戲資料。",
+ "_fields": {
+  "name_zh": "繁中顯示名稱",
+  "name_en": "英文顯示名稱",
+  "group": "網站分類（pass/top/shoes/outfit/mask/face/neck/hair/head/ear/cape/prop）",
+  "season": "季號；null = 不算季節物品",
+  "hidden": "true = 網站不顯示",
+  "unconfirmed": "待確認原因",
+  "source": "資料來源",
+  "confidence": "對應可信度",
+  "note": "備註"
+ },
+ "items": {
+  "CharSkyKid_Prop_PipeBroken_01": {
+   "season": "03",
+   "source": "wiki: Crab Whisperer (TS 2021-09-02)",
+   "confidence": "uncertain",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_Pinwheel_01": {
+   "season": "04",
+   "source": "wiki: Sparkler Parent (TS 2021-12-23)",
+   "confidence": "likely",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_LanternPost": {
+   "season": "04",
+   "source": "wiki: Wise Grandparent memory lantern (TS 2021-11-11)",
+   "confidence": "uncertain",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_APFlagAnim": {
+   "season": "05",
+   "source": "wiki: Festival Spin Dancer (TS 2021-10-14)",
+   "confidence": "likely",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_IslandUmbrella_01": {
+   "season": "07",
+   "source": "wiki: Jelly Whisperer beach umbrella (TS 2021-11-25)",
+   "confidence": "likely",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_BeachRecliner": {
+   "season": "07",
+   "source": "wiki: Chill Sunbather (TS 2021-08-19)",
+   "confidence": "likely",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_BeachChairWood": {
+   "season": "07",
+   "source": "wiki: Grateful Shell Collector wooden deck chairs",
+   "confidence": "likely",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_BeachChairCloth": {
+   "season": "07",
+   "source": "wiki: Hiking Grouch double deck chairs (TS 2022-02-17)",
+   "confidence": "uncertain",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_MannequinFigurine": {
+   "season": "22",
+   "source": "wiki: Nesting ultimate gift Mini Figurine",
+   "confidence": "likely",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_SpellFire": {
+   "season": "06",
+   "source": "wiki: Playfighting Herbalist light orb (TS 2021-10-28)",
+   "confidence": "likely",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_MuralWater": {
+   "season": "08",
+   "source": "wiki: Prophet of Water sticker (TS)",
+   "confidence": "likely",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_MuralEarth": {
+   "season": "08",
+   "source": "wiki: Prophet of Earth sticker (TS)",
+   "confidence": "likely",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_MuralAir": {
+   "season": "08",
+   "source": "wiki: Prophet of Air sticker (TS)",
+   "confidence": "likely",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_MuralFire": {
+   "season": "08",
+   "source": "wiki: Prophet of Fire sticker (TS)",
+   "confidence": "likely",
+   "note": "OutfitDefs 沒有季節標記，依 wiki 補上"
+  },
+  "CharSkyKid_Prop_HangingMask": {
+   "season": null,
+   "unconfirmed": "no matching Nesting item on the wiki",
+   "note": "OutfitDefs 標為 season_22，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_StoneMannequin": {
+   "season": null,
+   "unconfirmed": "dress mannequin; the Nesting ultimate Mini Figurine is MannequinFigurine",
+   "note": "OutfitDefs 標為 season_22，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP23Bench": {
+   "season": null,
+   "unconfirmed": "not among Duets items on the wiki; looks like Workshop Show & Tell 2025 / Days of Music",
+   "note": "OutfitDefs 標為 season_23，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP23ClothDivider": {
+   "season": null,
+   "unconfirmed": "not among Duets items on the wiki; looks like Workshop Show & Tell 2025 / Days of Music",
+   "note": "OutfitDefs 標為 season_23，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP23Cup": {
+   "season": null,
+   "unconfirmed": "not among Duets items on the wiki; looks like Workshop Show & Tell 2025 / Days of Music",
+   "note": "OutfitDefs 標為 season_23，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP23Curtain": {
+   "season": null,
+   "unconfirmed": "not among Duets items on the wiki; looks like Workshop Show & Tell 2025 / Days of Music",
+   "note": "OutfitDefs 標為 season_23，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP23DecorCup": {
+   "season": null,
+   "unconfirmed": "not among Duets items on the wiki; looks like Workshop Show & Tell 2025 / Days of Music",
+   "note": "OutfitDefs 標為 season_23，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP23HalfRug": {
+   "season": null,
+   "unconfirmed": "not among Duets items on the wiki; looks like Workshop Show & Tell 2025 / Days of Music",
+   "note": "OutfitDefs 標為 season_23，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP23Vanity": {
+   "season": null,
+   "unconfirmed": "not among Duets items on the wiki; looks like Workshop Show & Tell 2025 / Days of Music",
+   "note": "OutfitDefs 標為 season_23，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP23Vase": {
+   "season": null,
+   "unconfirmed": "not among Duets items on the wiki; looks like Workshop Show & Tell 2025 / Days of Music",
+   "note": "OutfitDefs 標為 season_23，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP23PlaceablePianoUpright": {
+   "season": null,
+   "unconfirmed": "not among Duets items on the wiki; looks like Workshop Show & Tell 2025 / Days of Music",
+   "note": "OutfitDefs 標為 season_23，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP24ClassicPlushAlt": {
+   "season": null,
+   "unconfirmed": "alternate of the Moomin plush; no separate wiki item",
+   "note": "OutfitDefs 標為 season_24，wiki 沒列在該季"
+  },
+  "CharSkyKid_Wing_MaskRampEffects": {
+   "season": null,
+   "unconfirmed": "technical entry (effect), no model file; not on the wiki",
+   "note": "OutfitDefs 標為 season_27，wiki 沒列在該季"
+  },
+  "CharSkyKid_Mask_AP27ManateeMask": {
+   "season": null,
+   "unconfirmed": "no matching Two Embers item on the wiki",
+   "note": "OutfitDefs 標為 season_27，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP30ChallengeBouncePad_2": {
+   "season": null,
+   "unconfirmed": "upgrade tier of the Challenge Bounce Pad",
+   "note": "OutfitDefs 標為 season_30，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP30ChallengeBouncePad_3": {
+   "season": null,
+   "unconfirmed": "upgrade tier of the Challenge Bounce Pad",
+   "note": "OutfitDefs 標為 season_30，wiki 沒列在該季"
+  },
+  "CharSkyKid_Neck_AP31StrawHat": {
+   "season": null,
+   "unconfirmed": "placeholder icon UiWip, no model: unfinished item",
+   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+  },
+  "CharSkyKid_Hat_AP07StrawHatNoCrab": {
+   "season": null,
+   "unconfirmed": "older Sanctuary asset, not on the Dear Van Gogh list",
+   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP31PaintBrush": {
+   "season": null,
+   "unconfirmed": "not on the Dear Van Gogh list",
+   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP31StarryUmbrella": {
+   "season": null,
+   "unconfirmed": "not on the Dear Van Gogh list",
+   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP24ConsoleTable": {
+   "season": null,
+   "unconfirmed": "wiki lists it as permanent Nesting Workshop furniture, not a season item",
+   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP24Crate": {
+   "season": null,
+   "unconfirmed": "wiki lists it as permanent Nesting Workshop furniture, not a season item",
+   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP24Desk": {
+   "season": null,
+   "unconfirmed": "wiki lists it as permanent Nesting Workshop furniture, not a season item",
+   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP24OilLamp": {
+   "season": null,
+   "unconfirmed": "wiki lists it as permanent Nesting Workshop furniture, not a season item",
+   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP24RockingChair": {
+   "season": null,
+   "unconfirmed": "wiki lists it as permanent Nesting Workshop furniture, not a season item",
+   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP31Bed": {
+   "season": null,
+   "unconfirmed": "wiki lists it as permanent Nesting Workshop furniture, not a season item",
+   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP31BedroomChair": {
+   "season": null,
+   "unconfirmed": "wiki lists it as permanent Nesting Workshop furniture, not a season item",
+   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP31BedroomTallTable": {
+   "season": null,
+   "unconfirmed": "wiki lists it as permanent Nesting Workshop furniture, not a season item",
+   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+  },
+  "CharSkyKid_Hair_AP09BambooHat_01": {
+   "season": null,
+   "unconfirmed": "fan reports say it was only given out on the China (NetEase) server",
+   "note": "OutfitDefs 標為 season_09，wiki 沒列在該季"
+  },
+  "CharSkyKid_Prop_AP11Fox_02": {
+   "season": null,
+   "unconfirmed": "second copy of the Little Prince fox; one item on the wiki",
+   "note": "OutfitDefs 標為 season_11，wiki 沒列在該季"
+  }
+ }
+}
