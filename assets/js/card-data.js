@@ -108,6 +108,31 @@
         en: s.en, start: s.start, end: s.end };
     });
   }
+  // paid packs for the IAP picker, grouped into series: a season, an event family (Days of Mischief …) or "other"
+  const EVENTS = { fortune: 'Days of Fortune', love: 'Days of Love', bloom: 'Days of Bloom', nature: 'Days of Nature', color: 'Days of Color',
+    rainbow: 'Days of Color', anniv: 'Sky Anniversary', sunlight: 'Days of Sunlight', summer: 'Days of Summer', moonlight: 'Days of Moonlight',
+    mischief: 'Days of Mischief', feast: 'Days of Feast', style: 'Days of Style', tot: 'Tournament of Triumph', treasure: 'Days of Treasure',
+    personality: 'Personality Quiz', music: 'Days of Music', camping: 'Summer Camping', sanrio: 'Cinnamoroll Pop-Up Cafe', ivory: 'Ivory Cafe',
+    ribbon: 'Twin Ribbon', gamescom: 'AURORA Encore' };
+  let PACKS = [];
+  function buildPacks(list, catalog) {
+    const byName = new Map(catalog.filter(i => CLOSET_CATS.includes(i.cat)).map(i => [i.name, i.path]));
+    return list.map(p => {
+      const items = p.items.map(n => byName.get(n)).filter(Boolean);
+      if (!items.length) return null;
+      const ev = p.event || '', m = ev.match(/^season_(\d+)$/);
+      let kind, series, year = String(p.year || '');
+      if (m) { kind = 'season'; series = String(+m[1]).padStart(2, '0'); }
+      else if (ev) {
+        const [pre, yy] = ev.split('_');
+        kind = 'event'; series = EVENTS[pre] || pre.charAt(0).toUpperCase() + pre.slice(1);
+        if (/^\d\d$/.test(yy || '')) year = '20' + yy;
+      } else { kind = 'other'; series = 'other'; }
+      return { id: p.id, name: (LANG !== 'en' && p.name_zh) || p.name_en || p.id, usd: p.usd == null ? null : Number(p.usd),
+        status: p.status, kind, series, year, items };
+    }).filter(Boolean);
+  }
+  const packs = () => PACKS;
   function loadCatalog() {
     if (catalogPromise) return catalogPromise;
     catalogPromise = Promise.all([
@@ -175,6 +200,7 @@
           seen.add(key);
           out.push(Object.assign({ path: r.path }, parsePath(r.path)));
         });
+        PACKS = packsDoc ? buildPacks(packsDoc.packs, out) : [];
         return out;
       })
       .catch(err => { catalogPromise = null; throw err; });
@@ -380,7 +406,7 @@
   ];
 
   window.CardData = {
-    CATS, CAT_BY_ID, CLOSET_CATS, SEASONS, seasonName, seasonFull, seasonLabel, parsePath, iconURL, loadCatalog,
+    CATS, CAT_BY_ID, CLOSET_CATS, SEASONS, seasonName, seasonFull, seasonLabel, parsePath, iconURL, loadCatalog, packs,
     CURRENCIES, GLYPH, PINS, LINKS, GRADIENTS, gradientCSS, SOLIDS, FONTS,
     WALLPAPERS, wallpaperURL, textureURL, PAPERS
   };
