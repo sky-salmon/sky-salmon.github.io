@@ -2,14 +2,16 @@
  * Usage: <body data-page="card"> … <script src="assets/js/site.js"></script> (before page scripts). */
 (function () {
   'use strict';
+  // i18n (assets/js/i18n.js); pages without it keep the Traditional Chinese source text
+  const t = window.I18N ? window.I18N.t : (s, v) => (v ? s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
 
   const PAGES = [
-    { id: 'home', href: 'index.html', label: '首頁' },
-    { id: 'card', href: 'card.html', label: '名片' },
-    { id: 'height', href: 'height.html', label: '身高' },
-    { id: 'events', href: 'events.html', label: '活動' },
-    { id: 'music', href: 'music.html', label: '樂譜' },
-    { id: 'gallery', href: 'gallery.html', label: '相簿' }
+    { id: 'home', href: 'index.html', label: t('首頁') },
+    { id: 'card', href: 'card.html', label: t('名片') },
+    { id: 'height', href: 'height.html', label: t('身高') },
+    { id: 'events', href: 'events.html', label: t('活動') },
+    { id: 'music', href: 'music.html', label: t('樂譜') },
+    { id: 'gallery', href: 'gallery.html', label: t('相簿') }
   ];
 
   const MARK = `<svg viewBox="0 0 36 36" aria-hidden="true">
@@ -28,27 +30,29 @@
     const header = document.createElement('header');
     header.className = 'topbar';
     header.innerHTML = `<div class="wrap">
-      <a class="brand" href="index.html" aria-label="candle·kit 首頁">${MARK}<span>candle·kit</span></a>
-      <nav class="nav" aria-label="主要導覽">${links()}</nav>
-      <button class="nav-toggle" type="button" aria-label="開啟選單" aria-expanded="false" aria-controls="mobile-menu">
+      <a class="brand" href="index.html" aria-label="${t('candle·kit 首頁')}">${MARK}<span>candle·kit</span></a>
+      <nav class="nav" aria-label="${t('主要導覽')}">${links()}</nav>
+      <button class="nav-toggle" type="button" aria-label="${t('開啟選單')}" aria-expanded="false" aria-controls="mobile-menu">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
       </button>
     </div>
-    <nav class="mobile-menu" id="mobile-menu" aria-label="行動版選單">${links()}</nav>`;
+    <nav class="mobile-menu" id="mobile-menu" aria-label="${t('行動版選單')}">${links()}</nav>`;
     document.body.prepend(header);
+    // language picker, on pages that load assets/js/i18n.js
+    if (window.I18N) header.querySelector('.nav-toggle').before(window.I18N.switcher());
 
     const toggle = header.querySelector('.nav-toggle'), menu = header.querySelector('.mobile-menu');
     toggle.addEventListener('click', () => {
       const open = menu.classList.toggle('is-open');
       toggle.setAttribute('aria-expanded', open);
-      toggle.setAttribute('aria-label', open ? '關閉選單' : '開啟選單');
+      toggle.setAttribute('aria-label', open ? t('關閉選單') : t('開啟選單'));
     });
 
     const footer = document.createElement('footer');
     footer.className = 'site-footer';
     footer.innerHTML = `<div class="wrap">
       <div class="hand">Made with ♡ for every child of the light</div>
-      <div>candle·kit · 粉絲自製工具，與 thatgamecompany 無關 · <a href="https://github.com/chunhao0613/sky-cotl" target="_blank" rel="noopener">GitHub</a></div>
+      <div>candle·kit · ${t('粉絲自製工具，與 thatgamecompany 無關')} · <a href="https://github.com/chunhao0613/sky-cotl" target="_blank" rel="noopener">GitHub</a></div>
     </div>`;
     document.body.append(footer);
 
@@ -93,7 +97,7 @@
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('圖片無法讀取'));
+      img.onerror = () => reject(new Error(t('圖片無法讀取')));
       img.src = src;
     });
   }

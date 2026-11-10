@@ -4,6 +4,8 @@
  * are kept in a separate asset store so undo snapshots stay small. */
 (function () {
   'use strict';
+  // i18n (assets/js/i18n.js); pages without it keep the Traditional Chinese source text
+  const t = window.I18N ? window.I18N.t : (s, v) => (v ? s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
 
   const { store, toast, readFileAsDataURL, loadImage, bindDropzone } = window.Site;
   const D = window.CardData;
@@ -15,25 +17,25 @@
 
   // ── model ─────────────────────────────────────────────────────────────────
   const SECTIONS = {
-    profile: { title: 'PROFILE', zh: '個人資料' },
-    pass: { title: 'PASS', zh: '季節', picker: 'catalog', views: ['grid', 'tile'] },
-    pin: { title: 'PIN & STAR', zh: '徽章', picker: 'pins', views: ['grid', 'tile'] },
-    iap: { title: 'IAP', zh: '內購', picker: 'catalog', views: ['grid', 'tile', 'row'] },
-    spells: { title: 'SPELLS', zh: '魔法', picker: 'catalog', views: ['grid'] },
-    extra: { title: 'CLOSET', zh: '衣櫃', picker: 'catalog', views: ['grid', 'tile'] },  // was EXTRA; key kept for saved cards
-    link: { title: 'LINK', zh: '綁定', picker: 'links' },
-    info: { title: 'INFO', zh: '備註' }
+    profile: { title: 'PROFILE', zh: t('個人資料') },
+    pass: { title: 'PASS', zh: t('季節'), picker: 'catalog', views: ['grid', 'tile'] },
+    pin: { title: 'PIN & STAR', zh: t('徽章'), picker: 'pins', views: ['grid', 'tile'] },
+    iap: { title: 'IAP', zh: t('內購'), picker: 'catalog', views: ['grid', 'tile', 'row'] },
+    spells: { title: 'SPELLS', zh: t('魔法'), picker: 'catalog', views: ['grid'] },
+    extra: { title: 'CLOSET', zh: t('衣櫃'), picker: 'catalog', views: ['grid', 'tile'] },  // was EXTRA; key kept for saved cards
+    link: { title: 'LINK', zh: t('綁定'), picker: 'links' },
+    info: { title: 'INFO', zh: t('備註') }
   };
   const SEC_IDS = Object.keys(SECTIONS);
   const ITEM_SECS = ['pass', 'pin', 'iap', 'spells', 'extra', 'link'];
 
   const DESIGNS = [
-    { id: 'classic', zh: '經典', en: 'Classic', tone: 'dark' },
-    { id: 'noir', zh: '墨夜', en: 'Noir', tone: 'dark' },
-    { id: 'prism', zh: '稜鏡', en: 'Prism', tone: 'light', mast: d => `<span class="mast-title" data-bind="title"></span><span class="mast-tag">PRISM / 01</span>` },
-    { id: 'future', zh: '未來', en: 'Future', tone: 'dark', mast: d => `<span class="mast-kicker">ISSUE / 01</span><span class="mast-title" data-bind="title"></span>` },
-    { id: 'scrapbook', zh: '剪貼簿', en: 'Scrapbook', tone: 'light', mast: d => `<span class="mast-tag">✦ SKY JOURNAL / MEMORIES</span><span class="mast-title" data-bind="title"></span>` },
-    { id: 'pixel', zh: '像素', en: 'Pixel', tone: 'dark', mast: d => `<span class="mast-l">LV.99</span><span class="mast-title" data-bind="title"></span><span class="mast-r">HP 5/5</span>` }
+    { id: 'classic', zh: t('經典'), en: 'Classic', tone: 'dark' },
+    { id: 'noir', zh: t('墨夜'), en: 'Noir', tone: 'dark' },
+    { id: 'prism', zh: t('稜鏡'), en: 'Prism', tone: 'light', mast: d => `<span class="mast-title" data-bind="title"></span><span class="mast-tag">PRISM / 01</span>` },
+    { id: 'future', zh: t('未來'), en: 'Future', tone: 'dark', mast: d => `<span class="mast-kicker">ISSUE / 01</span><span class="mast-title" data-bind="title"></span>` },
+    { id: 'scrapbook', zh: t('剪貼簿'), en: 'Scrapbook', tone: 'light', mast: d => `<span class="mast-tag">✦ SKY JOURNAL / MEMORIES</span><span class="mast-title" data-bind="title"></span>` },
+    { id: 'pixel', zh: t('像素'), en: 'Pixel', tone: 'dark', mast: d => `<span class="mast-l">LV.99</span><span class="mast-title" data-bind="title"></span><span class="mast-r">HP 5/5</span>` }
   ];
   const DESIGN = Object.fromEntries(DESIGNS.map(d => [d.id, d]));
 
@@ -138,7 +140,7 @@
       [snap(), ...history.stack].forEach(s => { (s.match(/"a[0-9a-z]{6,}"/g) || []).forEach(m => refs.add(m.slice(1, -1))); });
       Object.keys(assets).forEach(id => { if (!refs.has(id)) delete assets[id]; });
       const ok = store.set(KEY, state) && store.set(KEY_ASSETS, assets) && store.set(KEY_LIB, lib);
-      if (!ok && !warned) { warned = true; toast('瀏覽器空間不足或封鎖儲存，重新整理後可能遺失內容'); }
+      if (!ok && !warned) { warned = true; toast(t('瀏覽器空間不足或封鎖儲存，重新整理後可能遺失內容')); }
     }, 250);
   }
   let commitTimer = 0;
@@ -191,10 +193,10 @@
   const money = (n, cur) => cur + (Math.round(n * 100) / 100).toFixed(/[¥NT]/.test(cur) && Number.isInteger(n) ? 0 : 2);
   function itemInfo(it) {
     if (it.k === 'c') { const p = D.parsePath(it.p); return { label: p.label, sub: [p.catZh, p.season && D.seasonName(p.season)].filter(Boolean).join(' · '), season: p.season, html: `<img src="${esc(D.iconURL(it.p))}" alt="" draggable="false">` }; }
-    if (it.k === 'g') { const g = D.PINS.find(x => x.id === it.id) || D.PINS[0]; return { label: g.zh, sub: '徽章', html: g.svg }; }
-    if (it.k === 'l') { const l = D.LINKS.find(x => x.id === it.id) || D.LINKS[0]; return { label: l.name, sub: '綁定平台', html: l.svg }; }
+    if (it.k === 'g') { const g = D.PINS.find(x => x.id === it.id) || D.PINS[0]; return { label: g.zh, sub: t('徽章'), html: g.svg }; }
+    if (it.k === 'l') { const l = D.LINKS.find(x => x.id === it.id) || D.LINKS[0]; return { label: l.name, sub: t('綁定平台'), html: l.svg }; }
     const url = assetURL(it.id);
-    return { label: '自訂圖示', sub: '我的圖示', html: url ? `<img src="${url}" alt="" draggable="false">` : '' };
+    return { label: t('自訂圖示'), sub: t('我的圖示'), html: url ? `<img src="${url}" alt="" draggable="false">` : '' };
   }
   const itemKey = it => it.k + ':' + (it.p || it.id);
   function isEmpty(sec, s) {
@@ -212,7 +214,7 @@
     eye: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.5 8S4 3.6 8 3.6 14.5 8 14.5 8 12 12.4 8 12.4 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg>',
     eyeOff: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1.5 8S4 3.6 8 3.6 14.5 8 14.5 8 12 12.4 8 12.4 1.5 8 1.5 8z"/><path d="m2.5 2.5 11 11"/></svg>'
   };
-  const VIEW_LABEL = { grid: '格狀', tile: '卡片', row: '清單' };
+  const VIEW_LABEL = { grid: t('格狀'), tile: t('卡片'), row: t('清單') };
 
   function itemsHTML(sec, s, clean) {
     const list = s.items[sec], view = sec === 'spells' || sec === 'link' ? 'grid' : (s.views[sec] || 'grid');
@@ -226,7 +228,7 @@
       else if (sec === 'iap' && view !== 'grid') { const pr = fmtPrice(it.price); cap = `<span class="item-cap">${view === 'row' ? esc(name) + (pr !== null ? ' · ' : '') : ''}${pr !== null ? esc(money(pr, s.currency)) : (view === 'row' ? '' : '—')}</span>`; }
       else if (view !== 'grid') cap = `<span class="item-cap">${esc(sec === 'pass' && !it.label && info.season ? D.seasonName(info.season) : name)}</span>`;
       const tag = clean ? 'span' : 'button';
-      return `<${tag} ${clean ? '' : 'type="button" '}class="item${it.k === 'c' ? ' is-cat' : ''}${it.dead ? ' is-dead' : ''}" data-act="item" data-sec="${sec}" data-i="${i}" title="${esc(name)}"${clean ? '' : ` aria-label="${esc(name)}，點一下編輯"`}><span class="item-ico">${info.html}</span>${cap}</${tag}>`;
+      return `<${tag} ${clean ? '' : 'type="button" '}class="item${it.k === 'c' ? ' is-cat' : ''}${it.dead ? ' is-dead' : ''}" data-act="item" data-sec="${sec}" data-i="${i}" title="${esc(name)}"${clean ? '' : ` aria-label="${t('{name}，點一下編輯', { name: esc(name) })}"`}><span class="item-ico">${info.html}</span>${cap}</${tag}>`;
     }).join('');
     let total = '';
     if (sec === 'iap') {
@@ -248,15 +250,15 @@
       const curs = D.CURRENCIES.filter(c => p.curOn[c.id]).map(c =>
         `<span class="cur" title="${c.zh}">${c.svg}<span class="cur-val" ${editable('cur.' + c.id, '0', clean, 'inputmode="numeric" role="textbox" aria-label="' + c.zh + '"')}>${esc(p.cur[c.id] || '0')}</span></span>`).join('');
       const h = p.h, hasH = String(h.now).trim() !== '';
-      const range = [h.tall && `最高 ${esc(h.tall)}`, h.short && `最矮 ${esc(h.short)}`].filter(Boolean).join(' · ');
+      const range = [h.tall && t('最高 {h}', { h: esc(h.tall) }), h.short && t('最矮 {h}', { h: esc(h.short) })].filter(Boolean).join(' · ');
       return `<section class="${cls}" data-sec="profile">
-        ${clean ? '' : `<span class="cp-tools ed"><button type="button" class="cp-btn" data-act="profile" aria-label="編輯個人資料">${ICON.pen}</button></span>`}
+        ${clean ? '' : `<span class="cp-tools ed"><button type="button" class="cp-btn" data-act="profile" aria-label="${t('編輯個人資料')}">${ICON.pen}</button></span>`}
         <div class="pf${showAv ? '' : ' no-avatar'}">
-          ${showAv ? `<div class="pf-avatar${av ? '' : ' is-empty'}" ${clean ? '' : `data-act="avatar" role="button" tabindex="0" aria-label="${av ? '更換頭像' : '上傳頭像'}"`}>${av ? `<img src="${av}" alt="">` : D.GLYPH.avatar}${!av && !clean ? '<span class="pf-avatar-hint ed">點我加頭像</span>' : ''}</div>` : ''}
+          ${showAv ? `<div class="pf-avatar${av ? '' : ' is-empty'}" ${clean ? '' : `data-act="avatar" role="button" tabindex="0" aria-label="${av ? t('更換頭像') : t('上傳頭像')}"`}>${av ? `<img src="${av}" alt="">` : D.GLYPH.avatar}${!av && !clean ? `<span class="pf-avatar-hint ed">${t('點我加頭像')}</span>` : ''}</div>` : ''}
           <div class="pf-main">
             ${curs ? `<div class="pf-cur">${curs}</div>` : ''}
-            ${hasH ? `<div class="pf-height" ${clean ? '' : 'data-act="height" role="button" tabindex="0" aria-label="修改身高"'}>${D.GLYPH.height}<b>${esc(h.now)}</b>${range ? `<span class="sep">|</span><small>${range}</small>` : ''}</div>` : ''}
-            ${p.note.trim() ? `<div class="pf-note">${D.GLYPH.pencil}<div class="pf-note-val" ${editable('note', '加一句備註', clean, 'role="textbox" aria-label="個人備註"')}>${esc(p.note)}</div></div>` : ''}
+            ${hasH ? `<div class="pf-height" ${clean ? '' : `data-act="height" role="button" tabindex="0" aria-label="${t('修改身高')}"`}>${D.GLYPH.height}<b>${esc(h.now)}</b>${range ? `<span class="sep">|</span><small>${range}</small>` : ''}</div>` : ''}
+            ${p.note.trim() ? `<div class="pf-note">${D.GLYPH.pencil}<div class="pf-note-val" ${editable('note', t('加一句備註'), clean, `role="textbox" aria-label="${t('個人備註')}"`)}>${esc(p.note)}</div></div>` : ''}
           </div>
         </div>
       </section>`;
@@ -265,20 +267,20 @@
     if (!clean) {
       if (meta.views && meta.views.length > 1) {
         const v = s.views[sec] || 'grid', next = meta.views[(meta.views.indexOf(v) + 1) % meta.views.length];
-        tools.push(`<button type="button" class="cp-btn" data-act="view" data-sec="${sec}" aria-label="切換顯示方式（目前：${VIEW_LABEL[v]}，下一個：${VIEW_LABEL[next]}）" title="顯示方式：${VIEW_LABEL[v]}">${ICON[v]}</button>`);
+        tools.push(`<button type="button" class="cp-btn" data-act="view" data-sec="${sec}" aria-label="${t('切換顯示方式（目前：{cur}，下一個：{next}）', { cur: VIEW_LABEL[v], next: VIEW_LABEL[next] })}" title="${t('顯示方式：{v}', { v: VIEW_LABEL[v] })}">${ICON[v]}</button>`);
       }
-      if (sec === 'link') tools.push(`<button type="button" class="cp-btn" data-act="link-note" aria-pressed="${s.linkNoteOn}" aria-label="${s.linkNoteOn ? '收起' : '加入'}備註">${ICON.pen}</button>`);
-      if (sec === 'iap' && hasPrices(s)) tools.push(`<button type="button" class="cp-btn" data-act="total" aria-pressed="${!s.totalHidden}" aria-label="${s.totalHidden ? '在名片上顯示總價' : '從名片上隱藏總價'}" title="總價：${s.totalHidden ? '隱藏中' : '顯示中'}">${s.totalHidden ? ICON.eyeOff : ICON.eye}</button>`);
-      if (meta.picker) tools.push(`<button type="button" class="cp-btn" data-act="add" data-sec="${sec}" aria-label="加入${meta.zh}物品">${ICON.plus}</button>`);
+      if (sec === 'link') tools.push(`<button type="button" class="cp-btn" data-act="link-note" aria-pressed="${s.linkNoteOn}" aria-label="${s.linkNoteOn ? t('收起') : t('加入')}${t('備註')}">${ICON.pen}</button>`);
+      if (sec === 'iap' && hasPrices(s)) tools.push(`<button type="button" class="cp-btn" data-act="total" aria-pressed="${!s.totalHidden}" aria-label="${s.totalHidden ? t('在名片上顯示總價') : t('從名片上隱藏總價')}" title="${t('總價：')}${s.totalHidden ? t('隱藏中') : t('顯示中')}">${s.totalHidden ? ICON.eyeOff : ICON.eye}</button>`);
+      if (meta.picker) tools.push(`<button type="button" class="cp-btn" data-act="add" data-sec="${sec}" aria-label="${t('加入{sec}物品', { sec: meta.zh })}">${ICON.plus}</button>`);
     }
     let body = '';
-    if (sec === 'info') body = `<div class="info-note" ${editable('info', '寫點備註、聯絡方式或想說的話…', clean, 'data-multiline="true" role="textbox" aria-multiline="true" aria-label="INFO 內容"')}>${esc(s.info)}</div>`;
+    if (sec === 'info') body = `<div class="info-note" ${editable('info', t('寫點備註、聯絡方式或想說的話…'), clean, `data-multiline="true" role="textbox" aria-multiline="true" aria-label="${t('INFO 內容')}"`)}>${esc(s.info)}</div>`;
     else {
-      if (sec === 'link' && (s.linkNoteOn || s.linkNote.trim())) body += `<div class="link-note" ${editable('linkNote', '加一句說明，例如：信箱已綁定', clean, 'role="textbox" aria-label="LINK 備註"')}>${esc(s.linkNote)}</div>`;
+      if (sec === 'link' && (s.linkNoteOn || s.linkNote.trim())) body += `<div class="link-note" ${editable('linkNote', t('加一句說明，例如：信箱已綁定'), clean, `role="textbox" aria-label="${t('LINK 備註')}"`)}>${esc(s.linkNote)}</div>`;
       body += itemsHTML(sec, s, clean);
     }
     return `<section class="${cls}" data-sec="${sec}">
-      <div class="cp-head"><span class="cp-title" ${editable('secTitle.' + sec, meta.title, clean, 'role="textbox" aria-label="區塊標題"')}>${esc(s.titles[sec] || meta.title)}</span>${tools.length ? `<span class="cp-tools ed">${tools.join('')}</span>` : ''}</div>
+      <div class="cp-head"><span class="cp-title" ${editable('secTitle.' + sec, meta.title, clean, `role="textbox" aria-label="${t('區塊標題')}"`)}>${esc(s.titles[sec] || meta.title)}</span>${tools.length ? `<span class="cp-tools ed">${tools.join('')}</span>` : ''}</div>
       ${body ? `<div class="cp-body">${body}</div>` : ''}
     </section>`;
   }
@@ -328,7 +330,7 @@
     const t = card.querySelector('.mast-title');
     if (t) {
       t.textContent = s.title;
-      if (!clean) { t.setAttribute('contenteditable', 'true'); t.setAttribute('spellcheck', 'false'); t.dataset.ph = 'SKY PROFILE'; t.setAttribute('role', 'textbox'); t.setAttribute('aria-label', '名片標題'); }
+      if (!clean) { t.setAttribute('contenteditable', 'true'); t.setAttribute('spellcheck', 'false'); t.dataset.ph = 'SKY PROFILE'; t.setAttribute('role', 'textbox'); t.setAttribute('aria-label', t('名片標題')); }
     }
   }
 
@@ -372,7 +374,7 @@
     $('#stage-size').textContent = `${W} × ${H}`;
     $('#out-size').textContent = `${W * 2} × ${H * 2} px`;
     const d = DESIGN[state.design];
-    $('#stage-style').textContent = `${d.zh} ${d.en}`;
+    $('#stage-style').textContent = d.zh === d.en ? d.zh : `${d.zh} ${d.en}`;
     syncSizeUI();
     const ex = $('#export-modal');
     if (!ex.hidden) syncExportUI();
@@ -442,7 +444,7 @@
       const views = SECTIONS[sec].views, v = state.views[sec] || 'grid';
       state.views[sec] = views[(views.indexOf(v) + 1) % views.length];
       commit(); renderMain();
-      toast(`顯示方式：${VIEW_LABEL[state.views[sec]]}`, 1200);
+      toast(t('顯示方式：{v}', { v: VIEW_LABEL[state.views[sec]] }), 1200);
       $(`[data-act="view"][data-sec="${sec}"]`, cardEl)?.focus();
     }
     else if (act === 'item') openPop(sec, +t.dataset.i);
@@ -464,14 +466,14 @@
     previewMode = !previewMode;
     e.currentTarget.setAttribute('aria-pressed', previewMode);
     closePop(); renderMain();
-    toast(previewMode ? '預覽：這就是匯出後的樣子' : '回到編輯模式', 1500);
+    toast(previewMode ? t('預覽：這就是匯出後的樣子') : t('回到編輯模式'), 1500);
   });
   $('#btn-reset').addEventListener('click', () => {
     flushText();
     const keep = { design: state.design, themes: state.themes, title: state.title };
     state = Object.assign(blank(), keep);
     closePop(); renderAll(); commit();
-    toast('已清空名片內容，可以按「復原」找回');
+    toast(t('已清空名片內容，可以按「復原」找回'));
   });
   $('#btn-undo').addEventListener('click', () => stepHistory(-1));
   $('#btn-redo').addEventListener('click', () => stepHistory(1));
@@ -488,9 +490,9 @@
 
   // ── design strip with live thumbnails ────────────────────────────────────
   const strip = $('#style-strip');
-  strip.innerHTML = DESIGNS.map(d => `<button type="button" role="radio" class="style-tile" data-design="${d.id}" aria-checked="false" aria-label="${d.zh} ${d.en}">
+  strip.innerHTML = DESIGNS.map(d => `<button type="button" role="radio" class="style-tile" data-design="${d.id}" aria-checked="false" aria-label="${d.zh === d.en ? d.zh : d.zh + ' ' + d.en}">
       <span class="thumb" aria-hidden="true"><span class="thumb-inner"><span class="card-shell"><span class="card"></span></span></span></span>
-      <span class="meta"><span class="zh">${d.zh}</span><span class="en">${d.en}</span><span class="state">編輯中</span></span>
+      <span class="meta"><span class="zh">${d.zh}</span>${d.zh === d.en ? '' : `<span class="en">${d.en}</span>`}<span class="state">${t('編輯中')}</span></span>
     </button>`).join('');
   strip.addEventListener('click', e => {
     const tile = e.target.closest('.style-tile');
@@ -552,12 +554,12 @@
   function renderCols(focusSec) {
     const L = state.layout, dbl = L.cols === 2;
     colsEl.classList.toggle('is-double', dbl);
-    const lists = dbl ? [['left', '左欄'], ['right', '右欄']] : [['left', '區塊']];
+    const lists = dbl ? [['left', t('左欄')], ['right', t('右欄')]] : [['left', t('區塊')]];
     colsEl.innerHTML = lists.map(([key, label]) => {
       const ids = L[key], shown = ids.filter(id => !L.hidden[id]).length;
       return `<div class="col-box" data-col="${key}">
         <div class="col-head"><i class="${dbl ? 'is-' + key : ''}" aria-hidden="true"></i><b>${label}</b><span class="mono">${shown}/${ids.length}</span></div>
-        <ul class="sec-list" data-col="${key}" aria-label="${label}">${ids.map(rowHTML).join('')}${ids.length ? '' : '<li class="col-empty">把區塊拖到這裡</li>'}</ul>
+        <ul class="sec-list" data-col="${key}" aria-label="${label}">${ids.map(rowHTML).join('')}${ids.length ? '' : `<li class="col-empty">${t('把區塊拖到這裡')}</li>`}</ul>
       </div>`;
     }).join('');
     $$('.layout-opt').forEach(b => b.setAttribute('aria-checked', String(+b.dataset.cols === L.cols)));
@@ -566,9 +568,9 @@
   function rowHTML(id) {
     const hidden = !!state.layout.hidden[id], meta = SECTIONS[id], name = state.titles[id] || meta.title;
     return `<li class="sec-row${hidden ? ' is-hidden' : ''}" data-sec="${id}">
-      <button type="button" class="row-btn eye-btn" data-act="eye" aria-pressed="${!hidden}" aria-label="${hidden ? '顯示' : '隱藏'} ${esc(name)}">${hidden ? EYE_OFF : EYE}</button>
-      <span class="name">${esc(name)}${isEmpty(id, state) && !hidden ? '<span class="empty-tag">（空）</span>' : ''}</span>
-      <button type="button" class="row-btn handle" aria-label="拖曳或用方向鍵移動：${esc(name)}" aria-roledescription="可拖曳">${GRIP}</button>
+      <button type="button" class="row-btn eye-btn" data-act="eye" aria-pressed="${!hidden}" aria-label="${hidden ? t('顯示') : t('隱藏')} ${esc(name)}">${hidden ? EYE_OFF : EYE}</button>
+      <span class="name">${esc(name)}${isEmpty(id, state) && !hidden ? `<span class="empty-tag">${t('（空）')}</span>` : ''}</span>
+      <button type="button" class="row-btn handle" aria-label="${t('拖曳或用方向鍵移動：{name}', { name: esc(name) })}" aria-roledescription="${t('可拖曳')}">${GRIP}</button>
     </li>`;
   }
   $$('.layout-opt').forEach(b => b.addEventListener('click', () => setCols(+b.dataset.cols)));
@@ -600,7 +602,7 @@
     L[col].splice(clamp(index, 0, L[col].length), 0, id);
     commit(); renderMain(); renderCols(id);
     const name = state.titles[id] || SECTIONS[id].title;
-    live.textContent = `${name} 移到${L.cols === 2 ? (col === 'left' ? '左欄' : '右欄') : ''}第 ${L[col].indexOf(id) + 1} 個`;
+    live.textContent = t('{name} 移到{col}第 {n} 個', { name, col: L.cols === 2 ? (col === 'left' ? t('左欄') : t('右欄')) : '', n: L[col].indexOf(id) + 1 });
   }
   colsEl.addEventListener('keydown', e => {
     const h = e.target.closest('.handle');
@@ -662,10 +664,10 @@
   function syncSizeUI() {
     const W = cardEl.offsetWidth, H = cardEl.offsetHeight, s = state.size;
     inW.value = s.w || W; inW.classList.toggle('is-auto', !s.w); fill(inW);
-    $('#out-width').textContent = s.w ? s.w + 'px' : '自動';
+    $('#out-width').textContent = s.w ? s.w + 'px' : t('自動');
     $('#auto-width').setAttribute('aria-pressed', !s.w);
     inH.value = s.h || H; inH.classList.toggle('is-auto', !s.h); fill(inH);
-    $('#out-height').textContent = s.h ? s.h + 'px' : '自動';
+    $('#out-height').textContent = s.h ? s.h + 'px' : t('自動');
     $('#auto-height').setAttribute('aria-pressed', !s.h);
     $('#row-balance').hidden = state.layout.cols !== 2;
     inB.value = s.bal; fill(inB);
@@ -701,7 +703,7 @@
     $$('.swatch', solidPresets).forEach(b => b.setAttribute('aria-checked', String(b.dataset.solid.toLowerCase() === th.solid.toLowerCase())));
     const own = th.wp && !th.wp.startsWith('preset:') && assetURL(th.wp);
     $('#wp-current').hidden = !own;
-    if (own) { $('#wp-thumb').style.backgroundImage = `url("${own}")`; $('#wp-name').textContent = th.wpName || '我的桌布'; }
+    if (own) { $('#wp-thumb').style.backgroundImage = `url("${own}")`; $('#wp-name').textContent = th.wpName || t('我的桌布'); }
     $$('.wp-opt', wpGrid).forEach(b => b.setAttribute('aria-checked', String(b.dataset.wp === th.wp)));
     $('#in-overlay').value = th.overlay; fill($('#in-overlay')); $('#out-overlay').textContent = th.overlay + '%';
     $('#in-blur').checked = th.blur;
@@ -763,13 +765,13 @@
     return c.toDataURL(type, q);
   }
   bindDropzone($('#wp-drop'), $('#wp-input'), async file => {
-    if (!/^image\//.test(file.type)) { toast('請選擇圖片檔'); return; }
+    if (!/^image\//.test(file.type)) { toast(t('請選擇圖片檔')); return; }
     try {
       const url = await shrinkImage(file, 1400, 'image/jpeg', .82); // keeps localStorage use modest
       const id = putAsset(url);
       applyTheme({ mode: 'image', wp: id, wpName: file.name.slice(0, 40), wpLum: wallpaperLum(url) });
-      toast('桌布已套用');
-    } catch { toast('圖片無法讀取'); }
+      toast(t('桌布已套用'));
+    } catch { toast(t('圖片無法讀取')); }
   });
   $('#wp-change').addEventListener('click', () => $('#wp-input').click());
   $('#wp-remove').addEventListener('click', () => applyTheme({ wp: 'preset:' + D.WALLPAPERS[0].id, wpName: '', wpLum: wallpaperLum(D.wallpaperURL(D.WALLPAPERS[0].id)) }));
@@ -807,7 +809,7 @@
   const picker = $('#picker-modal'), pBody = $('#picker-body');
   const PRICES = ['auto', '', '0.99', '1.99', '2.99', '4.99', '9.99', '14.99', '19.99', '24.99', '29.99', '49.99', '99.99'];
   let pk = null; // { sec, mode, sel: Map(key → item), order: [keys], cat, season, q, price }
-  const PICK_TITLES = { pass: 'PASS · 項鍊（含畢業禮）', pin: 'PIN & STAR · 徽章', iap: 'IAP · 內購禮包', spells: 'SPELLS · 魔法', extra: 'CLOSET · 衣櫃', link: 'LINK · 綁定平台' };
+  const PICK_TITLES = { pass: t('PASS · 項鍊（含畢業禮）'), pin: t('PIN & STAR · 徽章'), iap: t('IAP · 內購禮包'), spells: t('SPELLS · 魔法'), extra: t('CLOSET · 衣櫃'), link: t('LINK · 綁定平台') };
   // which catalogue categories each section offers
   const SEC_CATS = { pass: ['pass'], iap: D.CLOSET_CATS, spells: ['spell'], extra: D.CLOSET_CATS };
   function inSection(i, sec) {
@@ -815,7 +817,7 @@
     if (sec === 'iap') return !!i.iap && D.CLOSET_CATS.includes(i.cat); // items sold in paid packs
     return (SEC_CATS[sec] || []).includes(i.cat);
   }
-  const usdLabel = i => (i.usd && i.usd !== '?' ? 'US$' + i.usd : (i.usd === '?' ? '價格未知' : ''));
+  const usdLabel = i => (i.usd && i.usd !== '?' ? 'US$' + i.usd : (i.usd === '?' ? t('價格未知') : ''));
   function openPicker(sec, opener) {
     closePop();
     const meta = SECTIONS[sec];
@@ -831,7 +833,7 @@
     $('#picker-season').hidden = pk.mode !== 'catalog' || sec === 'spells';
     $('#picker-group').hidden = pk.mode !== 'catalog' || sec === 'pass' || sec === 'spells';
     $('#picker-group').value = pk.group;
-    if (sec === 'iap') $('#price-chips').innerHTML = PRICES.map(p => `<button type="button" role="radio" class="chip-btn" data-price="${p}" aria-checked="${p === pk.price}">${p === 'auto' ? '官方價格' : p ? '$' + p : '不標價'}</button>`).join('');
+    if (sec === 'iap') $('#price-chips').innerHTML = PRICES.map(p => `<button type="button" role="radio" class="chip-btn" data-price="${p}" aria-checked="${p === pk.price}">${p === 'auto' ? t('官方價格') : p ? '$' + p : t('不標價')}</button>`).join('');
     openModal(picker, opener);
     renderPickerChrome();
     renderPicker();
@@ -839,26 +841,26 @@
   function renderPickerChrome() {
     if (pk.mode === 'catalog') {
       const own = SEC_CATS[pk.sec] || [];
-      const cats = [...(own.length > 1 ? [['all', '全部']] : []), ...own.map(id => [id, D.CAT_BY_ID[id].zh]), ['mine', '我的圖示']];
+      const cats = [...(own.length > 1 ? [['all', t('全部')]] : []), ...own.map(id => [id, D.CAT_BY_ID[id].zh]), ['mine', t('我的圖示')]];
       $('#picker-cats').innerHTML = cats.map(([id, zh]) => `<button type="button" class="chip-btn" data-cat="${id}" aria-pressed="${id === pk.cat}">${zh}</button>`).join('');
     } else if (pk.mode === 'pins') {
-      $('#picker-cats').innerHTML = [['all', '徽章'], ['mine', '我的圖示']].map(([id, zh]) => `<button type="button" class="chip-btn" data-cat="${id}" aria-pressed="${id === pk.cat}">${zh}</button>`).join('');
+      $('#picker-cats').innerHTML = [['all', t('徽章')], ['mine', t('我的圖示')]].map(([id, zh]) => `<button type="button" class="chip-btn" data-cat="${id}" aria-pressed="${id === pk.cat}">${zh}</button>`).join('');
     }
   }
-  function updatePickerStatus() { $('#picker-status').textContent = `已選 ${pk.sel.size} 個`; }
+  function updatePickerStatus() { $('#picker-status').textContent = t('已選 {n} 個', { n: pk.sel.size }); }
   function pickBtn(key, html, label, extra = '') {
     return `<button type="button" class="pick${extra}" data-key="${esc(key)}" aria-pressed="${pk.sel.has(key)}" title="${esc(label)}" aria-label="${esc(label)}">${html}</button>`;
   }
   function mineHTML() {
     const ids = lib.filter(id => assets[id]);
-    const btns = ids.map(id => `<span class="pick-wrap" style="position:relative">${pickBtn('u:' + id, `<img src="${assets[id]}" alt="">`, '自訂圖示')}<button type="button" class="pick-del" data-del="${id}" aria-label="從圖庫刪除">×</button></span>`).join('');
-    return `<div class="picker-group"><p class="picker-group-head">我的圖示 <span class="mono">${ids.length}</span></p>${ids.length ? `<div class="picker-grid">${btns}</div>` : '<p class="picker-empty">還沒有自己的圖示 — 按「上傳自己的圖示」加入截圖或圖片，會自動裁成正方形。</p>'}</div>`;
+    const btns = ids.map(id => `<span class="pick-wrap" style="position:relative">${pickBtn('u:' + id, `<img src="${assets[id]}" alt="">`, t('自訂圖示'))}<button type="button" class="pick-del" data-del="${id}" aria-label="${t('從圖庫刪除')}">×</button></span>`).join('');
+    return `<div class="picker-group"><p class="picker-group-head">${t('我的圖示')} <span class="mono">${ids.length}</span></p>${ids.length ? `<div class="picker-grid">${btns}</div>` : `<p class="picker-empty">${t('還沒有自己的圖示 — 按「上傳自己的圖示」加入截圖或圖片，會自動裁成正方形。')}</p>`}</div>`;
   }
   async function renderPicker() {
     updatePickerStatus();
     if (pk.mode === 'links') {
       pBody.innerHTML = `<div class="picker-grid is-links">${D.LINKS.map(l => pickBtn('l:' + l.id, `${l.svg}<span>${l.name}</span>`, l.name, ' is-link')).join('')}</div>
-        <p class="hint" style="margin-top:14px">選好之後，點名片上的平台圖示可以標記成「已失效」。</p>`;
+        <p class="hint" style="margin-top:14px">${t('選好之後，點名片上的平台圖示可以標記成「已失效」。')}</p>`;
       return;
     }
     if (pk.mode === 'pins') {
@@ -867,12 +869,12 @@
     }
     if (pk.cat === 'mine') { pBody.innerHTML = mineHTML(); return; }
     if (!pk.catalog) {
-      pBody.innerHTML = '<p class="picker-empty">正在載入物品圖示…</p>';
+      pBody.innerHTML = `<p class="picker-empty">${t('正在載入物品圖示…')}</p>`;
       try { pk.catalog = await D.loadCatalog(); }
-      catch { pBody.innerHTML = '<p class="picker-empty">物品清單載入失敗，請檢查網路後再試一次。</p>'; return; }
+      catch { pBody.innerHTML = `<p class="picker-empty">${t('物品清單載入失敗，請檢查網路後再試一次。')}</p>`; return; }
       if (!pk || picker.hidden) return;
       const seasons = [...new Set(pk.catalog.map(i => i.season).filter(Boolean))].sort();
-      $('#picker-season').innerHTML = `<option value="all">全部季節</option><option value="none">非季節物品（常駐、活動、內購）</option>`
+      $('#picker-season').innerHTML = `<option value="all">${t('全部季節')}</option><option value="none">${t('非季節物品（常駐、活動、內購）')}</option>`
         + seasons.map(c => `<option value="${c}">${esc(D.seasonFull(c))}</option>`).join('');
       $('#picker-season').value = pk.season;
     }
@@ -897,12 +899,12 @@
     else keys.sort((a, b) => catRank(a) - catRank(b));
     const html = keys.map(g => {
       const items = groups.get(g);
-      const head = bySeason ? (g === '—' ? '非季節' : `<span class="mono">AP${g}</span>${esc([D.SEASONS[g]?.zh, D.SEASONS[g]?.en].filter(Boolean).join(' · '))}`)
+      const head = bySeason ? (g === '—' ? t('非季節') : `<span class="mono">AP${g}</span>${esc(D.seasonLabel(g))}`)
         : `${esc(D.CATS.find(c => c.id === g)?.zh || g)} <span class="mono">${items.length}</span>`;
-      return `<div class="picker-group"><p class="picker-group-head">${head}<button type="button" class="text-link" data-all="${esc(items.map(i => 'c:' + i.path).join('|'))}">全選這組</button></p>
-        <div class="picker-grid">${items.map(i => pickBtn('c:' + i.path, `<img src="${esc(D.iconURL(i.path))}" alt="" loading="lazy" decoding="async">${pk.sec === 'iap' && usdLabel(i) ? `<span class="pick-price">${esc(usdLabel(i))}</span>` : ''}`, `${i.label}${i.season ? ' · ' + D.seasonName(i.season) : ''}${pk.sec === 'iap' && i.pack ? ' · ' + i.pack + (usdLabel(i) ? '（' + usdLabel(i) + '）' : '') : ''}`)).join('')}</div></div>`;
+      return `<div class="picker-group"><p class="picker-group-head">${head}<button type="button" class="text-link" data-all="${esc(items.map(i => 'c:' + i.path).join('|'))}">${t('全選這組')}</button></p>
+        <div class="picker-grid">${items.map(i => pickBtn('c:' + i.path, `<img src="${esc(D.iconURL(i.path))}" alt="" loading="lazy" decoding="async">${pk.sec === 'iap' && usdLabel(i) ? `<span class="pick-price">${esc(usdLabel(i))}</span>` : ''}`, `${i.label}${i.season ? ' · ' + D.seasonName(i.season) : ''}${pk.sec === 'iap' && i.pack ? ' · ' + i.pack + (usdLabel(i) ? t('（') + usdLabel(i) + t('）') : '') : ''}`)).join('')}</div></div>`;
     }).join('');
-    pBody.innerHTML = html || '<p class="picker-empty">找不到符合的物品，換個關鍵字試試。</p>';
+    pBody.innerHTML = html || `<p class="picker-empty">${t('找不到符合的物品，換個關鍵字試試。')}</p>`;
   }
   function keyToItem(key) {
     const i = key.indexOf(':'), k = key.slice(0, i), v = key.slice(i + 1);
@@ -964,9 +966,9 @@
         const id = putAsset(c.toDataURL('image/png'));
         lib.unshift(id);
         if (pk) pk.sel.set('u:' + id, keyToItem('u:' + id));
-      } catch { toast('有圖片無法讀取'); }
+      } catch { toast(t('有圖片無法讀取')); }
     }
-    if (files.length) { save(); if (pk) { pk.cat = 'mine'; renderPickerChrome(); renderPicker(); } toast(`已加入 ${files.length} 個圖示`); }
+    if (files.length) { save(); if (pk) { pk.cat = 'mine'; renderPickerChrome(); renderPicker(); } toast(t('已加入 {n} 個圖示', { n: files.length })); }
   });
   $('#picker-ok').addEventListener('click', () => {
     const sec = pk.sec, kept = state.items[sec].filter(it => pk.sel.has(itemKey(it)));
@@ -976,7 +978,7 @@
     if (state.layout.hidden[sec] && state.items[sec].length) delete state.layout.hidden[sec];
     closeModal(picker);
     commit(); renderMain(); renderCols();
-    if (added.length) toast(`已加入 ${added.length} 個物品`, 1500);
+    if (added.length) toast(t('已加入 {n} 個物品', { n: added.length }), 1500);
   });
   picker.addEventListener('modal-close', () => { pk = null; });
 
@@ -1053,7 +1055,7 @@
     commit(); renderMain(); renderCols();
     const next = $(`.item[data-sec="${sec}"][data-i="${Math.min(i, state.items[sec].length - 1)}"]`, cardEl) || $(`[data-act="add"][data-sec="${sec}"]`, cardEl);
     next?.focus();
-    toast('已移除，可以按「復原」找回', 1600);
+    toast(t('已移除，可以按「復原」找回'), 1600);
   });
   pop.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closePop(); } });
   document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('.item')) closePop(); });
@@ -1067,14 +1069,14 @@
   $('#avatar-input').addEventListener('change', async e => {
     const f = e.target.files[0]; e.target.value = '';
     if (!f) return;
-    if (!/^image\//.test(f.type)) { toast('請選擇圖片檔'); return; }
+    if (!/^image\//.test(f.type)) { toast(t('請選擇圖片檔')); return; }
     try {
       const url = await readFileAsDataURL(f);
       crop.img = await loadImage(url);
       cropImg.src = url;
       openModal(cropModal, avatarOpener);
       requestAnimationFrame(() => { crop.S = cropStage.clientWidth; crop.z = 1; $('#crop-zoom').value = 1; centerCrop(); });
-    } catch { toast('圖片無法讀取'); }
+    } catch { toast(t('圖片無法讀取')); }
   });
   const cropScale = () => crop.S / Math.min(crop.img.naturalWidth, crop.img.naturalHeight) * crop.z;
   function clampCrop() {
@@ -1114,7 +1116,7 @@
     if (state.layout.hidden.profile) delete state.layout.hidden.profile;
     closeModal(cropModal);
     commit(); renderMain(); renderCols(); syncProfileUI();
-    toast('頭像已更新');
+    toast(t('頭像已更新'));
   });
 
   // ── profile modal ────────────────────────────────────────────────────────
@@ -1131,10 +1133,10 @@
     $('#pm-avatar-remove').disabled = !av;
     $('#pm-avatar-on').checked = p.avatarOn !== false;
     $('#pm-cur').innerHTML = D.CURRENCIES.map(c => `<div class="pm-cur-item${p.curOn[c.id] ? '' : ' is-off'}">
-        <button type="button" class="row-btn pm-cur-eye" data-cur-eye="${c.id}" aria-pressed="${!!p.curOn[c.id]}" aria-label="${p.curOn[c.id] ? '隱藏' : '顯示'}${c.zh}">${p.curOn[c.id] ? EYE : EYE_OFF}</button>
-        ${c.svg}<small>${c.zh}</small><input class="input" data-cur-in="${c.id}" value="${esc(p.cur[c.id] || '0')}" inputmode="numeric" maxlength="9" aria-label="${c.zh}數量">
+        <button type="button" class="row-btn pm-cur-eye" data-cur-eye="${c.id}" aria-pressed="${!!p.curOn[c.id]}" aria-label="${p.curOn[c.id] ? t('隱藏{name}', { name: c.zh }) : t('顯示{name}', { name: c.zh })}">${p.curOn[c.id] ? EYE : EYE_OFF}</button>
+        ${c.svg}<small>${c.zh}</small><input class="input" data-cur-in="${c.id}" value="${esc(p.cur[c.id] || '0')}" inputmode="numeric" maxlength="9" aria-label="${t('{name}數量', { name: c.zh })}">
       </div>`).join('');
-    $('#pm-cur-all').textContent = Object.values(p.curOn).some(Boolean) ? '全部隱藏' : '全部顯示';
+    $('#pm-cur-all').textContent = Object.values(p.curOn).some(Boolean) ? t('全部隱藏') : t('全部顯示');
     $$('[data-h]').forEach(i => { if (document.activeElement !== i) i.value = p.h[i.dataset.h] || ''; });
     if (document.activeElement !== $('#pm-note')) $('#pm-note').value = p.note;
   }
@@ -1169,11 +1171,11 @@
   $('#pm-height-import').addEventListener('click', () => {
     const h = store.get('candle.height.last', null);
     const n = v => (v !== null && v !== '' && Number.isFinite(Number(v))) ? Number(v) : null;
-    if (!h || typeof h !== 'object' || n(h.current) === null) { toast('還沒有身高紀錄，先到身高工具量一次吧'); return; }
+    if (!h || typeof h !== 'object' || n(h.current) === null) { toast(t('還沒有身高紀錄，先到身高工具量一次吧')); return; }
     const f = v => n(v) === null ? '' : String(Math.round(n(v) * 100) / 100);
     state.profile.h = { now: f(h.current), tall: f(h.tallest), short: f(h.shortest) };
     commit(); renderMain(); syncProfileUI();
-    toast('已從身高工具帶入');
+    toast(t('已從身高工具帶入'));
   });
   profileModal.addEventListener('modal-close', () => commit(true));
 
@@ -1384,7 +1386,7 @@
     flushText(); closePop();
     const btn = $('#btn-download');
     btn.classList.add('is-busy');
-    toast('正在產生圖片…', 6000);
+    toast(t('正在產生圖片…'), 6000);
     const wasPreview = previewMode;
     try {
       renderMain(); // re-derive the on-screen card from state so the screen and the file match
@@ -1398,10 +1400,10 @@
       a.download = fileName(opts.name, opts.format === 'jpeg' ? 'jpg' : 'png');
       document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-      toast(`已下載 ${a.download}`);
+      toast(t('已下載 {file}', { file: a.download }));
     } catch (err) {
       console.error(err);
-      toast('匯出失敗，請重新整理後再試一次');
+      toast(t('匯出失敗，請重新整理後再試一次'));
     } finally {
       previewMode = wasPreview; renderMain();
       btn.classList.remove('is-busy');
