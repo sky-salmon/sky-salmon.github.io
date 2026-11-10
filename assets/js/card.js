@@ -19,8 +19,8 @@
     pass: { title: 'PASS', zh: '季節', picker: 'catalog', views: ['grid', 'tile'] },
     pin: { title: 'PIN & STAR', zh: '徽章', picker: 'pins', views: ['grid', 'tile'] },
     iap: { title: 'IAP', zh: '內購', picker: 'catalog', views: ['grid', 'tile', 'row'] },
-    spells: { title: 'SPELLS', zh: '法術', picker: 'catalog', views: ['grid'] },
-    extra: { title: 'EXTRA', zh: '其他', picker: 'catalog', views: ['grid', 'tile'] },
+    spells: { title: 'SPELLS', zh: '魔法', picker: 'catalog', views: ['grid'] },
+    extra: { title: 'CLOSET', zh: '衣櫃', picker: 'catalog', views: ['grid', 'tile'] },  // was EXTRA; key kept for saved cards
     link: { title: 'LINK', zh: '綁定', picker: 'links' },
     info: { title: 'INFO', zh: '備註' }
   };
@@ -41,8 +41,9 @@
   const CUR_DEFAULT_ON = { candle: true, ascended: true, heart: true, seasonCandle: true };
 
   const SAMPLE_ITEMS = {
-    pass: ['01_斗篷_Cape/CharSkyKid_Wing_AP21Deer', '01_斗篷_Cape/CharSkyKid_Wing_AP16Fire', '01_斗篷_Cape/CharSkyKid_Wing_AP16ButterflyBlue', '01_斗篷_Cape/CharSkyKid_Wing_AP11Scarf_01'],
-    iap: ['01_斗篷_Cape/CharSkyKid_Wing_AnnivTuxedo', '01_斗篷_Cape/CharSkyKid_Wing_BloomSunflower', '01_斗篷_Cape/CharSkyKid_Wing_Bat']
+    // PASS: a season pendant and that season's 畢業禮; IAP: items sold in paid packs, with their official USD price
+    pass: ['06_項鍊_Necklace/CharSkyKid_Neck_AP31Pendant', '01_斗篷_Cape/CharSkyKid_Wing_AP31AlmondBlossom', '03_髮型_Hair/CharSkyKid_Hair_AP31AlmondBlossom', '10_道具_Prop/CharSkyKid_Prop_AP31BlossomTea'],
+    iap: ['01_斗篷_Cape/CharSkyKid_Wing_AP16ButterflyYellow', '01_斗篷_Cape/CharSkyKid_Wing_AnnivTuxedo', '01_斗篷_Cape/CharSkyKid_Wing_Bat']
   };
 
   function blank() {
@@ -61,7 +62,7 @@
     const s = blank();
     Object.assign(s.profile.cur, { candle: '201', ascended: '12', heart: '119', seasonCandle: '24' });
     s.items.pass = SAMPLE_ITEMS.pass.map(p => ({ k: 'c', p }));
-    s.items.iap = SAMPLE_ITEMS.iap.map((p, i) => ({ k: 'c', p, price: ['19.99', '14.99', '9.99'][i] }));
+    s.items.iap = SAMPLE_ITEMS.iap.map((p, i) => ({ k: 'c', p, price: ['24.99', '14.99', '17.99'][i] }));
     s.items.link = [{ k: 'l', id: 'google' }, { k: 'l', id: 'apple' }];
     return s;
   }
@@ -804,28 +805,41 @@
 
   // ── item picker ───────────────────────────────────────────────────────────
   const picker = $('#picker-modal'), pBody = $('#picker-body');
-  const PRICES = ['', '0.99', '1.99', '2.99', '4.99', '9.99', '14.99', '19.99', '24.99', '29.99', '49.99', '99.99'];
+  const PRICES = ['auto', '', '0.99', '1.99', '2.99', '4.99', '9.99', '14.99', '19.99', '24.99', '29.99', '49.99', '99.99'];
   let pk = null; // { sec, mode, sel: Map(key → item), order: [keys], cat, season, q, price }
-  const PICK_TITLES = { pass: 'PASS · 季節物品', pin: 'PIN & STAR · 徽章', iap: 'IAP · 內購物品', spells: 'SPELLS · 法術道具', extra: 'EXTRA · 其他收藏', link: 'LINK · 綁定平台' };
+  const PICK_TITLES = { pass: 'PASS · 項鍊（含畢業禮）', pin: 'PIN & STAR · 徽章', iap: 'IAP · 內購禮包', spells: 'SPELLS · 魔法', extra: 'CLOSET · 衣櫃', link: 'LINK · 綁定平台' };
+  // which catalogue categories each section offers
+  const SEC_CATS = { pass: ['pass'], iap: D.CLOSET_CATS, spells: ['spell'], extra: D.CLOSET_CATS };
+  function inSection(i, sec) {
+    if (sec === 'pass') return i.cat === 'pass' || i.ult;          // season pendants + 畢業禮
+    if (sec === 'iap') return !!i.iap && D.CLOSET_CATS.includes(i.cat); // items sold in paid packs
+    return (SEC_CATS[sec] || []).includes(i.cat);
+  }
+  const usdLabel = i => (i.usd && i.usd !== '?' ? 'US$' + i.usd : (i.usd === '?' ? '價格未知' : ''));
   function openPicker(sec, opener) {
     closePop();
     const meta = SECTIONS[sec];
-    pk = { sec, mode: meta.picker, sel: new Map(), cat: sec === 'spells' ? 'prop' : 'all', season: 'all', q: '', price: '' };
+    const cats = SEC_CATS[sec] || [];
+    pk = { sec, mode: meta.picker, sel: new Map(), cat: cats.length === 1 ? cats[0] : 'all', season: 'all', q: '',
+      price: sec === 'iap' ? 'auto' : '', group: sec === 'pass' ? 'season' : 'closet' };
     state.items[sec].forEach(it => pk.sel.set(itemKey(it), it));
     $('#picker-title').textContent = PICK_TITLES[sec];
     $('#picker-tools').hidden = pk.mode === 'links';
     $('#picker-price').hidden = sec !== 'iap';
     $('#picker-q').value = '';
     $('.picker-search').hidden = pk.mode !== 'catalog';
-    $('#picker-season').hidden = pk.mode !== 'catalog';
-    if (sec === 'iap') $('#price-chips').innerHTML = PRICES.map(p => `<button type="button" role="radio" class="chip-btn" data-price="${p}" aria-checked="${p === ''}">${p ? '$' + p : '不標價'}</button>`).join('');
+    $('#picker-season').hidden = pk.mode !== 'catalog' || sec === 'spells';
+    $('#picker-group').hidden = pk.mode !== 'catalog' || sec === 'pass' || sec === 'spells';
+    $('#picker-group').value = pk.group;
+    if (sec === 'iap') $('#price-chips').innerHTML = PRICES.map(p => `<button type="button" role="radio" class="chip-btn" data-price="${p}" aria-checked="${p === pk.price}">${p === 'auto' ? '官方價格' : p ? '$' + p : '不標價'}</button>`).join('');
     openModal(picker, opener);
     renderPickerChrome();
     renderPicker();
   }
   function renderPickerChrome() {
     if (pk.mode === 'catalog') {
-      const cats = [['all', '全部'], ...D.CATS.map(c => [c.id, c.zh]), ['mine', '我的圖示']];
+      const own = SEC_CATS[pk.sec] || [];
+      const cats = [...(own.length > 1 ? [['all', '全部']] : []), ...own.map(id => [id, D.CAT_BY_ID[id].zh]), ['mine', '我的圖示']];
       $('#picker-cats').innerHTML = cats.map(([id, zh]) => `<button type="button" class="chip-btn" data-cat="${id}" aria-pressed="${id === pk.cat}">${zh}</button>`).join('');
     } else if (pk.mode === 'pins') {
       $('#picker-cats').innerHTML = [['all', '徽章'], ['mine', '我的圖示']].map(([id, zh]) => `<button type="button" class="chip-btn" data-cat="${id}" aria-pressed="${id === pk.cat}">${zh}</button>`).join('');
@@ -863,12 +877,15 @@
       $('#picker-season').value = pk.season;
     }
     const q = pk.q.trim().toLowerCase();
-    let list = pk.catalog.filter(i =>
-      (pk.cat === 'all' || i.cat === pk.cat) &&
+    let list = pk.catalog.filter(i => inSection(i, pk.sec) &&
+      (pk.cat === 'all' || pk.cat === 'pass' || i.cat === pk.cat) &&
       (pk.season === 'all' || (pk.season === 'none' ? !i.season : i.season === pk.season)) &&
       (!q || (i.label + ' ' + i.name + ' ' + i.catZh + ' ' + (i.season ? D.seasonFull(i.season) : '')).toLowerCase().includes(q)));
     if (pk.sec === 'pass' && pk.season === 'all' && !q) list = list.filter(i => i.season);
-    const bySeason = pk.sec === 'pass' || (pk.season !== 'all' && pk.season !== 'none');
+    // closet order: category order of the closet, then the game's own item order (OutfitDefs)
+    const catRank = c => { const r = D.CLOSET_CATS.indexOf(c); return r < 0 ? (c === 'pass' ? -1 : 99) : r; };
+    list.sort((a, b) => catRank(a.cat) - catRank(b.cat) || a.order - b.order);  // in PASS this puts the pendant first
+    const bySeason = pk.group === 'season' || (pk.season !== 'all' && pk.season !== 'none');
     const groups = new Map();
     list.forEach(i => {
       const g = bySeason ? (i.season || '—') : i.cat;
@@ -877,19 +894,25 @@
     });
     const keys = [...groups.keys()];
     if (bySeason) keys.sort((a, b) => (a === '—') - (b === '—') || a.localeCompare(b));
+    else keys.sort((a, b) => catRank(a) - catRank(b));
     const html = keys.map(g => {
       const items = groups.get(g);
       const head = bySeason ? (g === '—' ? '非季節' : `<span class="mono">AP${g}</span>${esc([D.SEASONS[g]?.zh, D.SEASONS[g]?.en].filter(Boolean).join(' · '))}`)
         : `${esc(D.CATS.find(c => c.id === g)?.zh || g)} <span class="mono">${items.length}</span>`;
       return `<div class="picker-group"><p class="picker-group-head">${head}<button type="button" class="text-link" data-all="${esc(items.map(i => 'c:' + i.path).join('|'))}">全選這組</button></p>
-        <div class="picker-grid">${items.map(i => pickBtn('c:' + i.path, `<img src="${esc(D.iconURL(i.path))}" alt="" loading="lazy" decoding="async">`, `${i.label}${i.season ? ' · ' + D.seasonName(i.season) : ''}`)).join('')}</div></div>`;
+        <div class="picker-grid">${items.map(i => pickBtn('c:' + i.path, `<img src="${esc(D.iconURL(i.path))}" alt="" loading="lazy" decoding="async">${pk.sec === 'iap' && usdLabel(i) ? `<span class="pick-price">${esc(usdLabel(i))}</span>` : ''}`, `${i.label}${i.season ? ' · ' + D.seasonName(i.season) : ''}${pk.sec === 'iap' && i.pack ? ' · ' + i.pack + (usdLabel(i) ? '（' + usdLabel(i) + '）' : '') : ''}`)).join('')}</div></div>`;
     }).join('');
     pBody.innerHTML = html || '<p class="picker-empty">找不到符合的物品，換個關鍵字試試。</p>';
   }
   function keyToItem(key) {
     const i = key.indexOf(':'), k = key.slice(0, i), v = key.slice(i + 1);
     const it = k === 'c' ? { k, p: v } : { k, id: v };
-    if (pk.sec === 'iap' && pk.price) it.price = pk.price;
+    if (pk.sec === 'iap') {
+      if (pk.price === 'auto') {  // official price of the pack the item was sold in (USD)
+        const c = k === 'c' && pk.catalog && pk.catalog.find(x => x.path === v);
+        if (c && c.usd && c.usd !== '?') it.price = c.usd;
+      } else if (pk.price) it.price = pk.price;
+    }
     if (pk.sec === 'spells') it.n = 1;
     return it;
   }
@@ -918,6 +941,7 @@
     pBody.scrollTop = 0; renderPicker();
   });
   $('#picker-season').addEventListener('change', e => { pk.season = e.target.value; pBody.scrollTop = 0; renderPicker(); });
+  $('#picker-group').addEventListener('change', e => { pk.group = e.target.value; pBody.scrollTop = 0; renderPicker(); });
   let qTimer = 0;
   $('#picker-q').addEventListener('input', e => { clearTimeout(qTimer); qTimer = setTimeout(() => { pk.q = e.target.value; pBody.scrollTop = 0; renderPicker(); }, 180); });
   $('#price-chips').addEventListener('click', e => {
@@ -1421,6 +1445,8 @@
   function renderAll() { renderMain(); syncStrip(); renderCols(); syncThemeUI(); syncSizeUI(); renderThumbs(); }
   renderAll();
   pushHistory(); save();
+  // Seasons and categories come from icons.csv; redraw once it is in so saved items show the right ones.
+  D.loadCatalog().then(() => { renderMain(); renderCols(); renderThumbs(); }).catch(() => {});
   if (document.fonts) document.fonts.ready.then(() => { fitStage(); updateMeta(); renderThumbs(); });
   addEventListener('load', () => { fitStage(); renderThumbs(); });
   window.addEventListener('pageshow', e => { if (e.persisted) { state = normalize(store.get(KEY, null)) || state; renderAll(); } });
