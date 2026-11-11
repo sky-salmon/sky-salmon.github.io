@@ -117,9 +117,12 @@
   }
   const assetURL = id => (id && assets[id]) || '';
 
-  // card.html?s=<id> shows a card someone shared (assets/js/cloud.js loads it); nothing is saved while viewing one
+  // A shared card: #card=<code> carries the card itself (assets/js/cloud.js decodes it); ?s=<id> is the older kind that
+  // was stored in Firestore. Nothing is saved while viewing one.
   const SHARE_ID = (new URLSearchParams(location.search).get('s') || '').replace(/[^\w-]/g, '').slice(0, 64) || null;
-  let viewing = !!SHARE_ID;
+  const SHARE_CODE = (location.hash.match(/(?:^#|&)card=([\w-]+)/) || [])[1] || null;
+  let viewing = !!(SHARE_ID || SHARE_CODE);
+  window.addEventListener('hashchange', () => { if (/card=/.test(location.hash) || SHARE_CODE) location.reload(); });
   let state = viewing ? blank() : (normalize(store.get(KEY, null)) || fromV2() || sample());
 
   // ── history + persistence ────────────────────────────────────────────────
@@ -1657,11 +1660,12 @@
     lib = myLib;
     flushText();
     if (!(store.set(KEY, state) && store.set(KEY_ASSETS, assets) && store.set(KEY_LIB, lib))) { toast(t('瀏覽器空間不足或封鎖儲存，重新整理後可能遺失內容')); return; }
-    location.replace(location.pathname);
+    location.replace(location.pathname + location.search.replace(/[?&]s=[^&]*/, '').replace(/^&/, '?'));
   }
   window.CardApp = {
     data: cardData, load: loadCardData, adopt: adoptShared, openModal, closeModal,
     viewing: () => (viewing ? SHARE_ID : null),
+    shareCode: () => (viewing ? SHARE_CODE : null),
     isSample: () => isSampleState(state),
     ownIsSample: () => { const own = normalize(store.get(KEY, null)); return !own || isSampleState(own); }
   };

@@ -14,14 +14,26 @@
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('a[href="https://github.com/chunhao0613/sky-cotl"]').forEach(a => { a.href = REPO_URL; });
   });
+  // Addresses without ".html": GitHub Pages serves /card from card.html. Local servers (python -m http.server) don't,
+  // so keep the file names there.
+  const PRETTY = location.protocol !== 'file:' && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  const prettyPath = p => (PRETTY ? p.replace(/\/index\.html$/, '/').replace(/\.html$/, '') : p);
+  const pageHref = file => (PRETTY ? (file === 'index.html' ? './' : file.replace(/\.html$/, '')) : file);
+  if (PRETTY && /\.html$/.test(location.pathname)) history.replaceState(history.state, '', prettyPath(location.pathname) + location.search + location.hash);
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('a[href]').forEach(a => {
+      const h = a.getAttribute('href'), m = h.match(/^([\w-]+\.html)([?#].*)?$/);
+      if (m) a.setAttribute('href', pageHref(m[1]) + (m[2] || ''));
+    });
+  });
   const PAGES = [
-    { id: 'home', href: 'index.html', label: t('首頁') },
-    { id: 'card', href: 'card.html', label: t('名片') },
-    { id: 'wardrobe', href: 'wardrobe.html', label: t('衣櫃') },
-    { id: 'height', href: 'height.html', label: t('身高') },
-    { id: 'events', href: 'events.html', label: t('活動') },
-    { id: 'music', href: 'music.html', label: t('樂譜') },
-    { id: 'gallery', href: 'gallery.html', label: t('相簿') }
+    { id: 'home', href: pageHref('index.html'), label: t('首頁') },
+    { id: 'card', href: pageHref('card.html'), label: t('名片') },
+    { id: 'wardrobe', href: pageHref('wardrobe.html'), label: t('衣櫃') },
+    { id: 'height', href: pageHref('height.html'), label: t('身高') },
+    { id: 'events', href: pageHref('events.html'), label: t('活動') },
+    { id: 'music', href: pageHref('music.html'), label: t('樂譜') },
+    { id: 'gallery', href: pageHref('gallery.html'), label: t('相簿') }
   ];
 
   const MARK = `<svg viewBox="0 0 36 36" aria-hidden="true">
@@ -40,7 +52,7 @@
     const header = document.createElement('header');
     header.className = 'topbar';
     header.innerHTML = `<div class="wrap">
-      <a class="brand" href="index.html" aria-label="${t('candle·kit 首頁')}">${MARK}<span>candle·kit</span></a>
+      <a class="brand" href="${pageHref('index.html')}" aria-label="${t('candle·kit 首頁')}">${MARK}<span>candle·kit</span></a>
       <nav class="nav" aria-label="${t('主要導覽')}">${links()}</nav>
       <button class="nav-toggle" type="button" aria-label="${t('開啟選單')}" aria-expanded="false" aria-controls="mobile-menu">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
@@ -122,6 +134,6 @@
     zone.addEventListener('drop', e => { [...e.dataTransfer.files].forEach(onFile); });
   }
 
-  window.Site = { store, toast, readFileAsDataURL, loadImage, bindDropzone, PAGES };
+  window.Site = { store, toast, readFileAsDataURL, loadImage, bindDropzone, PAGES, pageURL: () => location.origin + prettyPath(location.pathname) };
   renderChrome();
 })();

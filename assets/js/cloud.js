@@ -6,7 +6,8 @@
  *
  * Data (rules: firebase/firestore.rules)
  *   cards/{uid}   { v: 1, data: JSON string {state, assets, lib}, updatedAt }   private to that user
- *   shares/{uid}  { v: 1, data: JSON string {state, assets}, updatedAt }         readable by anyone with the link
+ *   shares/{uid}  older share links (card.html?s=<uid>): still readable, no longer written (the owner's is deleted)
+ * Share links now carry the card itself (#card=<deflate + base64url>), so nothing is stored anywhere.
  * Sync keeps one card per account. The hash of the last synced copy (per account) decides which side changed:
  * only this device → upload, only the cloud → download, both → ask. */
 (function () {
@@ -33,7 +34,6 @@
     return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
   }
   const payload = () => JSON.stringify(App.data(false));
-  const sharePayload = () => JSON.stringify(App.data(true));
   const base = uid => { const b = store.get(BASE_KEY, null); return b && b.uid === uid ? b.h : null; };
   const setBase = (uid, h) => store.set(BASE_KEY, { uid, h });
 
@@ -115,6 +115,7 @@
     try { snap = await fb.getDoc(cardRef()); } catch (e) { console.warn('cloud read failed', e); setStatus('error'); return; }
     const local = payload(), L = hash(local), B = base(user.uid);
     ready = true;
+    if (!reconcile.cleaned) { reconcile.cleaned = true; fb.deleteDoc(shareRef(user.uid)).catch(() => {}); }  // older stored share link
     if (!snap.exists()) { push(); return; }
     const remote = snap.data().data, C = hash(remote);
     if (L === C) { setBase(user.uid, C); lastSync = Date.now(); setStatus('synced'); return; }
@@ -153,37 +154,57 @@
     toast(t('已登出，名片仍保留在這台裝置'));
   }
 
-  // ── share links ───────────────────────────────────────────────────────────
-  let share = { known: false, exists: false, busy: false, when: null };
-  const shareURL = id => location.origin + location.pathname + '?s=' + encodeURIComponent(id);
-  async function loadShareInfo() {
-    try {
-      const s = await fb.getDoc(shareRef(user.uid));
-      share = { known: true, exists: s.exists(), busy: false, when: s.exists() && s.data().updatedAt ? s.data().updatedAt.toDate() : null };
-    } catch (e) { console.warn(e); share = { known: true, exists: false, busy: false, when: null, error: true }; }
+  // ── share links: the card itself goes in the link (#card=…), nothing is stored anywhere ──
+  const b64url = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode(...u8.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+  const unb64url = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+  const pipe = async (u8, stream) => new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(stream)).arrayBuffer());
+  const encodeCard = async obj => 'z' + b64url(await pipe(new TextEncoder().encode(JSON.stringify(obj)), new CompressionStream('deflate-raw')));
+  async function decodeCard(code) {
+    if (code[0] !== 'z') throw new Error('unknown share format');
+    return JSON.parse(new TextDecoder().decode(await pipe(unb64url(code.slice(1)), new DecompressionStream('deflate-raw'))));
+  }
+  function shrink(url, max, type, q) {  // images in a link must be small: scale down and re-encode
+    return new Promise(res => {
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        let out = c.toDataURL(type, q);
+        if (type === 'image/webp' && !out.startsWith('data:image/webp')) out = c.toDataURL('image/png');  // Safari can't write webp
+        res(out);
+      };
+      img.onerror = () => res(null);
+      img.src = url;
+    });
+  }
+  async function makeShareLink() {
+    const d = App.data(true), st = d.state, a = d.assets;
+    let dropped = false;  // uploaded wallpapers are too big for a link: those designs fall back to their default background
+    Object.values(st.themes || {}).forEach(th => {
+      if (th && th.wp && !String(th.wp).startsWith('preset:')) { delete a[th.wp]; th.wp = null; if (th.mode === 'image') th.mode = 'default'; dropped = true; }
+    });
+    const avatar = st.profile && st.profile.avatar;
+    for (const id of Object.keys(a)) {
+      a[id] = id === avatar ? await shrink(a[id], 160, 'image/jpeg', 0.72) : await shrink(a[id], 64, 'image/webp', 0.8);
+      if (!a[id]) delete a[id];
+    }
+    const base = window.Site.pageURL ? window.Site.pageURL() : location.origin + location.pathname;
+    return { url: base + '#card=' + await encodeCard({ v: 1, state: st, assets: a }), dropped };
+  }
+  let shareLink = null;
+  async function openShare(opener) {
+    shareLink = null;
+    openDialog('share', opener);
+    try { shareLink = await makeShareLink(); } catch (e) { console.warn(e); shareLink = { error: true }; }
     renderDialog();
+    if (shareLink && shareLink.url) copyLink(true);
   }
-  async function publishShare() {
-    const d = sharePayload();
-    if (bytes(d) > MAX_BYTES) { toast(t('名片裡的圖片太大，無法分享。換小一點的頭像或背景再試'), 5000); return; }
-    share.busy = true; renderDialog();
-    try {
-      await fb.setDoc(shareRef(user.uid), { v: 1, data: d, updatedAt: fb.serverTimestamp() });
-      share = { known: true, exists: true, busy: false, when: new Date() };
-      renderDialog();
-      copyLink();
-    } catch (e) { console.warn(e); share.busy = false; renderDialog(); toast(t('分享失敗，請稍後再試')); }
-  }
-  async function stopShare() {
-    share.busy = true; renderDialog();
-    try { await fb.deleteDoc(shareRef(user.uid)); share = { known: true, exists: false, busy: false, when: null }; toast(t('已停止分享，舊連結不能再開啟')); }
-    catch (e) { console.warn(e); share.busy = false; toast(t('操作失敗，請稍後再試')); }
-    renderDialog();
-  }
-  async function copyLink() {
-    const url = shareURL(user.uid);
+  async function copyLink(quiet) {
+    const url = shareLink && shareLink.url;
+    if (!url) return;
     try { await navigator.clipboard.writeText(url); toast(t('已複製分享連結')); }
-    catch { const i = $('#cloud-link'); if (i) { i.focus(); i.select(); } toast(t('請長按連結手動複製')); }
+    catch { if (quiet) return; const i = $('#cloud-link'); if (i) { i.focus(); i.select(); } toast(t('請長按連結手動複製')); }
   }
 
   // ── dialog ────────────────────────────────────────────────────────────────
@@ -197,7 +218,6 @@
     view = v;
     renderDialog();
     if (modal.hidden) App.openModal(modal, opener);
-    if (fb && user && v === 'share' && !share.known) loadShareInfo();
   }
   const btn = (id, label, cls = '', dis = false) => `<button type="button" class="btn btn-sm ${cls}" data-act="${id}"${dis ? ' disabled' : ''}>${label}</button>`;
   const GOOGLE = '<svg viewBox="0 0 18 18" aria-hidden="true" class="g-logo"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>';
@@ -223,25 +243,21 @@
       title.textContent = t('用這張名片開始編輯？');
       h = `<p>${t('這會取代你在這台裝置上的名片。如果你有開雲端同步，雲端上的也會一起更新。')}</p>`;
       f = btn('close', t('取消')) + btn('adopt-yes', t('取代並開始編輯'), 'btn-primary');
-    } else if (!user) {
-      title.textContent = view === 'share' ? t('分享名片') : t('雲端存檔');
-      h = signInBody(view === 'share'
-        ? t('分享前要先登入。登入後會產生一個連結，朋友點開就能看到你的名片，也能複製一份來改。')
-        : t('用 Google 帳號登入後，名片會自動存到雲端。換手機或電腦，登入同一個帳號就能接著編輯。'));
-      f = btn('close', t('關閉'));
     } else if (view === 'share') {
       title.textContent = t('分享名片');
-      if (!share.known) h = `<p class="hint">${t('讀取中…')}</p>`;
-      else if (share.exists) {
-        h = `<p>${t('朋友打開這個連結就能看到你的名片，也能複製一份來改。')}</p>
-          <div class="cloud-link"><input class="input mono-input" id="cloud-link" readonly value="${esc(shareURL(user.uid))}" aria-label="${t('分享連結')}">${btn('copy', t('複製'), 'btn-primary')}</div>
-          <p class="hint">${share.when ? t('連結內容是 {time} 的樣子。之後改了名片，按「更新內容」才會換成新的。', { time: esc(fmtTime(share.when)) }) : ''}</p>`;
-        f = btn('unshare', t('停止分享'), 'cloud-danger', share.busy) + '<span class="spacer"></span>' +
-          (navigator.share ? btn('native-share', t('傳送…')) : '') + btn('publish', share.busy ? t('處理中…') : t('更新內容'), '', share.busy);
-      } else {
-        h = `<p>${t('建立一個連結，朋友點開就能看到你現在的名片，也能複製一份來改。連結裡只有名片內容，不會有你的帳號資料。')}</p>`;
-        f = btn('close', t('取消')) + btn('publish', share.busy ? t('處理中…') : t('建立分享連結'), 'btn-primary', share.busy);
+      if (!shareLink) h = `<p class="hint">${t('產生連結中…')}</p>`;
+      else if (shareLink.error) h = `<p>${t('這個瀏覽器無法產生分享連結，請換新版的 Chrome、Safari 或 Edge。')}</p>`;
+      else {
+        const kb = (shareLink.url.length / 1024).toFixed(1);
+        h = `<p>${t('朋友打開這個連結就能看到你的名片，也能複製一份來改。名片內容直接寫在連結裡，不會存到任何伺服器。')}</p>
+          <div class="cloud-link"><input class="input mono-input" id="cloud-link" readonly value="${esc(shareLink.url)}" aria-label="${t('分享連結')}">${btn('copy', t('複製'), 'btn-primary')}</div>
+          <p class="hint">${t('連結是現在這張名片的樣子；之後改了名片，再按一次分享就會產生新的連結。')}${shareLink.dropped ? ' ' + t('上傳的背景圖太大，不會放進連結，朋友看到的是預設背景。') : ''}${shareLink.url.length > 8000 ? ' ' + t('連結比較長（{kb} KB），有些聊天軟體可能會截斷，可以改傳下載的圖片。', { kb }) : ''}</p>`;
       }
+      f = (navigator.share && shareLink && shareLink.url ? btn('native-share', t('傳送…')) : '') + '<span class="spacer"></span>' + btn('close', t('關閉'));
+    } else if (!user) {
+      title.textContent = t('雲端存檔');
+      h = signInBody(t('用 Google 帳號登入後，名片會自動存到雲端。換手機或電腦，登入同一個帳號就能接著編輯。'));
+      f = btn('close', t('關閉'));
     } else {
       title.textContent = t('雲端存檔');
       const line = {
@@ -262,14 +278,12 @@
     const b = e.target.closest('[data-act]'); if (!b) return;
     const act = b.dataset.act;
     if (act === 'close') { App.closeModal(modal); return; }
-    if (act === 'signin') { b.disabled = true; if (await signIn() && view === 'share') loadShareInfo(); renderDialog(); return; }
+    if (act === 'signin') { b.disabled = true; await signIn(); renderDialog(); return; }
     if (act === 'signout') { await signOut(); App.closeModal(modal); return; }
     if (act === 'retry') { retry(); return; }
-    if (act === 'to-share') { openDialog('share'); return; }
-    if (act === 'publish') { publishShare(); return; }
-    if (act === 'unshare') { stopShare(); return; }
+    if (act === 'to-share') { openShare(); return; }
     if (act === 'copy') { copyLink(); return; }
-    if (act === 'native-share') { navigator.share({ title: t('我的 Sky 名片'), url: shareURL(user.uid) }).catch(() => {}); return; }
+    if (act === 'native-share') { navigator.share({ title: t('我的 Sky 名片'), url: shareLink.url }).catch(() => {}); return; }
     if (act === 'use-cloud' && conflict) { const c = conflict; conflict = null; useCloud(c.remote, c.C); view = 'account'; App.closeModal(modal); toast(t('已換成雲端的名片')); return; }
     if (act === 'use-local' && conflict) { conflict = null; push(); view = 'account'; App.closeModal(modal); toast(t('已用這台裝置的名片更新雲端')); return; }
     if (act === 'adopt-yes') { App.adopt(); return; }
@@ -287,11 +301,24 @@
       try { await loadSDK(); await authReady; } catch (e) { console.warn(e); toast(t('連不到雲端服務，請檢查網路')); App.closeModal(modal); return; }
       if (user && !ready && !conflict) reconcile();
       renderDialog();
-      if (user && v === 'share') loadShareInfo();
     }
   }
 
-  // ── shared card view (card.html?s=…) ──────────────────────────────────────
+  // ── shared card view: #card=… (decoded here) or the older ?s=<uid> (read from Firestore) ──
+  function sharedBanner(msg, ok) {
+    const banner = $('#share-banner');
+    const home = `<a class="btn btn-sm" href="${esc(location.pathname)}">${t('回到我的名片')}</a>`;
+    banner.innerHTML = `<p>${msg}</p><div class="share-actions">${ok ? `<button type="button" class="btn btn-sm btn-primary" id="share-adopt">${t('複製一份來編輯')}</button>` : ''}${home}</div>`;
+    banner.hidden = false;
+    if (ok) $('#share-adopt').addEventListener('click', e => { if (App.ownIsSample()) App.adopt(); else openDialog('adopt', e.currentTarget); });
+  }
+  async function openSharedCode(code) {
+    try {
+      const d = await decodeCard(code);
+      if (!App.load(d, false)) throw new Error('bad card');
+      sharedBanner(t('這是別人分享的名片，你可以下載圖片，或複製一份來編輯。'), true);
+    } catch (e) { console.warn(e); sharedBanner(t('這個分享連結不完整或已損壞，請對方重新分享一次。'), false); }
+  }
   async function openShared(id) {
     const banner = $('#share-banner');
     const say = (msg, actions) => { banner.innerHTML = `<p>${msg}</p>${actions ? `<div class="share-actions">${actions}</div>` : ''}`; banner.hidden = false; };
@@ -324,13 +351,14 @@
       status: () => status, uid: () => user && user.uid
     };
   }
-  if (!ENABLED) { document.querySelectorAll('[data-cloud]').forEach(el => { el.hidden = true; }); }
-  else document.querySelectorAll('[data-cloud]').forEach(el => { el.hidden = false; });
+  document.querySelectorAll('[data-cloud-only]').forEach(el => { el.hidden = !ENABLED; });
+  const code = App.shareCode && App.shareCode();
+  if (code) { openSharedCode(code); return; }
   const sid = App.viewing();
   if (sid) { openShared(sid); return; }
+  $('#btn-share').addEventListener('click', e => openShare(e.currentTarget));
   if (!ENABLED) return;
   $('#btn-cloud').addEventListener('click', e => openFromToolbar('account', e.currentTarget));
-  $('#btn-share').addEventListener('click', e => openFromToolbar('share', e.currentTarget));
   if (store.get(ON_KEY, false)) {
     loadSDK().then(() => authReady).then(u => { if (u) reconcile(); else store.set(ON_KEY, false); })
       .catch(e => { console.warn('cloud unavailable', e); setStatus('error'); });

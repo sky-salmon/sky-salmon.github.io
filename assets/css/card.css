@@ -796,7 +796,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 .share-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; margin-bottom: 14px; padding: 12px 14px 12px 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--gold) 50%, transparent); background: rgba(226, 178, 92, .08); }
 .share-banner p { margin: 0; font-size: 14px; color: var(--ink); }
 .share-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.is-viewing .styles, .is-viewing .controls-col, .is-viewing .stage-hint, .is-viewing [data-cloud],
+.is-viewing .styles, .is-viewing .controls-col, .is-viewing .stage-hint, .is-viewing [data-cloud], .is-viewing [data-cloud-only], .is-viewing .tool:has(#btn-share),
 .is-viewing #btn-undo, .is-viewing #btn-redo, .is-viewing #btn-reset, .is-viewing .toolbar .tool:has(#btn-undo, #btn-redo, #btn-reset, #btn-preview), .is-viewing .toolbar .tool-sep { display: none !important; }
 .is-viewing .studio { grid-template-columns: minmax(0, 1fr); }
 /* phones: the cloud tools take a second toolbar row (the separator before them becomes the line break) */

@@ -222,7 +222,7 @@ function decodeLook(code) {
   Object.entries(o.p || {}).forEach(([s, n]) => { const f = full(n); if (IDX.pieces[f] && IDX.pieces[f].slot === s) pieces[s] = f; });
   return { pieces, dyes: o.d || {}, clip: o.a || 'idle' };
 }
-const lookURL = () => location.origin + location.pathname + '#look=' + encodeLook(look);
+const lookURL = () => (window.Site.pageURL ? window.Site.pageURL() : location.origin + location.pathname) + '#look=' + encodeLook(look);
 function saveLook() { if (!shared) store.set(LOOK_KEY, look); }
 function changed() {
   if (shared) { shared = false; $('#wd-banner').hidden = true; history.replaceState(null, '', location.pathname); }
