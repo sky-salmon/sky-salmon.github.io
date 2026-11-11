@@ -1,8 +1,7 @@
 rules_version = '2';
 // candle·kit Firestore rules (paste into Firebase console → Firestore Database → Rules).
 //   cards/{uid}     one signed-in user's own card (JSON string in `data`): only that user can read or write it.
-//   shares/{uid}    the card that user shared: anyone with the link can read it, only its owner can write it.
-//                   The id is the owner's uid, so every Google account has at most one shared card (no spam).
+//   shares/{uid}    older share links: read-only now; share links carry the card in the address instead.
 //   config/admins   Google accounts allowed into admin.html ({uids, labels}); admins add and remove each other there.
 //   config/github   the GitHub token and repository admin.html saves to; readable by admins only.
 //   requests/{uid}  an account asking to become an admin; admins see and approve or dismiss it.
@@ -28,9 +27,10 @@ service cloud.firestore {
       allow create, update: if signedInAs(uid) && validCard(['v', 'data', 'updatedAt']);
     }
 
+    // older share links (card?s=<uid>): readable until their owner signs in again (the page then deletes them).
+    // New share links carry the card in the address and store nothing.
     match /shares/{uid} {
       allow get: if true;
-      allow create, update: if signedInAs(uid) && validCard(['v', 'data', 'updatedAt']);
       allow delete: if signedInAs(uid);
     }
 
