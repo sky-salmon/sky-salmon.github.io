@@ -20,7 +20,7 @@ CJK = re.compile(r"[㐀-鿿]")
 
 
 def html_keys() -> list[str]:
-    s = (ROOT / "card.html").read_text(encoding="utf-8")
+    s = "".join((ROOT / f).read_text(encoding="utf-8") for f in ("card.html", "wardrobe.html"))
     s = re.sub(r"<!--.*?-->", "", s, flags=re.S)
     s = re.sub(r"<(script|style)\b.*?</\1>", "", s, flags=re.S)
     keys = [t.strip() for t in re.findall(r">([^<>]*)<", s)]
@@ -30,7 +30,7 @@ def html_keys() -> list[str]:
 
 def js_keys() -> list[str]:
     keys = []
-    for f in ("card.js", "card-data.js", "site.js", "i18n.js", "cloud.js"):
+    for f in ("card.js", "card-data.js", "site.js", "i18n.js", "cloud.js", "wardrobe.js"):
         s = (ROOT / "assets" / "js" / f).read_text(encoding="utf-8")
         keys += [m.replace("\\'", "'") for m in re.findall(r"\bt\('((?:[^'\\]|\\.)*)'", s)]
     return [k for k in keys if CJK.search(k)]
