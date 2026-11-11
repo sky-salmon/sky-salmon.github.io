@@ -17,6 +17,7 @@
   const PAGES = [
     { id: 'home', href: 'index.html', label: t('首頁') },
     { id: 'card', href: 'card.html', label: t('名片') },
+    { id: 'wardrobe', href: 'wardrobe.html', label: t('衣櫃') },
     { id: 'height', href: 'height.html', label: t('身高') },
     { id: 'events', href: 'events.html', label: t('活動') },
     { id: 'music', href: 'music.html', label: t('樂譜') },
