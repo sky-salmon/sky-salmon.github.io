@@ -1,10 +1,12 @@
 // 身高計算 — 3D "studio" stage: cream disc, lantern tower, the player's character,
-// a measuring stick (ticks drawn as an SVG overlay projected from 3D), a critter and a candle.
-// Model slots try assets/models/<name>.glb first and fall back to procedural placeholders.
+// a measuring stick (ticks drawn as an SVG overlay projected from 3D), a crab and candles.
+// Model slots try an authored assets/models/<name>.glb first, then the game's own model (island/sky.js: the lantern
+// post, the crab, the candles, the pebbles), and fall back to procedural placeholders.
 import * as THREE from 'three';
 import { part, toon, addOutline, outlineUniforms } from './island/toon.js';
 import { loadToonModel, wrapGltf, findNodes } from './island/gltf.js';
 import { makeCharacter, makeCandle, makeFlame } from './island/models.js';
+import { skyLantern, skyCrab, skyCandles, skyRocks } from './island/sky.js';
 import { canvasTexture, rng } from './island/util.js';
 
 const BASE_H = 2.2;                       // authored character height (units)
@@ -94,17 +96,29 @@ function makeStageDisc() {
   const ground = softShadow(DISC_R * 2.9, DISC_R * 2.5, 0.2);
   ground.position.y = -0.62;
   g.add(ground);
-  // a few pebbles near the rim
-  const rand = rng(11);
+  g.position.set(DISC_X, 0, DISC_Z);
+  return g;
+}
+
+// a few pebbles near the rim (in disc space): the game's small rock cluster, else little stones
+const PEBBLE_TINTS = ['#e8dcc8', '#f1e8da'];
+const PEBBLES = (() => {
+  const rand = rng(11), out = [];
   for (let i = 0; i < 6; i++) {
     const a = -0.5 + i * 1.05 + rand() * 0.3, r = DISC_R * (0.72 + rand() * 0.12), s = 0.06 + rand() * 0.06;
-    const p = part(new THREE.DodecahedronGeometry(s, 0), i % 2 ? '#e8dcc8' : '#f1e8da', { flat: true });
+    out.push([Math.cos(a) * r, Math.sin(a) * r * 0.9, s, i]);
+  }
+  return out;
+})();
+function makePebbles() {
+  const g = new THREE.Group();
+  PEBBLES.forEach(([x, z, s, i]) => {
+    const p = part(new THREE.DodecahedronGeometry(s, 0), PEBBLE_TINTS[i % 2], { flat: true });
     p.scale.y = 0.6;
-    p.position.set(Math.cos(a) * r, s * 0.35, Math.sin(a) * r * 0.9);
+    p.position.set(x, s * 0.35, z);
     p.rotation.set(i, i * 2, 0);
     g.add(p);
-  }
-  g.position.set(DISC_X, 0, DISC_Z);
+  });
   return g;
 }
 
@@ -266,23 +280,32 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
   fill.position.set(7, 3, -6);
   scene.add(fill);
 
-  scene.add(makeStageDisc());
+  const disc = makeStageDisc();
+  scene.add(disc);
 
-  // model slots
+  // model slots: an authored .glb, else the game's model, else the placeholder
   const status = {};
   window.__heightModels = status;
-  async function slot(name, fallback, autoplay = ['idle']) {
+  async function slot(name, game, fallback, autoplay = ['idle']) {
     const gltf = await loadToonModel(name);
     if (gltf) { status[name] = 'glb'; return Object.assign(wrapGltf(gltf, autoplay), { isGlb: true }); }
+    if (game) {
+      try { const m = await game(); status[name] = 'game'; return m; }
+      catch (err) { console.warn(`[height] game ${name} failed to load, using placeholder`, err); }
+    }
     status[name] = 'placeholder';
     return fallback();
   }
-  const [charM, pillarM, critterM, candleM] = await Promise.all([
-    slot('character', makeCharacter),
-    slot('pillar', makePillar),
-    slot('critter', makeCritter),
-    slot('candle', makeCandle, [])
+  const [charM, pillarM, critterM, candleM, pebbles] = await Promise.all([
+    slot('character', null, makeCharacter),   // the player's kid arrives later through setKid
+    slot('pillar', skyLantern, makePillar),
+    slot('critter', skyCrab, makeCritter),
+    slot('candle', skyCandles, makeCandle, []),
+    skyRocks(PEBBLES.map(([x, z, s, i]) => [x, z, s * 3.4, i * 2]), ['#ddcfb8', '#e6dac6'])   // the cluster is flat: a shade darker
+      .then(m => { status.pebbles = 'game'; return m.object; })
+      .catch(err => { console.warn('[height] game pebbles failed to load', err); status.pebbles = 'placeholder'; return makePebbles(); })
   ]);
+  disc.add(pebbles);
   const animated = [charM, pillarM, critterM, candleM].filter(m => m.update);
 
   // character: authored GLB is already ~2.2 tall; the placeholder gets normalised to it
@@ -316,7 +339,9 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
   const lantern = new THREE.Group();
   lantern.position.copy(lightAnchor);
   pillarRoot.add(lantern);
-  const lanternGlow = glowSprite(2.1, 0.75);
+  // the game's lantern is a closed cage: a smaller, softer halo keeps its stone from washing out
+  const glowK = status.pillar === 'game' ? 0.5 : 1;
+  const lanternGlow = glowSprite(status.pillar === 'game' ? 1.6 : 2.1, 0.75 * glowK);
   lantern.add(lanternGlow);
   const lanternLight = new THREE.PointLight('#ffc469', 2.6, 5.5, 1.4);
   lantern.add(lanternLight);
@@ -326,24 +351,31 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
   const ruler = makeRulerStick();
   scene.add(ruler);
   scene.add(critterM.object);
+  if (status.critter === 'game') critterM.object.add(softShadow(0.85, 0.6, 0.3));   // the stand-in brings its own
   const candleRoot = new THREE.Group();
-  const saucer = part(new THREE.CylinderGeometry(0.24, 0.2, 0.05, 24), '#e9d6b6');
-  saucer.position.y = 0.025;
-  candleRoot.add(saucer);
   const candleBody = new THREE.Group();
-  candleBody.position.y = 0.05;
-  candleBody.scale.setScalar(candleM.isGlb ? 1 : 1.7);
+  if (status.candle === 'placeholder') {   // the stand-in candle sits on a little saucer; the game's stand on the disc
+    const saucer = part(new THREE.CylinderGeometry(0.24, 0.2, 0.05, 24), '#e9d6b6');
+    saucer.position.y = 0.025;
+    candleRoot.add(saucer);
+    candleBody.position.y = 0.05;
+  }
+  candleBody.scale.setScalar(status.candle === 'game' ? 1.3 : candleM.isGlb ? 1 : 1.7);
   candleBody.add(candleM.object);
   candleRoot.add(candleBody, softShadow(0.75, 0.5, 0.3));
-  let flameAnchor = findNodes(candleM.object, 'flame_anchor')[0];
-  if (!flameAnchor) {   // authored candle without the node: light it at the top of its bounds
-    flameAnchor = new THREE.Object3D();
-    flameAnchor.position.y = new THREE.Box3().setFromObject(candleM.object).max.y;
-    candleM.object.add(flameAnchor);
+  let flameAnchors = findNodes(candleM.object, 'flame_anchor');
+  if (!flameAnchors.length) {   // authored candle without the node: light it at the top of its bounds
+    const top = new THREE.Object3D();
+    top.position.y = new THREE.Box3().setFromObject(candleM.object).max.y;
+    candleM.object.add(top);
+    flameAnchors = [top];
   }
-  const flame = makeFlame();
-  flameAnchor.add(flame.object);
-  animated.push(flame);
+  flameAnchors.forEach((anchor, i) => {   // with several candles, one carries the light and the sparks
+    const flame = makeFlame({ light: i === 0, sparks: i === 0, glow: i === 0, phase: i * 1.7 });
+    flame.object.scale.setScalar(anchor.userData.size || 1);
+    anchor.add(flame.object);
+    animated.push(flame);
+  });
   scene.add(candleRoot);
 
   // drifting dust in the warm light
@@ -575,7 +607,7 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
     for (const m of animated) m.update(elapsed, dt);
     const flick = reducedMotion ? 1 : 1 + Math.sin(elapsed * 2.3) * 0.06 + Math.sin(elapsed * 5.1) * 0.03;
     lanternLight.intensity = 2.6 * flick;
-    lanternGlow.material.opacity = 0.72 * flick;
+    lanternGlow.material.opacity = 0.72 * glowK * flick;
 
     for (let i = 0; i < MOTES; i++) {
       const s = moteSeed[i], y = (s.y + elapsed * s.sp) % 4;

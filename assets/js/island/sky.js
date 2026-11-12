@@ -1,5 +1,6 @@
-// Game models on the home island: meshes taken from Sky's own files (assets/glb/), coloured with the game's
-// colour ramps (assets/avatar/tex/) where the mesh's UVs index one, and drawn in the island's toon style.
+// Game models on the home island and the height stage: meshes taken from Sky's own files (assets/glb/),
+// coloured with the game's colour ramps (assets/avatar/tex/) where the mesh's UVs index one, and drawn in the
+// island's toon style.
 // Each maker returns the same shape as its procedural stand-in in models.js; main.js falls back to the stand-in
 // when a file fails to load.
 import * as THREE from 'three';
@@ -56,7 +57,8 @@ function toonMesh(geo, material) {
 }
 
 // ── the kid ──────────────────────────────────────────────────────────────
-// Assembled by the same engine as the height page, from a look decoded from an outfit QR (assets/models/hero.json).
+// Assembled by the same engine as the height page. `look` = { pieces, dyes, attitude, height, scale } (saved-look.js);
+// pieces null = the game's starting outfit. wear(look) re-dresses the same kid.
 const KID_UNITS = 15.557;   // head top of the default kid, in game units
 const KID_HEIGHT = 2.2;     // …and how tall that stands on the island
 const clamp = (v, [lo, hi]) => Math.min(hi, Math.max(lo, Number.isFinite(v) ? v : 0));
@@ -64,23 +66,29 @@ const clamp = (v, [lo, hi]) => Math.min(hi, Math.max(lo, Number.isFinite(v) ? v 
 export async function skyKid(look) {
   const { createAvatar } = await import('../avatar-engine.js');
   const api = await createAvatar();
-  const idx = api.index, rules = api.rules || {}, pieces = {};
-  for (const [slot, name] of Object.entries(look.pieces || {})) pieces[slot] = idx.pieces[name] ? name : null;
-  if (!pieces.outfit) pieces.outfit = (idx.defaults || {}).outfit || null;   // the body piece carries the head too
-  const shown = await api.wearLook({
-    pieces,
-    dyes: look.dyes || {},
-    clip: rules.attitudeClip ? rules.attitudeClip(idx, look.attitude) : 'idle',
-    body: { height: clamp(look.height, rules.HEIGHT_RANGE || [-2, 2]), scale: clamp(look.scale, rules.SCALE_RANGE || [-0.2, 0.2]) }
-  });
-  if (!shown) throw new Error('the kid could not be dressed');
+  const idx = api.index, rules = api.rules || {};
+  // the starting outfit, minus the game's empty "None" pieces
+  const defaults = Object.fromEntries(Object.entries(idx.defaults || {}).filter(([, n]) => (idx.pieces[n] || {}).file));
+  async function wear(l) {
+    const pieces = {};
+    if (l.pieces) for (const [slot, name] of Object.entries(l.pieces)) pieces[slot] = idx.pieces[name] ? name : null;
+    else Object.assign(pieces, defaults);
+    if (!pieces.outfit) pieces.outfit = defaults.outfit || null;   // the body piece carries the head too
+    return api.wearLook({
+      pieces,
+      dyes: l.pieces ? l.dyes || {} : {},
+      clip: l.pieces && rules.attitudeClip ? rules.attitudeClip(idx, l.attitude) : 'idle',
+      body: { height: clamp(l.height, rules.HEIGHT_RANGE || [-2, 2]), scale: clamp(l.scale, rules.SCALE_RANGE || [-0.2, 0.2]) }
+    });
+  }
+  if (!(await wear(look))) throw new Error('the kid could not be dressed');
 
   const root = new THREE.Group(), holder = new THREE.Group();
   holder.scale.setScalar(KID_HEIGHT / KID_UNITS);
   holder.rotation.y = Math.PI;   // the game's kid faces -Z
   holder.add(api.object);
   root.add(holder, blobShadow(1.0, 0.7, 0.38));
-  return { object: root, update: (t, dt) => api.update(dt) };
+  return { object: root, update: (t, dt) => api.update(dt), wear };
 }
 
 // ── stone bench ──────────────────────────────────────────────────────────
@@ -223,6 +231,63 @@ export async function skyGround(radius, avoid = []) {
     return h;
   }
   return { object: g, heightAt };
+}
+
+// ── height page: lantern post, crab, pebbles ─────────────────────────────
+// The lantern post is the game's placeable one. Its own texture is a ramp tinted by the engine, so it is painted
+// here in the stage's stone colours, with a glowing core showing through the windows of its cage.
+const LANTERN_FILE = '12_家具擺設_Placeable/CharSkyKid_Prop_LanternPost';
+const LANTERN_SCALE = 0.21;                 // 16.35 tall in the file → about 3.4
+const CAGE = { from: 9.55, to: 12.85, r: 1.35 };   // the windowed cage, in model units
+
+export async function skyLantern() {
+  const geo = await geometry(LANTERN_FILE);
+  const stone = new THREE.Color('#f2eadc'), foot = new THREE.Color('#ded1bb'), roof = new THREE.Color('#d0814f'), gold = new THREE.Color('#f2c46d');
+  paint(geo, (p, _uvY, c) => c.copy(p.y > 14.97 ? gold : p.y > 13.55 ? roof : p.y < 4 ? foot : stone));
+  geo.scale(LANTERN_SCALE, LANTERN_SCALE, LANTERN_SCALE);
+  const g = new THREE.Group();
+  g.add(toonMesh(geo, toon('#ffffff', { vertexColors: true, side: THREE.DoubleSide })));
+  const k = LANTERN_SCALE, core = new THREE.Mesh(
+    new THREE.CylinderGeometry(CAGE.r * k, CAGE.r * k, (CAGE.to - CAGE.from) * k * 0.92, 8),
+    new THREE.MeshBasicMaterial({ color: '#ffd98c' }));
+  core.position.y = (CAGE.from + CAGE.to) / 2 * k;
+  g.add(core);
+  return { object: g, lightAnchor: new THREE.Vector3(0, core.position.y, 0) };
+}
+
+// The game's crab: a rock-backed shell on four legs, dark as in the game. It sidles now and then.
+export async function skyCrab() {
+  const geo = await geometry('CrabA');
+  const leg = new THREE.Color('#3f4350'), shell = new THREE.Color('#545a6a'), top = new THREE.Color('#717789');
+  paint(geo, (p, _uvY, c) => (p.y < 0.55 ? c.copy(leg) : c.copy(shell).lerp(top, Math.min(1, (p.y - 0.55) / 1.45))));
+  geo.rotateY(Math.PI);       // it faces -Z in the file, like the kid
+  geo.scale(0.3, 0.3, 0.3);   // about 0.6 tall, 0.8 across
+  const root = new THREE.Group(), body = new THREE.Group();
+  body.add(toonMesh(geo, toon('#ffffff', { vertexColors: true })));
+  root.add(body);
+  return {
+    object: root,
+    update(t) {
+      const cycle = t % 8, walk = cycle > 6 && cycle < 7.4 ? Math.sin((cycle - 6) / 1.4 * Math.PI) : 0;
+      body.position.x = walk * 0.12;
+      body.position.y = walk ? Math.abs(Math.sin(t * 22)) * 0.018 : 0;
+      body.scale.y = 1 + Math.sin(t * 2) * 0.015;
+      body.rotation.z = walk * Math.sin(t * 22) * 0.04;
+    }
+  };
+}
+
+// The game's small rock cluster as pebbles: spots = [[x, z, size, turn], …], one tint per spot in turn.
+export async function skyRocks(spots, tints) {
+  const geo = await geometry('SkyRockCluster');
+  const mesh = new THREE.InstancedMesh(geo, toon('#ffffff'), spots.length);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), v = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), c = new THREE.Color();
+  spots.forEach(([x, z, k, turn], i) => {
+    mesh.setMatrixAt(i, m.compose(v.set(x, 0.004, z), q.setFromAxisAngle(up, turn), s.set(k, k * 3, k)));
+    mesh.setColorAt(i, c.set(tints[i % tints.length]));
+  });
+  mesh.raycast = () => {};
+  return { object: mesh };
 }
 
 // ── butterflies ──────────────────────────────────────────────────────────
