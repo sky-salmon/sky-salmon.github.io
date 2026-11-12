@@ -163,7 +163,8 @@ export function makeCandle() {
 }
 
 // Flame + glow + flickering light + rising sparks; origin = base of the flame.
-export function makeFlame() {
+// With several candles side by side, only one needs the light and the sparks; `phase` keeps them out of step.
+export function makeFlame({ light: withLight = true, sparks: withSparks = true, glow: withGlow = true, phase = 0 } = {}) {
   const g = new THREE.Group();
   const flamePts = [];
   for (let i = 0; i <= 10; i++) {
@@ -181,14 +182,13 @@ export function makeFlame() {
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.85 }));
   glow.scale.setScalar(1.1);
   glow.position.y = 0.1;
-  g.add(glow);
+  if (withGlow) g.add(glow);
 
-  const light = new THREE.PointLight('#ffb867', 2.2, 3.5, 1.6);
-  light.position.y = 0.15;
-  g.add(light);
+  const light = withLight ? new THREE.PointLight('#ffb867', 2.2, 3.5, 1.6) : null;
+  if (light) { light.position.y = 0.15; g.add(light); }
 
   // rising sparks
-  const N = 14, sparkPos = new Float32Array(N * 3), seeds = [];
+  const N = withSparks ? 14 : 0, sparkPos = new Float32Array(N * 3), seeds = [];
   const rand = rng(5);
   for (let i = 0; i < N; i++) seeds.push({ phase: rand(), speed: 0.25 + rand() * 0.25, drift: (rand() - 0.5) * 0.25 });
   const sparkGeo = new THREE.BufferGeometry();
@@ -198,12 +198,13 @@ export function makeFlame() {
 
   return {
     object: g,
-    update(t) {
+    update(time) {
+      const t = time + phase;
       const f = 1 + Math.sin(t * 13) * 0.06 + Math.sin(t * 7.3) * 0.05;
       flame.scale.set(1, f, 1);
       flame.rotation.z = Math.sin(t * 3.2) * 0.08;
       glow.material.opacity = 0.7 + Math.sin(t * 9) * 0.08;
-      light.intensity = 2 + Math.sin(t * 11) * 0.3;
+      if (light) light.intensity = 2 + Math.sin(t * 11) * 0.3;
       for (let i = 0; i < N; i++) {
         const s = seeds[i], k = (t * s.speed + s.phase) % 1;
         sparkPos[i * 3] = Math.sin(k * 9 + i) * 0.05 + s.drift * k;

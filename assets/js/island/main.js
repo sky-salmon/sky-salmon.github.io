@@ -1,9 +1,10 @@
 // Floating-island home: scene assembly, render loop and scroll-driven camera.
 import * as THREE from 'three';
 import { outlineUniforms } from './toon.js';
-import { makeIsland, makeGrass, makeFlowers, makePebbles, windUniforms } from './terrain.js';
+import { makeIsland, makeGrass, makeFlowers, makePebbles, windUniforms, ISLAND_RADIUS } from './terrain.js';
 import { makeCharacter, makeBench, makeCandle, makeFlame, makeBird, makeShelf, decorateShelf, makeBook, makeStarMarker, makeRocks, makeSun, makeButterflies } from './models.js';
 import { loadToonModel, wrapGltf, findNodes, modelStatus } from './gltf.js';
+import { skyKid, skyBench, skyCandles, skyFox, skyShelf, skyButterflies, skyGround } from './sky.js';
 import { smoothstep, clamp01 } from './util.js';
 
 // canvas-drawn labels need the webfonts first (don't wait forever if they're blocked)
@@ -56,13 +57,25 @@ async function modelOr(name, fallback, autoplay = ['idle']) {
   wrapped.isGlb = true;
   return wrapped;
 }
-const [islandGltf, characterM, benchM, candleM, birdM, shelfM, bookM, rocksGltf] = await Promise.all([
+// Models taken from the game (sky.js); a file that fails to load falls back to the procedural stand-in.
+async function gameOr(name, make, fallback) {
+  try {
+    const model = await make();
+    modelStatus[name] = 'game';
+    return model;
+  } catch (err) {
+    console.warn(`[models] game ${name} failed to load, using placeholder`, err);
+    modelStatus[name] = 'placeholder';
+    return fallback();
+  }
+}
+const [islandGltf, benchM, candleM, foxM, shelfM, fliesM, bookM, rocksGltf] = await Promise.all([
   loadToonModel('island'),
-  modelOr('character', makeCharacter),
-  modelOr('bench', makeBench),
-  modelOr('candle', makeCandle),
-  modelOr('bird', makeBird),
-  modelOr('shelf', makeShelf),
+  gameOr('bench', skyBench, makeBench),
+  gameOr('candle', skyCandles, makeCandle),
+  gameOr('fox', skyFox, makeBird),
+  gameOr('shelf', skyShelf, makeShelf),
+  gameOr('butterflies', () => skyButterflies(3), () => makeButterflies(3)),
   modelOr('book', makeBook, []),
   loadToonModel('rocks')
 ]);
@@ -80,9 +93,10 @@ const avoid = [
   { x: LAYOUT.shelf.x, z: LAYOUT.shelf.z, rx: 1.5, rz: 0.6 },
   { x: LAYOUT.character.x, z: LAYOUT.character.z, rx: 0.4, rz: 0.4 }
 ];
-world.add(makeGrass(isSmall() ? 1500 : 2400, avoid));
-world.add(makeFlowers(70, avoid));
-world.add(makePebbles(46));
+const groundM = await gameOr('ground', () => skyGround(ISLAND_RADIUS, [...avoid, { x: LAYOUT.bench.x, z: LAYOUT.bench.z, rx: 1.7, rz: 0.8 }]), () => ({ object: makePebbles(46) }));
+world.add(groundM.object);
+world.add(makeGrass(isSmall() ? 1500 : 2400, avoid, groundM.heightAt));
+world.add(makeFlowers(70, avoid, groundM.heightAt));
 
 const animated = [];
 function place(model, { x = 0, y = 0, z = 0, ry = 0, s = 1 } = {}) {
@@ -94,26 +108,61 @@ function place(model, { x = 0, y = 0, z = 0, ry = 0, s = 1 } = {}) {
   return model;
 }
 
-const SEAT_Y = 0.82; // bench seat height (authored bench.glb must match)
-const findIn = (root, name) => { let n = null; root.traverse(o => { if (o.name === name) n = o; }); return n; };
+// The kid is the heaviest thing here (the avatar engine, its index, a skeleton and ten outfit pieces), so the
+// island shows first and the kid steps in when ready. assets/models/hero.json holds the look.
+(async () => {
+  let kid;
+  try {
+    const res = await fetch(new URL('../../models/hero.json', import.meta.url));
+    if (!res.ok) throw new Error('hero.json ' + res.status);
+    kid = await skyKid(await res.json());
+    modelStatus.character = 'game';
+  } catch (err) {
+    console.warn('[models] game character failed to load, using placeholder', err);
+    modelStatus.character = 'placeholder';
+    kid = makeCharacter();
+  }
+  const full = modelStatus.character === 'game' ? 1 : LAYOUT.character.s;   // the placeholder was built small
+  place(kid, { ...LAYOUT.character, s: 0.001 });
+  const born = elapsed, base = kid.update;
+  kid.update = (t, dt) => {
+    const k = reducedMotion ? 1 : clamp01((t - born) / 0.45);
+    kid.object.scale.setScalar(Math.max(0.001, full * (1 - (1 - k) ** 3)));
+    if (base) base(t, dt);
+  };
+})();
 
-// placeholders were built smaller than the authored spec, so only they get a scale
-place(characterM, { ...LAYOUT.character, s: characterM.isGlb ? 1 : LAYOUT.character.s });
 place(benchM, LAYOUT.bench);
 
-place(candleM, { x: LAYOUT.bench.x + 0.35, y: SEAT_Y - 0.01, z: -0.05 });
-const flameAnchor = findIn(candleM.object, 'flame_anchor') || candleM.object;
-const flame = makeFlame();
-flameAnchor.add(flame.object);
-animated.push(flame);
-
-if (birdM.isGlb && birdM.actions.hop) {   // authored bird: hop every few seconds on top of idle
-  const hop = birdM.actions.hop, base = birdM.update;
-  hop.setLoop(THREE.LoopOnce, 1);
-  let lastHop = 0;
-  birdM.update = (t, dt) => { if (t - lastHop > 5.5) { lastHop = t; hop.reset().play(); } base(t, dt); };
+// The game bench's seat is uneven: rest things on it by casting down onto the stone.
+const SEAT_Y = 0.82;   // seat height of the placeholder bench
+const dropRay = new THREE.Raycaster(), dropFrom = new THREE.Vector3(), DOWN = new THREE.Vector3(0, -1, 0);
+world.updateMatrixWorld(true);
+function seatAt(x, z) {
+  dropRay.set(dropFrom.set(x, 6, z), DOWN);
+  const hit = dropRay.intersectObject(benchM.object, true)[0];
+  return hit ? hit.point.y : SEAT_Y;
 }
-place(birdM, { x: LAYOUT.bench.x + 1.05, y: SEAT_Y - 0.01, z: 0.08, ry: -0.55, s: birdM.isGlb ? 1 : 1.25 });
+
+const CANDLE_AT = { x: LAYOUT.bench.x - 0.5, z: -0.02 };
+const anchors = findNodes(candleM.object, 'flame_anchor');
+if (anchors.length > 1 || modelStatus.candle === 'game') {
+  place(candleM, CANDLE_AT);
+  for (const candle of candleM.object.children) {
+    if (candle.userData.settle) candle.position.y = seatAt(CANDLE_AT.x + candle.position.x, CANDLE_AT.z + candle.position.z) - 0.008;
+  }
+} else {
+  place(candleM, { ...CANDLE_AT, y: seatAt(CANDLE_AT.x, CANDLE_AT.z) - 0.01 });
+}
+(anchors.length ? anchors : [candleM.object]).forEach((anchor, i) => {
+  const flame = makeFlame({ light: i === 0, sparks: i === 0, glow: i === 0, phase: i * 1.7 });
+  flame.object.scale.setScalar(anchor.userData.size || 1);
+  anchor.add(flame.object);
+  animated.push(flame);
+});
+
+const FOX_AT = { x: LAYOUT.bench.x + 0.62, z: 0.06 };
+place(foxM, { ...FOX_AT, y: seatAt(FOX_AT.x, FOX_AT.z) - 0.01, ry: -0.5, s: modelStatus.fox === 'game' ? 1 : 1.25 });
 
 place(shelfM, LAYOUT.shelf);
 const shelfDeco = decorateShelf(shelfM.object);
@@ -138,7 +187,7 @@ const ROCK_SPOTS = [[1.75, 2.6, -1.3, 0.16], [1.35, 1.95, -0.9, 0.11], [5.4, 3.1
 place(makeRocks(ROCK_SPOTS, rocksGltf ? findNodes(rocksGltf.scene, 'rock_') : null));
 window.__models = modelStatus;
 const sun = place(makeSun(), { x: -3.2, y: 4.5, z: -4.0 });
-place(makeButterflies(3));
+place(fliesM);
 
 // ── camera keyframes ────────────────────────────────────────────────────
 const shelfCenter = new THREE.Vector3(LAYOUT.shelf.x, shelf.height * 0.55, LAYOUT.shelf.z);
@@ -147,12 +196,12 @@ const shelfRight = new THREE.Vector3(Math.cos(LAYOUT.shelf.ry), 0, -Math.sin(LAY
 const bookPos = new THREE.Vector3(LAYOUT.book.x, 0, LAYOUT.book.z);
 
 let keyframes = function () {
-  const small = isSmall();
+  const small = isSmall(), back = shelf.height / 3.86;   // the shelf stop was framed for a 3.86-tall shelf
   return [
     small
       ? { pos: new THREE.Vector3(6.2, 9.2, 24.5), tgt: new THREE.Vector3(1.1, 0.6, 0) }
       : { pos: new THREE.Vector3(8.6, 6.6, 20.8), tgt: new THREE.Vector3(-2.3, 0.0, 0.4) },
-    { pos: shelfCenter.clone().addScaledVector(shelfNormal, small ? 9.2 : 7.4).addScaledVector(shelfRight, small ? 1.6 : 0).add(new THREE.Vector3(0, small ? 1.6 : 0.35, 0)), tgt: shelfCenter.clone().add(new THREE.Vector3(0, 0.2, 0)) },
+    { pos: shelfCenter.clone().addScaledVector(shelfNormal, (small ? 9.2 : 7.4) * back).addScaledVector(shelfRight, small ? 1.6 : 0).add(new THREE.Vector3(0, small ? 1.6 : 0.35, 0)), tgt: shelfCenter.clone().add(new THREE.Vector3(0, 0.2, 0)) },
     { pos: new THREE.Vector3(0.6, small ? 15 : 11, 2.9), tgt: new THREE.Vector3(0.6, 0, 1.3) },
     { pos: bookPos.clone().add(new THREE.Vector3(0.05, small ? 7 : 5.4, 0.45)), tgt: bookPos.clone() }
   ];
@@ -322,7 +371,8 @@ function frame() {
   camera.position.copy(camPos);
   camera.lookAt(camTgt);
 
-  for (const m of animated) m.update(elapsed, dt);
+  const modelDt = reducedMotion ? 0 : dt;
+  for (const m of animated) m.update(elapsed, modelDt);
   for (const icon of shelf.icons) {
     const want = icon === hovered ? 1.12 : 1;
     icon.scale.setScalar(icon.scale.x + (want - icon.scale.x) * (1 - Math.exp(-dt * 12)));
