@@ -1,0 +1,23 @@
+/* candle·kit — "my child of light" (avatar.html); layout and stage come from wardrobe.css */
+.av-drop { position: relative; display: grid; gap: 4px; justify-items: center; text-align: center; padding: 22px 16px; border: 2px dashed var(--line-strong); border-radius: 16px; cursor: pointer; }
+.av-drop:hover, .av-drop.over { border-color: var(--gold); background: rgba(226, 178, 92, .08); }
+.av-drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.av-drop span { color: var(--muted); font-size: 13px; }
+.av-msg { margin: 0; font-size: 13.5px; color: var(--ink-soft); }
+.av-msg.bad { color: color-mix(in srgb, var(--red) 80%, var(--ink)); }
+.av-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.av-body > div { border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; display: grid; gap: 2px; }
+.av-body span { font-size: 12px; color: var(--muted); font-weight: 600; }
+.av-body b { font-size: 22px; color: var(--gold); }
+.av-body small { font-size: 12px; color: var(--ink-soft); }
+.av-list { display: grid; gap: 6px; }
+.av-row { display: grid; grid-template-columns: 40px 64px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 10px 6px 6px; border: 1px solid var(--line); border-radius: 12px; }
+.av-row img, .av-noimg { width: 40px; height: 40px; object-fit: contain; }
+.av-row.is-off { opacity: .6; }
+.av-slot { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.av-name { min-width: 0; display: grid; font-weight: 600; font-size: 14px; }
+.av-name small { font-weight: 400; color: var(--muted); font-size: 12px; }
+.av-dyes { display: flex; gap: 4px; }
+.av-dye { width: 16px; height: 16px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); }
+#av-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#av-canvas:active { cursor: grabbing; }
