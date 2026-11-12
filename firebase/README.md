@@ -1,21 +1,29 @@
-# Firebase (card editor cloud save + share links)
+# Firebase (card cloud save + admin sign-in)
 
-`card.html` can save a signed-in user's card to the cloud and create share links. It uses Firebase
-Authentication (Google sign-in) and Cloud Firestore on the free Spark plan; no server code.
+`card.html` can save a signed-in user's card to the cloud, and `admin.html` uses the same Google sign-in to decide
+who may manage the site. Both use Firebase Authentication (Google) and Cloud Firestore on the free Spark plan; no
+server code. Share links do not use Firebase: the card travels inside the link (`card#card=…`).
 
 | File | What |
 |---|---|
 | `assets/js/firebase-config.js` | The project's web config (public identifiers, not secrets). `null` hides the cloud buttons. |
-| `assets/js/cloud.js` | Sign-in, sync and share logic. |
+| `assets/js/cloud.js` | Card editor: sign-in, sync, share links. |
+| `assets/js/admin.js` | Admin page: sign-in gate, admin list, the GitHub token it saves with. |
 | `assets/js/vendor/firebase.js` | Firebase JS SDK (app, auth, firestore/lite), bundled with esbuild; loaded only when needed. |
 | `firebase/firestore.rules` | Security rules: who can read and write what. Paste into the console (or `firebase deploy --only firestore:rules`). |
 
 ## Data
 
-- `cards/{uid}`: the user's card as a JSON string (`data`). Only that user can read or write it.
-- `shares/{uid}`: the card that user shared. Anyone with the link (`card.html?s=<uid>`) can read it; only the owner can
-  change or delete it. One share per account, and nothing can be listed.
-- Documents are capped at 1 MiB; the editor refuses to sync or share a card whose images exceed that.
+- `cards/{uid}`: the user's card as a JSON string (`data`). Only that user can read or write it. Documents are capped
+  at 1 MiB; the editor refuses to sync a card whose images exceed that.
+- `shares/{uid}`: legacy. Older share links (`card?s=<uid>`) stored the card here; they can still be read, and the
+  owner's copy is deleted the next time they sign in. Nothing writes here any more.
+- `config/admins`: `{ uids, labels }` — the accounts that may use `admin.html` (plus `rootAdmins()` in the rules, which
+  can never be locked out). Admins only.
+- `config/github`: `{ token, repo }` — the GitHub token and repository the admin page commits with. Admins only.
+- `requests/{uid}`: an access request from a signed-in account that is not an admin yet; its `label` must be that
+  account's own email. Admins approve or dismiss it in admin.html → 設定.
+- `admin/{uid}`: legacy (a token per account, before `config/github`); only read once to migrate, then deleted.
 
 ## Setting up a project
 
@@ -44,3 +52,7 @@ npx esbuild entry.js --bundle --format=esm --minify --legal-comments=eof --targe
 
 `firebase emulators:start --only auth,firestore --project demo-candle` (uses `firebase.json`), then load the page with
 `window.FIREBASE_EMULATOR = true` set before `cloud.js` runs and any config whose `projectId` is `demo-candle`.
+
+`admin.html` has a Content-Security-Policy that names this project's `firebaseapp.com` host and does not allow the
+emulator's `127.0.0.1` ports: testing it against the emulator needs the policy relaxed by the test harness, and a move
+to another Firebase project needs the `frame-src` host in `admin.html` changed along with `firebase-config.js`.

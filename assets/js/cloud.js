@@ -81,14 +81,14 @@
     renderDialog();
   }
   function changed() {  // card.js saved the local copy
-    if (!ready || !user || App.viewing()) return;
+    if (!ready || !user || conflict || App.viewing()) return;   // an open conflict waits for the user's choice
     if (hash(payload()) === base(user.uid)) { if (status !== 'synced') setStatus('synced'); return; }
     if (status !== 'busy') setStatus('dirty');
     clearTimeout(pushTimer); pushTimer = setTimeout(push, PUSH_DELAY);
   }
   async function push() {
     clearTimeout(pushTimer);
-    if (!user || !ready) return;
+    if (!user || !ready || conflict) return;
     if (pushing) { pushTimer = setTimeout(push, PUSH_DELAY); return; }
     const d = payload(), h = hash(d), uid = user.uid;
     if (bytes(d) > MAX_BYTES) { setStatus('toobig'); return; }
@@ -181,8 +181,10 @@
   async function makeShareLink() {
     const d = App.data(true), st = d.state, a = d.assets;
     let dropped = false;  // uploaded wallpapers are too big for a link: those designs fall back to their default background
-    Object.values(st.themes || {}).forEach(th => {
-      if (th && th.wp && !String(th.wp).startsWith('preset:')) { delete a[th.wp]; th.wp = null; if (th.mode === 'image') th.mode = 'default'; dropped = true; }
+    Object.entries(st.themes || {}).forEach(([design, th]) => {
+      if (!(th && th.wp && !String(th.wp).startsWith('preset:'))) return;
+      delete a[th.wp]; th.wp = null;
+      if (th.mode === 'image') { th.mode = 'default'; if (design === st.design) dropped = true; }  // only warn when it shows
     });
     const avatar = st.profile && st.profile.avatar;
     for (const id of Object.keys(a)) {
@@ -289,7 +291,7 @@
     if (act === 'adopt-yes') { App.adopt(); return; }
   });
   modal && modal.addEventListener('modal-close', () => {
-    if (conflict) { setStatus('dirty'); ready = false; }  // closed without choosing: ask again next time
+    if (conflict) setStatus('dirty');  // closed without choosing: nothing uploads until they choose (cloud button reopens it)
     view = null;
   });
 

@@ -4,10 +4,9 @@
  * Access: Google sign-in (Firebase). Admin accounts are listed in Firestore config/admins (plus rootAdmins() in
  * firebase/firestore.rules); config/github holds the GitHub token and the repository, readable by admins only. Saving
  * needs push access to that repository, so GitHub itself still enforces who may change anything. Fallback: a GitHub
- * token pasted here, kept in this browser. Either way the token is only sent to api.github.com, and
- * saving is a normal commit made with that token, so GitHub itself enforces who may change anything; the page holds no
- * secret of its own. The token is kept in sessionStorage (or localStorage with "remember") and is only sent to
- * api.github.com. The card editor applies data/ at runtime, so a save is live once GitHub Pages has rebuilt. */
+ * token pasted here, kept in this browser (sessionStorage, or localStorage with "remember"). Requests made with the
+ * token only go to api.github.com; saving is a normal commit made with it. The card editor applies data/ at runtime,
+ * so a save is live once GitHub Pages has rebuilt. */
 (function () {
   'use strict';
   const BRANCH = 'main', API = 'https://api.github.com';
@@ -45,17 +44,20 @@
     catch { throw Object.assign(new Error('連不上 GitHub，請檢查網路'), { status: 0 }); }
     if (!r.ok) {
       const j = await r.json().catch(() => ({}));
-      throw Object.assign(new Error(j.message || ('GitHub ' + r.status)), { status: r.status });
+      const msg = j.message || ('GitHub ' + r.status);
+      const limited = r.status === 429 || (r.status === 403 && (r.headers.get('retry-after') != null || r.headers.get('x-ratelimit-remaining') === '0' || /rate limit|abuse/i.test(msg)));
+      throw Object.assign(new Error(msg), { status: r.status, limited });
     }
     return raw ? r.text() : r.json();
   }
-  const writeHint = e => (e.status === 403 || e.status === 404) ? '權杖沒有這個 repo 的 Contents 寫入權限（Read and write）。' : e.message;
+  const writeHint = e => e.limited ? 'GitHub 暫時限制了存檔次數，請過一陣子再試。'
+    : (e.status === 403 || e.status === 404) ? '權杖沒有這個 repo 的 Contents 寫入權限（Read and write）。' : e.message;
 
   async function signIn(t) {
     token = t;
-    const me = await gh('/user').catch(e => { throw new Error(e.status === 401 ? '權杖無效或已過期。' : e.message); });
+    const me = await gh('/user').catch(e => { throw Object.assign(new Error(e.status === 401 ? '權杖無效或已過期。' : e.message), { status: e.status }); });
     if (!REPO) throw new Error('還不知道網站的 GitHub repo，請填「帳號/名稱」。');
-    const repo = await gh('/repos/' + REPO).catch(e => { throw new Error(e.status === 404 ? `權杖看不到 ${REPO}，請在 Repository access 加入它。` : e.message); });
+    const repo = await gh('/repos/' + REPO).catch(e => { throw Object.assign(new Error(e.status === 404 ? `權杖看不到 ${REPO}，請在 Repository access 加入它。` : e.message), { status: e.status }); });
     if (!repo.permissions || !repo.permissions.push) throw new Error(`這個帳號沒有 ${REPO} 的寫入權限。`);
     return me.login;
   }
@@ -433,6 +435,7 @@
 
   function onInput(e) {
     const el = e.target;
+    if (!W) return;   // still loading, or loading failed
     if (el.id === 'q') { ui.q = el.value; ui.limit = 200; renderList(); return; }
     if (!ui.sel) { if (el.dataset.pick) showResults(el); return; }
     if (el.dataset.s) {
@@ -451,6 +454,7 @@
   }
   function onChange(e) {
     const el = e.target;
+    if (!W) return;
     if (el.id === 'f-group') { ui.group = el.value; ui.limit = 200; renderList(); return; }
     if (el.id === 'f-season') { ui.season = el.value; ui.limit = 200; renderList(); return; }
     if (!ui.sel) return;
@@ -484,6 +488,9 @@
     const t = e.target.closest('button');
     if (!t) { document.querySelectorAll('.results').forEach(r => { if (!r.contains(e.target)) r.hidden = true; }); return; }
     const ds = t.dataset;
+    if (t.id === 'logout') { logout(); return; }
+    if (t.id === 'settings') { openSettings(); return; }
+    if (!W) return;   // nothing else works before the data is in
     if (ds.tab) { ui.tab = ds.tab; ui.sel = null; ui.q = ''; ui.confirmDel = false; render(); return; }
     if (ds.season) { ui.sel = 'S:' + ds.season; ui.confirmDel = false; render(); return; }
     if (ds.item) { ui.sel = 'I:' + ds.item; ui.confirmDel = false; render(); return; }
@@ -527,11 +534,9 @@
     if (t.hasAttribute('data-drawer-close')) { closeDrawer(); return; }
     if (ds.jump) { ui.tab = { S: 'seasons', I: 'items', P: 'packs' }[ds.jump[0]]; ui.sel = ds.jump; ui.q = ''; closeDrawer(); render(); return; }
     if (ds.revert) { revert(ds.revert); render(); openDrawer(); return; }
-    if (t.id === 'discard') { W = clone(ORIG); ui.sel = null; saveDraft(); closeDrawer(); render(); toast('已放棄所有變更'); return; }
+    if (t.id === 'discard') { commitTyped = ''; W = clone(ORIG); ui.sel = null; saveDraft(); closeDrawer(); render(); toast('已放棄所有變更'); return; }
     if (t.id === 'save') { save(); return; }
     if (t.id === 'reload') { reload(); return; }
-    if (t.id === 'logout') { logout(); return; }
-    if (t.id === 'settings') { openSettings(); return; }
   }
 
   // ── changes drawer + save ────────────────────────────────────────────────
@@ -549,7 +554,7 @@
           ${d[k].map(c => `<div class="chg"><span class="tag ${K[c.kind][0]}">${K[c.kind][1]}</span><button type="button" data-jump="${pref[k]}:${esc(c.key)}">${esc(c.label)}</button><span class="what">${esc(c.what || '')}</span><span class="spacer"></span><button type="button" class="what" data-revert="${k}|${esc(c.key)}">還原</button></div>`).join('') || '<div class="chg"><span class="what">沒有變更</span></div>'}</div>`).join('')}
       </div>
       <div class="drawer-foot">
-        <input class="input" id="commit-msg" placeholder="${esc(defaultMessage(d))}" aria-label="commit 訊息（可留空）"${n ? '' : ' disabled'}>
+        <input class="input" id="commit-msg" value="${esc(commitTyped)}" placeholder="${esc(defaultMessage(d))}" aria-label="commit 訊息（可留空）"${n ? '' : ' disabled'}>
         <button class="btn" type="button" id="save"${n && !probs.length && !saving ? '' : ' disabled'}>${saving ? '儲存中…' : '儲存到 GitHub'}</button>
         <button class="btn danger" type="button" id="discard"${n ? '' : ' disabled'}>放棄所有變更</button>
         <span class="spacer"></span>
@@ -573,8 +578,9 @@
     const parts = [['seasons', '季節'], ['items', '物品'], ['packs', '禮包']].filter(([k]) => d[k].length).map(([k, z]) => `${z} ${d[k].length}`);
     return parts.length ? `目錄管理：更新${parts.join('、')}` : '目錄管理';
   }
+  let commitTyped = '';
   function commitMessage(d) {
-    const title = ($('#commit-msg') && $('#commit-msg').value.trim()) || defaultMessage(d);
+    const title = commitTyped || defaultMessage(d);
     const K = { new: '新增', edit: '修改', del: '刪除' };
     const lines = KINDS.flatMap(k => d[k].map(c => `- ${PATH[k]}：${K[c.kind]} ${c.label}${c.what ? `（${c.what}）` : ''}`));
     return title + '\n\n' + lines.slice(0, 60).join('\n') + (lines.length > 60 ? `\n…另外 ${lines.length - 60} 筆` : '') + '\n\n由 admin.html 儲存';
@@ -592,6 +598,7 @@
 
   async function save() {
     if (saving) return;
+    if ($('#commit-msg')) commitTyped = $('#commit-msg').value.trim();
     const probs = problems();
     if (probs.length) { openDrawer(); return; }
     saving = true; openDrawer();
@@ -614,7 +621,8 @@
           throw e;
         }
         files.forEach(f => { REMOTE.text[f.path] = f.content; });
-        REMOTE.sha = commit.sha;
+        KINDS.forEach(k => { REMOTE.docs[k] = JSON.parse(REMOTE.text[PATH[k]]); });   // the game update reads these
+        REMOTE.sha = commit.sha; commitTyped = '';
         REMOTE.hans = Object.fromEntries(W.seasons.map(s => [s.code, { zh: s.zh, zh_hans: hansOf(s) }]));
         ORIG = clone(W); saveDraft();
         saving = false; closeDrawer(); render();
@@ -646,7 +654,7 @@
   let wired = false;
   async function open(login) {
     $('#gate').hidden = true; $('#app').hidden = false;
-    $('#who').innerHTML = `<b title="${esc(REPO)}">${esc(guser ? labelOf(guser) : '@' + login)}</b>${guser ? '<button class="btn ghost small" type="button" id="settings">設定</button>' : ''}<button class="btn ghost small" type="button" id="logout">登出</button>`;
+    $('#who').innerHTML = `<b title="${esc(REPO)}">${esc(mode === 'google' && guser ? labelOf(guser) : '@' + login)}</b>${mode === 'google' && guser ? '<button class="btn ghost small" type="button" id="settings">設定</button>' : ''}<button class="btn ghost small" type="button" id="logout">登出</button>`;
     if (!wired) {
       wired = true;
       document.addEventListener('input', onInput);
@@ -684,6 +692,7 @@
     return lines.slice(1).map(l => { const f = l.split(','); return Object.fromEntries(head.map((h, i) => [h, f[i] || ''])); });
   }
   function renderUpdate() {
+    if (ui.tab !== 'update') return;   // progress keeps arriving while another tab is open
     $('#filters').innerHTML = '<p class="up-title"><b>遊戲更新</b> 選擇新版的 Sky.apks，自動抽出物品圖示、3D 模型和物品清單，只把有變的檔案存回網站。</p>';
     const bar = (done, total) => `<progress class="up-bar" max="${total || 1}" value="${Math.min(done, total || 1)}"></progress>`;
     let h = '';
@@ -713,7 +722,8 @@
         ${ch.newSeasons.length ? `<p class="problems">遊戲裡出現新的季節：${ch.newSeasons.map(c => 'AP' + esc(c)).join('、')}。先到「季節」分頁新增名稱（季號 ${ch.newSeasons.map(esc).join('、')}），網站才會顯示季節名稱；物品可以先存。</p>` : ''}
         ${ch.newItems.length ? `<p class="sub">新物品</p><div class="up-new">${ch.newItems.slice(0, 120).map(it => `<span class="up-it" title="${esc(it.name)}">${it.url ? `<img src="${it.url}" alt="">` : '<i></i>'}<span>${esc(it.label)}</span></span>`).join('')}${ch.newItems.length > 120 ? `<span class="note">…另外 ${ch.newItems.length - 120} 件</span>` : ''}</div>` : ''}
         ${ch.gone ? `<p class="note">網站上有 ${ch.gone} 個檔案這一版遊戲沒有產生（可能是下架或改名），會保留不刪，已存的名片不受影響。</p>` : ''}
-        <p class="note">遊戲資料：${r.summary.outfits} 件裝扮、${r.summary.placeables} 件家具；讀取 ${r.summary.readSeconds.toFixed(1)} 秒。${r.summary.glbFailed && r.summary.glbFailed.length ? `有 ${r.summary.glbFailed.length} 個模型轉換失敗（略過）。` : ''}</p>`;
+        <p class="note">遊戲資料：${r.summary.outfits} 件裝扮、${r.summary.placeables} 件家具；讀取 ${r.summary.readSeconds.toFixed(1)} 秒。${r.summary.glbFailed && r.summary.glbFailed.length ? `有 ${r.summary.glbFailed.length} 個模型轉換失敗（略過）。` : ''}</p>
+        ${warnLine(r.summary)}`;
       const files = up.files.length + up.texts.length;
       if (up.stage === 'review') {
         h += files ? `<div class="up-commit"><input class="input" id="up-msg" placeholder="${esc(defaultUpdateMessage())}" aria-label="commit 訊息（可留空）">
@@ -740,6 +750,18 @@
     Object.assign(up, { stage: 'idle', progress: {}, result: null, error: '', urls: [], files: [], worker: null, file: null, commit: null });
     renderUpdate();
   }
+  // things the extraction could not do: say so before the owner commits the result
+  function warnLine(sm) {
+    const parts = [
+      sm.iconsMissing ? `${sm.iconsMissing} 件物品找不到圖示（清單裡會標成缺圖，網站不顯示）` : '',
+      (sm.glbTextureFailed || []).length ? `${sm.glbTextureFailed.length} 個模型的貼圖讀不出來（模型會沒有貼圖）` : '',
+      (sm.meshFailed || []).length ? `${sm.meshFailed.length} 個模型檔讀不出來` : '',
+      (sm.warnings || []).length ? `${sm.warnings.length} 則其他警告` : ''
+    ].filter(Boolean);
+    if (!parts.length) return '';
+    console.warn('game update warnings', { glbTextureFailed: sm.glbTextureFailed, meshFailed: sm.meshFailed, warnings: sm.warnings });
+    return `<p class="problems">解析時有狀況：${parts.join('；')}。細節在瀏覽器的 Console。確認沒問題再存。</p>`;
+  }
   let upTick = 0;
   async function startUpdate(file) {
     if (!file) return;
@@ -747,10 +769,12 @@
     let known, siteCSV;
     try {
       [known, siteCSV] = await Promise.all([
-        gh(`/repos/${REPO}/contents/${HASHES}?ref=${REMOTE.sha}`, { raw: true }).then(JSON.parse).catch(() => ({ icons: {}, glb: {} })),
+        gh(`/repos/${REPO}/contents/${HASHES}?ref=${REMOTE.sha}`, { raw: true }).then(JSON.parse)
+          .catch(e => { if (e.status === 404) return { icons: {}, glb: {} }; throw e; }),   // only "no hash file yet" means "everything is new"
         gh(`/repos/${REPO}/contents/${CSV}?ref=${REMOTE.sha}`, { raw: true })
       ]);
-    } catch (e) { up.stage = 'error'; up.error = '讀不到網站目前的檔案：' + e.message; renderUpdate(); return; }
+    } catch (e) { if (up.file === file) { up.stage = 'error'; up.error = '讀不到網站目前的檔案：' + e.message; renderUpdate(); } return; }
+    if (up.stage !== 'running' || up.file !== file) return;   // cancelled while reading
     const w = new Worker(new URL('admin/extract-worker.js', SDK_URL.replace(/vendor\/firebase\.js$/, '')), { type: 'module' });
     up.worker = w;
     w.onmessage = ev => {
@@ -785,7 +809,7 @@
       newItems, newSeasons, csvChanged: m.csv.replace(/^\uFEFF/, '') !== siteCSV.replace(/^\uFEFF/, ''),  // fetch's text() drops the BOM
       iconsNew: m.icons.filter(i => !(i.path in ki)).length, iconsChanged: m.icons.filter(i => i.path in ki).length,
       glbNew: m.glbs.filter(g => !(g.path in kg)).length, glbChanged: m.glbs.filter(g => g.path in kg).length,
-      gone: m.notProduced ? m.notProduced.icons.length + m.notProduced.glb.filter(p => p.includes('/')).length : 0
+      gone: m.notProduced ? m.notProduced.icons.length + (up.glb ? m.notProduced.glb.filter(p => p.includes('/')).length : 0) : 0
     };
     const files = [
       ...m.icons.map(i => ({ path: 'assets/icons/' + i.path, bytes: i.png })),
@@ -814,7 +838,7 @@
     for (let attempt = 0; ; attempt++) {
       try { return (await gh(`/repos/${REPO}/git/blobs`, { method: 'POST', body: { content: await toBase64(bytes), encoding: 'base64' } })).sha; }
       catch (e) {
-        if (!(e.status === 403 || e.status === 429) || attempt >= 8) throw e;
+        if (!e.limited || attempt >= 8) throw e;   // a 403 for missing write permission fails at once
         up.note = 'GitHub 要求放慢速度，等待一分鐘後繼續。'; renderUpdate();
         await sleep(61000); up.note = '';
       }
@@ -822,17 +846,20 @@
   }
   async function commitUpdate() {
     const entries = [];
+    const msg = ($('#up-msg') && $('#up-msg').value.trim()) || defaultUpdateMessage();   // read before the view is redrawn
     up.stage = 'committing'; up.sent = 0; up.total = up.files.length; up.note = ''; renderUpdate();
     try {
       for (const f of up.files) {
-        const t = Date.now();
-        entries.push({ path: f.path, mode: '100644', type: 'blob', sha: await createBlob(f.bytes) });
-        up.sent++; renderUpdate();
+        const t = Date.now(), had = !!f.sha;
+        f.sha ||= await createBlob(f.bytes);          // kept on the file: a retry resumes instead of re-uploading
+        entries.push({ path: f.path, mode: '100644', type: 'blob', sha: f.sha });
+        up.sent++;
+        if (had) continue;
+        renderUpdate();
         const wait = 820 - (Date.now() - t);
         if (wait > 0 && up.sent < up.total) await sleep(wait);
       }
       up.note = '建立 commit…'; renderUpdate();
-      const msg = ($('#up-msg') && $('#up-msg').value.trim()) || defaultUpdateMessage();
       for (let attempt = 0; attempt < 3; attempt++) {  // main can move during a long upload: rebuild on the new head
         const ref = await gh(`/repos/${REPO}/git/ref/heads/${BRANCH}`), head = ref.object.sha;
         const hc = await gh(`/repos/${REPO}/git/commits/${head}`);
@@ -847,7 +874,7 @@
       }
     } catch (e) {
       up.stage = 'review'; renderUpdate();
-      toast('存檔失敗：' + esc(writeHint(e)) + (up.sent ? `（已上傳 ${up.sent} 個，重試會重新上傳）` : ''), 9000);
+      toast('存檔失敗：' + esc(writeHint(e)) + (up.sent ? `（已上傳 ${up.sent} 個，再按一次會從中斷的地方繼續）` : ''), 9000);
     }
   }
   $('#rows').addEventListener('change', e => {
@@ -859,9 +886,9 @@
     if (b.id === 'up-cancel' || b.id === 'up-reset') resetUpdate();
     if (b.id === 'up-commit') commitUpdate();
   });
-  $('#rows').addEventListener('dragover', e => { if (ui.tab === 'update' && up.stage !== 'running') { e.preventDefault(); const d = $('#drop'); if (d) d.classList.add('over'); } });
+  $('#rows').addEventListener('dragover', e => { if (ui.tab === 'update' && (up.stage === 'idle' || up.stage === 'error')) { e.preventDefault(); const d = $('#drop'); if (d) d.classList.add('over'); } });
   $('#rows').addEventListener('dragleave', () => { const d = $('#drop'); if (d) d.classList.remove('over'); });
-  $('#rows').addEventListener('drop', e => { if (ui.tab !== 'update' || up.stage === 'running') return; e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) startUpdate(f); });
+  $('#rows').addEventListener('drop', e => { if (ui.tab !== 'update' || !(up.stage === 'idle' || up.stage === 'error')) return; e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) startUpdate(f); });
   window.addEventListener('beforeunload', e => { if (up.stage === 'running' || up.stage === 'committing') { e.preventDefault(); e.returnValue = ''; } });
 
   // ── sign-in: Google (Firebase); the GitHub token and repository live in Firestore config/github ──
@@ -910,7 +937,11 @@
     if (!cfg || !cfg.token) return showSetup('第一次使用：貼上 GitHub 權杖，確認要存檔的 repo。它們會存在只有管理員帳號讀得到的地方，之後任何管理員用 Google 登入就好。');
     fb.deleteDoc(fb.doc(fdb, 'requests', user.uid)).catch(() => {});  // its own access request, if it made one before
     try { open(await signIn(cfg.token)); }
-    catch (ex) { token = null; showSetup('存著的 GitHub 權杖不能用了（' + ex.message + '）請貼一個新的。'); }
+    catch (ex) {
+      token = null;
+      showSetup(ex.status === 401 || ex.status === 404 || ex.status === undefined ? '存著的 GitHub 權杖不能用了（' + ex.message + '）請貼一個新的。'
+        : '現在連不上 GitHub（' + ex.message + '）。請稍後重新整理；權杖不用重貼。');
+    }
   }
   function tokenLink() {
     const owner = REPO.split('/')[0];
@@ -934,7 +965,7 @@
     $('#g-uid').textContent = user.uid;
     gateShow('#g-denied');
     try {
-      await fb.setDoc(fb.doc(fdb, 'requests', user.uid), { label: labelOf(user), createdAt: fb.serverTimestamp() });
+      await fb.setDoc(fb.doc(fdb, 'requests', user.uid), { label: user.email || labelOf(user), createdAt: fb.serverTimestamp() });
       $('#g-req').textContent = '已送出申請。請用已經是管理員的 Google 帳號登入這一頁，到「設定 → 管理員」核准，之後這個帳號重新整理就能進來。';
     } catch (e) { $('#g-req').textContent = '申請沒有送出（' + (e.code || e.message) + '）。可以把上面的帳號 ID 給管理員手動加入。'; }
     let rules = '';
@@ -1018,14 +1049,15 @@
           uids = uids.filter(x => x !== uid); delete labels[uid];
         }
         await writeAdmins(uids, labels);
+        if (b.dataset.set !== 'approve' && uid === guser.uid) { location.reload(); return; }
         if (b.dataset.set === 'approve') await fb.deleteDoc(fb.doc(fdb, 'requests', uid));
         toast(b.dataset.set === 'approve' ? '已核准' : '已移除');
       } else if (b.dataset.set === 'dismiss') { await fb.deleteDoc(fb.doc(fdb, 'requests', uid)); toast('已拒絕'); }
       else if (b.dataset.set === 'github') {
         const repo = $('#set-repo').value.trim(), tok = $('#set-token').value.trim() || token;
         if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { toast('repo 格式是 帳號/名稱'); b.disabled = false; return; }
-        const prevRepo = REPO; REPO = repo;
-        try { await signIn(tok); } catch (ex) { REPO = prevRepo; token = token; toast('不能用：' + esc(ex.message), 6000); b.disabled = false; return; }
+        const prevRepo = REPO, prevTok = token; REPO = repo;
+        try { await signIn(tok); } catch (ex) { REPO = prevRepo; token = prevTok; toast('不能用：' + esc(ex.message), 6000); b.disabled = false; return; }
         await saveGithub(tok, repo);
         toast('已儲存，重新載入資料…');
         if (repo !== prevRepo) setTimeout(() => location.reload(), 800);
@@ -1064,8 +1096,9 @@
   if (saved) {
     mode = 'token';
     signIn(saved).then(open).catch(ex => {
-      token = null; store.del(TOKEN_KEY);
-      $('#g-alt').click(); $('#login-err').textContent = '請重新登入：' + ex.message; $('#login-err').hidden = false;
+      token = null;
+      if (ex.status === 401) store.del(TOKEN_KEY);   // offline or a GitHub hiccup: keep it for the next visit
+      $('#g-alt').click(); $('#login-err').textContent = (ex.status === 401 ? '請重新登入：' : '暫時進不去，請稍後重新整理：') + ex.message; $('#login-err').hidden = false;
     });
   } else if (!FB_CFG) $('#g-alt').click();
   else {

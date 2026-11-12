@@ -1,8 +1,8 @@
-"""Build assets/js/i18n-dict.js for the card editor.
+"""Build assets/js/i18n-dict.js for the translated pages (card editor and catalogue).
 
 Keys are the Traditional Chinese source strings themselves:
-  - visible text and placeholder / aria-label / title / alt / meta-description attributes in card.html
-  - the first argument of every t('...') call in assets/js/{card,card-data,site}.js
+  - visible text and placeholder / aria-label / title / alt / meta-description attributes in card.html, wardrobe.html
+  - the first argument of every t('...') call in assets/js/{card,card-data,site,i18n,cloud,wardrobe}.js
 English comes from i18n/en.json (hand-written, key -> English). Simplified Chinese is generated with OpenCC
 (tw2sp: Taiwan phrasing -> mainland phrasing), with fixes from i18n/zh-Hans.overrides.json.
 
