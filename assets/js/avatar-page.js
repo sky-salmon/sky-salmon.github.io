@@ -5,7 +5,7 @@
  *     "h": <height>, "s": <scale>, "v": 3, … }   (note the two "h" keys: the hair slot, then the height number)
  * Slot ids are the FNV-1a 32-bit hash of the OutfitDefs name; dyes are DyeColorDefs ids ("-" / "none" = none).
  * Everything runs in this browser. */
-import { createAvatar, hsvToRgb } from './avatar-engine.js';
+import { createAvatar, dyeCss } from './avatar-engine.js';
 
 const t = window.I18N ? window.I18N.t : (s, v) => (v ? s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
 const D = window.CardData;
@@ -82,7 +82,7 @@ let kid = null, CAT = new Map();
 const status = msg => { const el = $('#av-status'); el.textContent = msg || ''; el.hidden = !msg; };
 const msg = (text, bad) => { const el = $('#av-msg'); el.textContent = text || ''; el.hidden = !text; el.classList.toggle('bad', !!bad); };
 const labelOf = n => (CAT.get(n) ? CAT.get(n).label : n.replace(/^CharSkyKid_/, '').replace(/_/g, ' '));
-const swatch = id => { const d = kid.index.dyes.find(x => x.id === id); return d ? `<i class="av-dye" title="${esc(d.name_en || id)}" style="--c:rgb(${hsvToRgb(d.hsv).map(x => Math.round(x * 255)).join(',')})"></i>` : ''; };
+const swatch = id => { const d = kid.index.dyes.find(x => x.id === id); return d ? `<i class="av-dye" title="${esc(d.name_en || id)}" style="--c:${dyeCss(d.hsv)}"></i>` : ''; };
 
 let QRNAMES = null;
 async function decode(text) {

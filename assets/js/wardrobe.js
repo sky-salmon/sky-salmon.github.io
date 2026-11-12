@@ -8,7 +8,7 @@
  *   tex/…png     ramp / mask textures shared by many outfits
  * A look is { pieces: {slot: outfit}, dyes: {slot: [primary, secondary]}, clip }. It lives in localStorage and in the
  * link (#look=…), so sharing needs no account and no server. */
-import { createAvatar, hsvToRgb } from './avatar-engine.js';
+import { createAvatar, dyeCss } from './avatar-engine.js';
 
 const t = window.I18N ? window.I18N.t : (s, v) => (v ? s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
 const { toast, store } = window.Site;
@@ -126,7 +126,7 @@ function renderDetail() {
   const [p, sec] = look.dyes[ui.slot] || [];
   const swatches = (which, cur) => `<div class="wd-dyes" role="radiogroup" aria-label="${which ? t('副色') : t('主色')}">
       <button type="button" class="wd-dye is-none" data-dye="${which}" data-id="" aria-checked="${cur == null}" title="${t('原色')}"></button>
-      ${IDX.dyes.map(d => `<button type="button" class="wd-dye" data-dye="${which}" data-id="${esc(d.id)}" aria-checked="${cur === d.id}" title="${esc(d.name_en || d.id)}" style="--c:rgb(${hsvToRgb(d.hsv).map(x => Math.round(x * 255)).join(',')})"></button>`).join('')}</div>`;
+      ${IDX.dyes.map(d => `<button type="button" class="wd-dye" data-dye="${which}" data-id="${esc(d.id)}" aria-checked="${cur === d.id}" title="${esc(d.name_en || d.id)}" style="--c:${dyeCss(d.hsv)}"></button>`).join('')}</div>`;
   $('#wd-detail').innerHTML = `<div class="wd-d-head">${iconURL(info) ? `<img src="${esc(iconURL(info))}" alt="">` : ''}
       <div><b>${esc(labelOf(name))}</b><small class="mono">${esc(short(name))}</small></div>
       ${REQUIRED.has(ui.slot) ? '' : `<button type="button" class="btn btn-sm" data-wear="">${t('卸下')}</button>`}</div>

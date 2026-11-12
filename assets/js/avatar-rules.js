@@ -281,11 +281,11 @@ export function applyPieceRules(THREE, rig, worn, index) {
     const e = w && w.name && index.pieces[w.name];
     if (e) entries.push({ slot, name: w.name, type: e.type || SLOT_TO_TYPE[slot], offsets: e.offsets, e, w });
   }
-  // onesie bodies model their own footwear (inferred from the meshes): hide the shoes slot
+  // a piece may list slots it hides (index "hides"); none do now: in game a onesie body still shows its shoes
   const body = entries.find(x => x.slot === 'outfit');
   const hidden = new Set(body && body.e.hides ? body.e.hides : []);
   for (const x of entries) if (x.w.obj) x.w.obj.visible = !hidden.has(x.slot);
-  if (hidden.size) notes.push(`hidden by onesie body: ${[...hidden].join(', ')}`);
+  if (hidden.size) notes.push(`hidden by ${body.name}: ${[...hidden].join(', ')}`);
 
   const A = combineOffsets(entries.filter(x => !hidden.has(x.slot)));
   st.acc = A;
