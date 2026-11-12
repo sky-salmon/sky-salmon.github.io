@@ -379,6 +379,19 @@ function writeChannel(st, obj, key, fns) {
   rec.last = v.clone();
 }
 
+// Call every frame BEFORE mixer.update() (and before creating or fading AnimationActions): puts back the values
+// updateAvatarFrame changed, so the mixer only ever sees — and, when it binds a new clip, saves as the original
+// state — the plain skeleton pose. Without it the stretch was applied on top of an already stretched pose after
+// every clip change (the kid shrank or grew, and pieces drifted off their bones).
+export function restoreAvatarFrame(rig) {
+  const st = rig.userData.skyRules;
+  if (!st) return;
+  for (const rec of st.chan.values()) {
+    const cur = rec.obj[rec.key];
+    if (rec.last && cur.equals(rec.last)) cur.copy(rec.base);
+  }
+}
+
 // Call every frame after mixer.update(). Order follows the game: outfit bone offsets/scales
 // (tibik_anon_7 @0x126c75c), root scale (FUN_00fe6930), height (FUN_00fe7508); the axis stretch is applied
 // to children's translations here and to skinning in the skeleton hook.
