@@ -1,4 +1,4 @@
-// avatar-rules.js — Sky: Children of the Light kid assembly rules for the wardrobe viewer.
+// avatar-rules.js — Sky: Children of the Light kid assembly rules (used by avatar-engine.js for the height page's character).
 // Dependency-free ES module: pass THREE in, nothing is imported.
 //
 // Every rule below was read out of the game's native code (libBootloader.so, Sky 0.35.2, arm64) unless it says
@@ -23,13 +23,6 @@ export const QR_SLOT_KEYS = { b: 'outfit', w: 'cape', h: 'hair', ms: 'mask', n: 
 export const ATTITUDES = ['Neutral', 'ColdWind', 'HandsOut', 'Proud', 'Sneaky', 'Tough', 'Solemn', 'Sassy', 'Lazy',
   'Wise', 'Timid', 'Nerdy', 'Injured', 'Sad', 'Guard'];
 
-export function fnv1a32(str) {
-  let h = 0x811c9dc5;
-  for (const b of new TextEncoder().encode(str)) { h ^= b; h = Math.imul(h, 0x01000193) >>> 0; }
-  return h >>> 0;
-}
-
-// LZ4 *block* format (no frame header, no stored size)
 export function lz4BlockDecode(src) {
   const out = [];
   let i = 0;
@@ -82,7 +75,7 @@ export function decodeOutfitQR(text, names = {}) {
     pieces, dyes, parts,
     height: typeof raw.h === 'number' ? raw.h : 0,
     scale: typeof raw.s === 'number' ? raw.s : 0,
-    attitude: raw.a ?? 0, attitudeName: ATTITUDES[raw.a] ?? null,
+    attitude: Number.isInteger(raw.a) ? raw.a : 0, attitudeName: Number.isInteger(raw.a) ? ATTITUDES[raw.a] ?? null : null,
     voice: raw.v ?? null, seed: raw.e ?? null, refreshVersion: raw.r ?? null,
     raw,
   };
@@ -131,7 +124,7 @@ function state(rig) {
     const bones = {};
     rig.traverse(o => { if (o.name) bones[o.name] = o; });
     rig.userData.skyRules = { bones, height: 0, scale: 0, stretch: {}, worn: {}, acc: null, slotMats: {},
-      chan: new Map(), hooked: new Set(), clip: null };
+      chan: new Map(), hooked: new WeakSet(), clip: null };
   }
   return rig.userData.skyRules;
 }
@@ -242,13 +235,14 @@ function carriedPropTransform(THREE, A) {
 // Hat → hair clipping (clippingParams). Planes are defined in a bone's local frame; the hair shader drops
 // fragments on the inner side of a plane within its radius. Sign/union semantics are inferred (shader not
 // decompiled) — see notes.
-const CLIP_DEFAULT_PARENT = { 1: 'M_chestWing', 2: 'M_hairCenter', 3: 'M_headAUX', 6: 'M_headAUX', 7: 'M_headAUX',
-  8: 'M_WingBRoot', 9: 'M_hairCenterAUX' };   // FUN_0125b014, by slot enum
-
-function patchHairClipping(THREE, mat, uniforms) {
-  if (mat.userData.skyClipPatched) { Object.assign(mat.userData.skyClipUniforms, uniforms); return; }
+// A material is patched once and keeps one set of uniform holders for its whole life: the compiled program holds on
+// to the objects it was built with, so later looks write new values into the same holders (count 0 = no clipping).
+function hairClipUniforms(THREE, mat) {
+  if (mat.userData.skyClipUniforms) return mat.userData.skyClipUniforms;
+  const uniforms = { skyClipCount: { value: 0 },
+    skyClipO: { value: [0, 1, 2].map(() => new THREE.Vector3()) },
+    skyClipN: { value: [0, 1, 2].map(() => new THREE.Vector3()) }, skyClipR2: { value: [0, 0, 0] } };
   const prev = mat.onBeforeCompile;
-  mat.userData.skyClipPatched = true;
   mat.userData.skyClipUniforms = uniforms;
   mat.onBeforeCompile = (sh, r) => {
     if (prev) prev.call(mat, sh, r);
@@ -270,6 +264,7 @@ for (int i = 0; i < 3; i++) {
   const prevKey = mat.customProgramCacheKey ? mat.customProgramCacheKey.bind(mat) : () => '';
   mat.customProgramCacheKey = () => prevKey() + '|skyclip';
   mat.needsUpdate = true;
+  return uniforms;
 }
 
 // worn: { slot: { name, obj } }, index: assets/avatar/index.json
@@ -281,13 +276,7 @@ export function applyPieceRules(THREE, rig, worn, index) {
     const e = w && w.name && index.pieces[w.name];
     if (e) entries.push({ slot, name: w.name, type: e.type || SLOT_TO_TYPE[slot], offsets: e.offsets, e, w });
   }
-  // a piece may list slots it hides (index "hides"); none do now: in game a onesie body still shows its shoes
-  const body = entries.find(x => x.slot === 'outfit');
-  const hidden = new Set(body && body.e.hides ? body.e.hides : []);
-  for (const x of entries) if (x.w.obj) x.w.obj.visible = !hidden.has(x.slot);
-  if (hidden.size) notes.push(`hidden by ${body.name}: ${[...hidden].join(', ')}`);
-
-  const A = combineOffsets(entries.filter(x => !hidden.has(x.slot)));
+  const A = combineOffsets(entries);
   st.acc = A;
   st.slotMats = {};
   for (const x of entries) {
@@ -315,17 +304,18 @@ export function applyPieceRules(THREE, rig, worn, index) {
   const dp = hat && hat.e.clippingParams && hat.e.clippingParams.driverParams;
   const rp = hair && hair.e.clippingParams && hair.e.clippingParams.receiverParams;
   st.clip = null;
+  const hairMats = hair && hair.w.obj && hair.w.obj.material ? [].concat(hair.w.obj.material) : [];
+  let planes = [];
   if (dp && rp && (rp.clipAcceptTypes || []).includes(9) && !(rp.clipExclude || []).includes(hat.name)) {
-    const planes = ['planeA', 'planeB', 'planeC'].map(k => dp[k]).filter(p => p && len2(p.normal) > 0);
-    if (planes.length && hair.w.obj && hair.w.obj.material) {
-      const u = { skyClipCount: { value: planes.length },
-        skyClipO: { value: [0, 1, 2].map(() => new THREE.Vector3()) },
-        skyClipN: { value: [0, 1, 2].map(() => new THREE.Vector3()) }, skyClipR2: { value: [0, 0, 0] } };
-      const mats = Array.isArray(hair.w.obj.material) ? hair.w.obj.material : [hair.w.obj.material];
-      for (const m of mats) patchHairClipping(THREE, m, u);
-      st.clip = { planes, uniforms: u };
-      notes.push(`hair clipped by ${hat.name} (${planes.length} planes)`);
-    }
+    planes = ['planeA', 'planeB', 'planeC'].map(k => dp[k]).filter(p => p && len2(p.normal) > 0);
+  }
+  if (planes.length && hairMats.length) {
+    const sets = hairMats.map(m => hairClipUniforms(THREE, m));
+    sets.forEach(u => { u.skyClipCount.value = planes.length; });
+    st.clip = { planes, sets };
+    notes.push(`hair clipped by ${hat.name} (${planes.length} planes)`);
+  } else {
+    hairMats.forEach(m => { if (m.userData.skyClipUniforms) m.userData.skyClipUniforms.skyClipCount.value = 0; });  // hat gone
   }
   return notes;
 }
@@ -433,26 +423,20 @@ export function updateAvatarFrame(THREE, rig) {
   }
   rig.updateMatrixWorld(true);
   if (st.clip) {                                                     // hair clip planes → world space
-    const { planes, uniforms } = st.clip, nm = new THREE.Matrix3();
+    const { planes, sets } = st.clip, nm = new THREE.Matrix3();
     planes.forEach((p, i) => {
       const bone = B[p.parent] || B.M_hairCenterAUX;
       const o = new THREE.Vector3(...p.origin).applyMatrix4(bone.matrixWorld);
       nm.getNormalMatrix(bone.matrixWorld);
       const n = new THREE.Vector3(...p.normal).applyMatrix3(nm).normalize();
       const sc = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld).x;
-      uniforms.skyClipO.value[i].copy(o); uniforms.skyClipN.value[i].copy(n);
-      uniforms.skyClipR2.value[i] = p.radiusSq * sc * sc;
+      for (const u of sets) { u.skyClipO.value[i].copy(o); u.skyClipN.value[i].copy(n); u.skyClipR2.value[i] = p.radiusSq * sc * sc; }
     });
   }
 }
 
-// attitude (QR "a") → clip id (index.json "attitudes"); clipFile tells which GLB holds a clip
-// (skeleton.glb, clips/idle_<Attitude>.glb or clips/holds.glb — load the latter on demand)
+// attitude (QR "a") → clip id (index.json "attitudes")
 export function attitudeClip(index, attitude) {
   const a = (index.attitudes || []).find(x => x.id === attitude);
   return a ? a.clip : 'idle';
-}
-export function clipFile(index, clipId) {
-  const c = (index.clips || []).find(x => x.id === clipId);
-  return c ? (c.file || 'skeleton.glb') : 'skeleton.glb';
 }

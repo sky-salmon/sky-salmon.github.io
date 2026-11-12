@@ -144,7 +144,16 @@ function pixels(img, w, h, smooth = true) {
   return ctx.getImageData(0, 0, w, h);
 }
 
+let jsqrLoad = null;
+const loadJsQR = () => (typeof window.jsQR === 'function' ? Promise.resolve() : (jsqrLoad ||= new Promise((res, rej) => {
+  const el = document.createElement('script');
+  el.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+  el.onload = res;
+  el.onerror = () => { jsqrLoad = null; el.remove(); rej(new Error('decoder')); };   // try again on the next upload
+  document.head.append(el);
+})));
 async function decodeQR(img) {
+  await loadJsQR().catch(() => {});
   if (typeof window.jsQR !== 'function') throw Object.assign(new Error('decoder missing'), { code: 'decoder' });
   const W = img.naturalWidth, H = img.naturalHeight, longest = Math.max(W, H);
   // full size (capped) → downscaled copies → an upscaled copy for tiny crops
@@ -236,7 +245,7 @@ function showResult(height, scale, src, { quiet = false } = {}) {
 
   if (stage) stage.setResult(tc, r.current);
   pendingStage = [tc, r.current];
-  showKid({ height, scale });
+  showKid({ height, scale }, src);
   if (src !== 'saved') store.set(KEY_INPUT, { height, scale, src, at: Date.now() });
   window.__heightResult = r;
 
@@ -295,7 +304,7 @@ async function handleFile(file) {
   const p = fit ? { height: fit.height, scale: fit.scale, text } : await extractParams(text);
   if (my !== job) return;
   window.__heightLastQR = p;
-  if (fit) setOutfit(fit);
+  if (fit) setOutfit(fit); else lookFresh = false;   // a QR without an outfit keeps the last look
   const hasH = Number.isFinite(p.height), hasS = Number.isFinite(p.scale);
   if (hasH) els.inH.value = p.height;
   if (hasS) els.inS.value = p.scale;
@@ -406,8 +415,10 @@ const ATT_ZH = { Neutral: '一般', ColdWind: '怕冷', HandsOut: '張開雙手'
   Sassy: '俏皮', Lazy: '慵懶', Wise: '智者', Timid: '害羞', Nerdy: '書呆', Injured: '受傷', Sad: '難過', Guard: '戒備' };
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let look = null;          // { pieces, dyes, attitude, attitudeName, unknown }
+let lookFresh = false;    // the look came from the QR just scanned (not from an earlier visit)
 let kidApi = null, kidShown = null, kidJob = 0, qrNames = null;
-const engine = () => (kidApi ||= import('./avatar-engine.js').then(m => m.createAvatar(null, { host: true })));
+// a failed load (offline, CDN hiccup) is not kept: the next result tries again
+const engine = () => (kidApi ||= import('./avatar-engine.js').then(m => m.createAvatar()).catch(e => { kidApi = null; throw e; }));
 
 async function decodeOutfit(text) {
   if (!/o=[A-Za-z0-9+/_-]{20,}/.test(text)) return null;
@@ -422,6 +433,7 @@ async function decodeOutfit(text) {
 }
 function setOutfit(o, { quiet = false } = {}) {
   look = { pieces: o.pieces || {}, dyes: o.dyes || {}, attitude: o.attitude || 0, attitudeName: o.attitudeName || null, unknown: o.unknown || {} };
+  lookFresh = !quiet;
   if (!quiet) store.set(KEY_LOOK, look);
   renderOutfit();
 }
@@ -450,7 +462,8 @@ async function renderOutfit() {
   els.outfitAtt.textContent = look.attitudeName ? '姿態 · ' + (ATT_ZH[look.attitudeName] || look.attitudeName) : '';
   els.outfit.hidden = false;
 }
-async function showKid(body) {
+const clampTo = (v, [lo, hi]) => Math.min(hi, Math.max(lo, v));
+async function showKid(body, src) {
   const my = ++kidJob;
   try {
     const api = await engine();
@@ -462,9 +475,13 @@ async function showKid(body) {
     if (!pieces.outfit) pieces.outfit = defaults.outfit || null;          // the body piece carries the head too
     const clip = look && api.rules && api.rules.attitudeClip ? api.rules.attitudeClip(idx, look.attitude) : 'idle';
     els.outfitNote.textContent = '舞台上的角色正在組裝…';
-    await api.wearLook({ pieces, dyes: look ? look.dyes : {}, clip, body: { height: body.height, scale: body.scale } });
-    if (my !== kidJob) return;
-    els.outfitNote.textContent = look ? '舞台上就是依這份 QR 組裝的你：穿搭、染色、姿態、身高與體型都照遊戲的規則還原。' : '';
+    // the game's own range; typed numbers far outside it would stretch the kid off the stage (the ticket keeps them)
+    const R = api.rules || {}, shape = { height: clampTo(body.height, R.HEIGHT_RANGE || [-2, 2]), scale: clampTo(body.scale, R.SCALE_RANGE || [-0.2, 0.2]) };
+    const shown = await api.wearLook({ pieces, dyes: look ? look.dyes : {}, clip, body: shape });
+    if (!shown || my !== kidJob) return;
+    els.outfitNote.textContent = !look ? ''
+      : src === 'qr' && lookFresh ? '舞台上就是依這份 QR 組裝的你：穿搭、染色、姿態、身高與體型都照遊戲的規則還原。'
+        : '舞台上的角色穿的是上次掃 QR 讀到的穿搭，身高與體型用的是目前的數值。';
     kidShown = api;
     if (stage) stage.setKid(api);
     window.__heightKid = api;

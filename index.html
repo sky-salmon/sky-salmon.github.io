@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="assets/css/island.css">
 <script type="importmap">
 { "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
 } }
 </script>
@@ -21,7 +21,7 @@
 <body>
 <canvas id="scene" aria-label="一座漂浮的小島，上面有披著斗篷的孩子、石椅、蠟燭、小鳥和放著工具的書架"></canvas>
 <div class="grain" aria-hidden="true"></div>
-<p class="no-webgl-msg">你的瀏覽器不支援 WebGL，無法顯示 3D 小島。</p>
+<p class="no-webgl-msg">3D 小島載入不了（瀏覽器不支援 WebGL，或網路擋住了 3D 函式庫），下面的工具都可以照常使用。</p>
 
 <header class="topbar">
   <a class="brand" href="#" data-goto="0" aria-label="燭光小站 首頁">
@@ -76,6 +76,7 @@
     <h3 class="page-label">書架上有什麼</h3>
     <h2>小工具</h2>
     <a class="tool-link" href="card.html">名片產生器 <span>→</span></a>
+    <a class="tool-link" href="wardrobe.html">衣櫃圖鑑 <span>→</span></a>
     <a class="tool-link" href="height.html">身高計算 <span>→</span></a>
     <a class="tool-link" href="music.html">樂譜練習 <span>→</span></a>
     <a class="tool-link" href="events.html">活動倒數 <span>→</span></a>
@@ -102,6 +103,6 @@
   <section id="about"></section>
 </main>
 
-<script type="module" src="assets/js/island/main.js"></script>
+<script type="module" src="assets/js/island/main.js" onerror="document.body.classList.add('no-webgl')"></script>
 </body>
 </html>

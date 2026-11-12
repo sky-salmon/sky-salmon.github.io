@@ -35,7 +35,7 @@
 .wd-meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
 .wd-empty { grid-column: 1 / -1; color: var(--muted); text-align: center; padding: 32px; }
 
-.wd-detail { position: sticky; top: 200px; border: 1px solid var(--line-strong); border-radius: 20px; padding: 18px; display: grid; gap: 8px;
+.wd-detail { position: sticky; top: calc(64px + var(--wd-bar-h, 140px) + 8px); border: 1px solid var(--line-strong); border-radius: 20px; padding: 18px; display: grid; gap: 8px;
   justify-items: start; background: rgba(255, 255, 255, .03); }
 .wd-close { position: absolute; top: 8px; right: 10px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; }
 .wd-close:hover { color: var(--ink); background: rgba(255, 255, 255, .06); }

@@ -561,9 +561,10 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
     const stretch = reducedMotion ? 0 : THREE.MathUtils.clamp(spring.v * 0.05, -0.06, 0.06);
     const bob = reducedMotion || kid ? 0 : (0.5 + 0.5 * Math.sin(elapsed * 1.7)) * 0.035;
     if (kid) {
-      kid.api.update(dt);
+      kid.api.update(reducedMotion ? 0 : dt);   // 0 still applies the pose; it just doesn't play the idle
+      kid.top = kid.api.headTop() * (BASE_H / KID_UNITS);   // once per frame: it walks the whole rig
       // head top at h = 0 for this kid, eased so breathing in the idle doesn't shake the band
-      const base = kid.api.headTop() * (BASE_H / KID_UNITS) / kidGrow(kid.api.body.height || 0);
+      const base = kid.top / kidGrow(kid.api.body.height || 0);
       kid.base = kid.base ? kid.base + (base - kid.base) * Math.min(1, dt * 4) : base;
     }
     charRoot.scale.set(spring.x * (1 - stretch * 0.5), spring.x * (1 + stretch), spring.x * (1 - stretch * 0.5));
@@ -589,7 +590,7 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
     pointer.sy += (pointer.y - pointer.sy) * (1 - Math.exp(-dt * 3));
     placeCamera(dist, pointer.sx, pointer.sy);
 
-    updateOverlay(kid ? kid.api.headTop() * (BASE_H / KID_UNITS) * spring.x * (1 + stretch) : charH * spring.x * (1 + stretch) + bob);
+    updateOverlay(kid ? kid.top * spring.x * (1 + stretch) : charH * spring.x * (1 + stretch) + bob);
     renderer.render(scene, camera);
     frames++;
     window.__heightStage = { ready: true, frames, scale: spring.x, target: spring.target, hasValue, dist };
@@ -608,7 +609,7 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
       holder.add(api.object);
       charRoot.add(holder);
       charM.object.visible = false;
-      kid = { api, holder, base: 0 };
+      kid = { api, holder, base: 0, top: 0 };
       if (!reducedMotion) { spring.x = 0.86; spring.v = 0; }
       spring.target = 1;
       renderNow = true;

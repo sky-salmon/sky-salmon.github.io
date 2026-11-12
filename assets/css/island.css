@@ -168,7 +168,10 @@ body.is-ready #scene { opacity: 1; }
 .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
 .no-webgl-msg { display: none; }
-body.no-webgl .no-webgl-msg { display: block; position: fixed; top: 45%; left: 50%; transform: translateX(-50%); z-index: 3; color: var(--ink-soft); }
+body.no-webgl .no-webgl-msg { display: block; position: fixed; top: 76px; left: 50%; transform: translateX(-50%); z-index: 7; width: min(560px, calc(100vw - 32px)); margin: 0; text-align: center; color: var(--ink-soft); }
+/* without the 3D scene nothing scrolls the journal into view: show it, so the tool links stay reachable */
+body.no-webgl .folio { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%); }
+body.no-webgl .hero, body.no-webgl .shelf-hint, body.no-webgl .back, body.no-webgl .story { display: none; }
 
 @media (max-width: 760px) {
   .topbar { grid-template-columns: 1fr auto; padding: 16px; }
