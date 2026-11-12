@@ -87,7 +87,8 @@ function bladeGeometry() {
 
 export const windUniforms = { uTime: { value: 0 } };
 
-export function makeGrass(count, avoid = []) {
+// heightAt(x, z): how far the ground is raised there (game mounds); flat when omitted
+export function makeGrass(count, avoid = [], heightAt = () => 0) {
   const material = new THREE.ShaderMaterial({
     uniforms: {
       ...windUniforms,
@@ -132,14 +133,14 @@ export function makeGrass(count, avoid = []) {
     const r = Math.sqrt(rand()) * (ISLAND_RADIUS - 0.25), a = rand() * Math.PI * 2;
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
     if (avoid.some(o => (x - o.x) ** 2 / o.rx ** 2 + (z - o.z) ** 2 / o.rz ** 2 < 1)) continue;
-    // patchy density: clumps and clearings so the ground shows through
-    const patch = noise3(x * 0.7, 0, z * 0.7, 11);
-    if (patch < -0.05 && rand() < 0.88) continue;
+    // patchy density: clumps and clearings so the ground shows through (a raised mound stays fully grown)
+    const patch = noise3(x * 0.7, 0, z * 0.7, 11), lift = heightAt(x, z);
+    if (patch < -0.05 && lift <= 0 && rand() < 0.88) continue;
     const height = 0.2 + rand() * 0.24 + Math.max(0, patch) * 0.3;
     e.set((rand() - 0.5) * 0.5, rand() * Math.PI * 2, (rand() - 0.5) * 0.5);
     q.setFromEuler(e);
     s.set(0.7 + rand() * 0.5, height, 1);
-    v.set(x, 0, z);
+    v.set(x, lift, z);
     m.compose(v, q, s);
     mesh.setMatrixAt(placed, m);
     col.setScalar(0.82 + rand() * 0.3);
@@ -154,7 +155,7 @@ export function makeGrass(count, avoid = []) {
 }
 
 // ── flowers & pebbles ─────────────────────────────────────────────────────
-export function makeFlowers(count, avoid = []) {
+export function makeFlowers(count, avoid = [], heightAt = () => 0) {
   const tex = canvasTexture(128, (ctx, sz) => {
     ctx.translate(sz / 2, sz / 2);
     ctx.fillStyle = '#ffffff';
@@ -181,7 +182,7 @@ export function makeFlowers(count, avoid = []) {
     q.setFromEuler(e);
     const k = 0.7 + rand() * 0.7;
     s.set(k, k, k);
-    v.set(x, 0.03 + rand() * 0.06, z);
+    v.set(x, heightAt(x, z) + 0.03 + rand() * 0.06, z);
     m.compose(v, q, s);
     mesh.setMatrixAt(placed++, m);
   }
