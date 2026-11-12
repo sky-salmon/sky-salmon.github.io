@@ -1,58 +1,14 @@
 <!DOCTYPE html>
-<html lang="zh-Hant" data-theme="ink">
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>我的光之子 — candle·kit</title>
 <meta name="robots" content="noindex">
-<meta name="description" content="上傳 Sky 光遇的服裝 QR，在 3D 裡還原你的光之子：穿搭、染色、身高與體型。">
-<meta name="theme-color" content="#111312">
-<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/base.css">
-<link rel="stylesheet" href="assets/css/wardrobe.css">
-<link rel="stylesheet" href="assets/css/avatar.css">
-<script type="importmap">
-{ "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-} }
-</script>
+<meta http-equiv="refresh" content="0; url=height">
+<link rel="canonical" href="height">
+<script>location.replace(/^(localhost|127\.)/.test(location.hostname) ? 'height.html' : 'height');</script>
 </head>
-<body data-page="avatar">
-<main class="wd">
-  <section class="wd-stage" aria-label="3D 角色">
-    <canvas id="av-canvas" aria-label="依照服裝 QR 還原的 3D 光之子，可以拖曳旋轉、滾輪縮放"></canvas>
-    <div class="wd-anim" role="group" aria-label="動作" id="av-anims"></div>
-    <div class="av-ruler" id="av-ruler" hidden></div>
-    <div class="wd-tools">
-      <button type="button" class="wd-tool" id="av-front">正面</button>
-      <button type="button" class="wd-tool" id="av-side">側面</button>
-      <button type="button" class="wd-tool" id="av-shot">截圖</button>
-    </div>
-    <p class="wd-status" id="av-status" role="status">載入中…</p>
-  </section>
-
-  <section class="wd-side" aria-label="服裝 QR">
-    <header class="wd-head">
-      <span class="eyebrow">CANDLE·KIT / MY CHILD OF LIGHT · DEMO</span>
-      <h1 class="title">我的光之子 <em>from QR</em></h1>
-      <p class="lead">上傳遊戲裡「Sky Mirror / Sky AR」的服裝 QR 截圖，自動還原你的穿搭、染色、身高與體型。QR 只在你的裝置上解析。</p>
-    </header>
-    <label class="av-drop" id="av-drop"><input type="file" id="av-file" accept="image/*">
-      <b>選擇或拖進 QR 截圖</b><span>也可以直接貼上 QR 連結（sky.thatg.co/o=…）</span></label>
-    <div class="wd-link"><input class="field" id="av-url" placeholder="https://sky.thatg.co/o=…" spellcheck="false" aria-label="QR 連結"><button type="button" class="btn btn-primary" id="av-go">還原</button></div>
-    <p class="av-msg" id="av-msg" role="alert" hidden></p>
-    <div class="av-body" id="av-body" hidden></div>
-    <div class="av-list" id="av-list"></div>
-  </section>
-</main>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" defer></script>
-<script src="assets/js/i18n-dict.js"></script>
-<script src="assets/js/i18n.js"></script>
-<script src="assets/js/site.js"></script>
-<script src="assets/js/seasons-data.js"></script>
-<script src="assets/js/card-data.js"></script>
-<script type="module" src="assets/js/avatar-page.js"></script>
+<body>
+<p>角色還原已經合併到 <a href="height">身高</a> 頁：上傳服裝 QR，就會在舞台上看到你的角色。</p>
 </body>
 </html>

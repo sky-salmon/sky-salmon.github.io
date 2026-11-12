@@ -9,6 +9,11 @@ import { canvasTexture, rng } from './island/util.js';
 
 const BASE_H = 2.2;                       // authored character height (units)
 const SCALE_TALL = 1.18, SCALE_SHORT = 0.82;
+// the real Sky kid (setKid): sized so the default kid's head top (15.56 game units) stands BASE_H tall.
+// Head top vs the height value, measured on the kid (h −2 / 0 / +2 → 12.87 / 15.56 / 17.74): the tallest / shortest
+// band is the kid's current head top carried to h = ±2 with this curve, so it fits any stance and body scale.
+const KID_UNITS = 15.557;
+const kidGrow = h => (h >= 0 ? 1 + 0.0701 * h : 1 + 0.0865 * h);
 const RULER_H = 3.0;                      // stick is graduated 0 … 3 units
 const FOV = 28;
 const ELEV = THREE.MathUtils.degToRad(8); // camera: front view, slightly above
@@ -420,7 +425,7 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
       lb.el.setAttribute('y', p[1].toFixed(1));
       lb.el.style.opacity = Math.abs(p[1] - cur[1]) < 16 ? 0 : 1;
     }
-    const yT = charH * SCALE_TALL, yS = charH * SCALE_SHORT;
+    const yT = kid ? kid.base * kidGrow(2) : charH * SCALE_TALL, yS = kid ? kid.base * kidGrow(-2) : charH * SCALE_SHORT;
     const lT = left(yT), rT = right(yT), lS = left(yS), rS = right(yS);
     bandPoly.setAttribute('points', [lS, rS, rT, lT].map(pt).join(' '));
     setLine(bandTop, [lT[0] - 5, lT[1]], rT);
@@ -526,6 +531,7 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
   }
   const spring = { x: 1, v: 0, target: 1 };
   let hasValue = false, renderNow = true;
+  let kid = null;   // { api, holder } once the page hands over the player's own kid
 
   const ro = new ResizeObserver(() => resize());
   ro.observe(container);
@@ -553,7 +559,13 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
       spring.x += spring.v * dt;
     }
     const stretch = reducedMotion ? 0 : THREE.MathUtils.clamp(spring.v * 0.05, -0.06, 0.06);
-    const bob = reducedMotion ? 0 : (0.5 + 0.5 * Math.sin(elapsed * 1.7)) * 0.035;
+    const bob = reducedMotion || kid ? 0 : (0.5 + 0.5 * Math.sin(elapsed * 1.7)) * 0.035;
+    if (kid) {
+      kid.api.update(dt);
+      // head top at h = 0 for this kid, eased so breathing in the idle doesn't shake the band
+      const base = kid.api.headTop() * (BASE_H / KID_UNITS) / kidGrow(kid.api.body.height || 0);
+      kid.base = kid.base ? kid.base + (base - kid.base) * Math.min(1, dt * 4) : base;
+    }
     charRoot.scale.set(spring.x * (1 - stretch * 0.5), spring.x * (1 + stretch), spring.x * (1 - stretch * 0.5));
     charRoot.position.y = bob;
     const shadowK = spring.x * (1 - bob * 2.5);
@@ -577,7 +589,7 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
     pointer.sy += (pointer.y - pointer.sy) * (1 - Math.exp(-dt * 3));
     placeCamera(dist, pointer.sx, pointer.sy);
 
-    updateOverlay(charH * spring.x * (1 + stretch) + bob);
+    updateOverlay(kid ? kid.api.headTop() * (BASE_H / KID_UNITS) * spring.x * (1 + stretch) : charH * spring.x * (1 + stretch) + bob);
     renderer.render(scene, camera);
     frames++;
     window.__heightStage = { ready: true, frames, scale: spring.x, target: spring.target, hasValue, dist };
@@ -585,8 +597,24 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
   requestAnimationFrame(frame);
 
   return {
+    // the player's kid (avatar-engine createAvatar(null, { host: true })) replaces the stand-in; its height comes
+    // from the game's own body rules, so the stage no longer scales it
+    setKid(api) {
+      if (kid && kid.api === api) { renderNow = true; return; }
+      if (kid) charRoot.remove(kid.holder);
+      const holder = new THREE.Group();
+      holder.scale.setScalar(BASE_H / KID_UNITS);
+      holder.rotation.y = Math.PI;              // Sky kids face −Z; the stage camera looks from +Z
+      holder.add(api.object);
+      charRoot.add(holder);
+      charM.object.visible = false;
+      kid = { api, holder, base: 0 };
+      if (!reducedMotion) { spring.x = 0.86; spring.v = 0; }
+      spring.target = 1;
+      renderNow = true;
+    },
     setResult(t, value) {
-      spring.target = mix(SCALE_TALL, SCALE_SHORT, Math.min(1, Math.max(0, t)));
+      spring.target = kid ? 1 : mix(SCALE_TALL, SCALE_SHORT, Math.min(1, Math.max(0, t)));
       hasValue = true;
       tagValue.textContent = fmt(value);
       tag.classList.add('has-value');

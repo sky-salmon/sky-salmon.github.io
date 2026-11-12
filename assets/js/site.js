@@ -29,7 +29,7 @@
   const PAGES = [
     { id: 'home', href: pageHref('index.html'), label: t('首頁') },
     { id: 'card', href: pageHref('card.html'), label: t('名片') },
-    { id: 'wardrobe', href: pageHref('wardrobe.html'), label: t('衣櫃') },
+    { id: 'wardrobe', href: pageHref('wardrobe.html'), label: t('圖鑑') },
     { id: 'height', href: pageHref('height.html'), label: t('身高') },
     { id: 'events', href: pageHref('events.html'), label: t('活動') },
     { id: 'music', href: pageHref('music.html'), label: t('樂譜') },

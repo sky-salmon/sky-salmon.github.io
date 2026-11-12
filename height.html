@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>身高計算 — candle·kit</title>
-<meta name="description" content="上傳 Sky 光遇的服裝 QR 截圖，在你的裝置上讀出身高與體型參數，估算你在同體型中的高矮。">
+<meta name="description" content="上傳 Sky 光遇的服裝 QR 截圖，在你的裝置上讀出身高與體型參數，估算你在同體型中的高矮，並用遊戲模型還原你的角色與穿搭。">
 <meta name="theme-color" content="#f4efe5">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,7 +37,7 @@
   <header class="masthead" id="masthead">
     <span class="eyebrow">CANDLE·KIT / HEIGHT READER</span>
     <h1 class="title">身高計算 <em>Height</em></h1>
-    <p class="lead">上傳遊戲裡的服裝 QR，在你的裝置上讀出身高與體型參數，估算你在同體型中有多高。</p>
+    <p class="lead">上傳遊戲裡的服裝 QR，在你的裝置上讀出身高與體型，估算你在同體型中有多高，並在舞台上還原你的角色與穿搭。</p>
   </header>
 
   <!-- controls: pinned note (desktop) / bottom sheet (mobile) -->
@@ -153,6 +153,15 @@
         </p>
       </section>
 
+      <section class="outfit" id="outfit" aria-labelledby="outfit-title" hidden>
+        <div class="outfit-top">
+          <h3 class="result-k mono" id="outfit-title">穿搭 · OUTFIT</h3>
+          <span class="chip" id="outfit-att" hidden></span>
+        </div>
+        <ul class="outfit-list" id="outfit-list"></ul>
+        <p class="outfit-note" id="outfit-note" aria-live="polite"></p>
+      </section>
+
       <div class="actions" id="actions" hidden>
         <button class="btn btn-primary" id="apply-btn" type="button">
           <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="14" height="11" rx="2"/><circle cx="7.6" cy="9" r="1.7"/><path d="M5.4 13.2c.6-1.2 1.3-1.7 2.2-1.7s1.6.5 2.2 1.7M12 8.2h2.6M12 11h2"/></svg>
@@ -170,6 +179,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" defer></script>
 <script src="assets/js/site.js"></script>
+<script src="assets/js/seasons-data.js"></script>
+<script src="assets/js/card-data.js"></script>
 <script type="module" src="assets/js/height.js"></script>
 </body>
 </html>

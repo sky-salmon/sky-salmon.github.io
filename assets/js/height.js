@@ -168,7 +168,8 @@ const els = {
   manual: $('manual'), form: $('manual-form'), inH: $('in-height'), inS: $('in-scale'), manualMsg: $('manual-msg'),
   result: $('result'), src: $('result-src'), current: $('r-current'), tallest: $('r-tallest'), shortest: $('r-shortest'),
   mark: $('r-mark'), cap: $('r-cap'), rawH: $('r-height'), rawS: $('r-scale'),
-  actions: $('actions'), apply: $('apply-btn'), reupload: $('reupload-btn'), toCard: $('to-card')
+  actions: $('actions'), apply: $('apply-btn'), reupload: $('reupload-btn'), toCard: $('to-card'),
+  outfit: $('outfit'), outfitList: $('outfit-list'), outfitAtt: $('outfit-att'), outfitNote: $('outfit-note')
 };
 
 const fmt = (v, d = 2) => (Math.abs(v) < 0.005 && d === 2 ? 0 : v).toFixed(d).replace('-', '−');
@@ -235,6 +236,7 @@ function showResult(height, scale, src, { quiet = false } = {}) {
 
   if (stage) stage.setResult(tc, r.current);
   pendingStage = [tc, r.current];
+  showKid({ height, scale });
   if (src !== 'saved') store.set(KEY_INPUT, { height, scale, src, at: Date.now() });
   window.__heightResult = r;
 
@@ -288,9 +290,12 @@ async function handleFile(file) {
     return;
   }
 
-  const p = await extractParams(text);
+  const fit = await decodeOutfit(text);
+  if (my !== job) return;
+  const p = fit ? { height: fit.height, scale: fit.scale, text } : await extractParams(text);
   if (my !== job) return;
   window.__heightLastQR = p;
+  if (fit) setOutfit(fit);
   const hasH = Number.isFinite(p.height), hasS = Number.isFinite(p.scale);
   if (hasH) els.inH.value = p.height;
   if (hasS) els.inS.value = p.scale;
@@ -390,6 +395,85 @@ els.scroll.addEventListener('scroll', updateMore, { passive: true });
 new ResizeObserver(updateMore).observe(els.scroll);
 new MutationObserver(() => requestAnimationFrame(updateMore)).observe(els.scroll, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'open'] });
 
+// ── the player's own kid ────────────────────────────────────────────────
+// An outfit QR (sky.thatg.co/o=…) carries the whole look: every slot, its dyes, the stance and the body. The kid is
+// assembled from the game's own models (assets/js/avatar-engine.js) and replaces the stand-in on the stage; a
+// manual entry dresses the default kid (or the last scanned look) at that height.
+const KEY_LOOK = 'candle.height.look';
+const ORDER = ['outfit', 'cape', 'hair', 'hat', 'horn', 'mask', 'face', 'neck', 'shoes', 'prop'];
+const SLOT_ZH = { cape: '斗篷', mask: '面具', hair: '髮型', outfit: '服裝', hat: '髮飾', horn: '頭飾', neck: '項鍊', face: '面飾', shoes: '鞋子', prop: '道具' };
+const ATT_ZH = { Neutral: '一般', ColdWind: '怕冷', HandsOut: '張開雙手', Proud: '驕傲', Sneaky: '偷偷摸摸', Tough: '強悍', Solemn: '莊重',
+  Sassy: '俏皮', Lazy: '慵懶', Wise: '智者', Timid: '害羞', Nerdy: '書呆', Injured: '受傷', Sad: '難過', Guard: '戒備' };
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let look = null;          // { pieces, dyes, attitude, attitudeName, unknown }
+let kidApi = null, kidShown = null, kidJob = 0, qrNames = null;
+const engine = () => (kidApi ||= import('./avatar-engine.js').then(m => m.createAvatar(null, { host: true })));
+
+async function decodeOutfit(text) {
+  if (!/o=[A-Za-z0-9+/_-]{20,}/.test(text)) return null;
+  try {
+    const R = await import('./avatar-rules.js');
+    qrNames ||= await fetch('assets/avatar/qr-names.json').then(r => (r.ok ? r.json() : Promise.reject(new Error('qr-names'))));
+    const o = R.decodeOutfitQR(text, qrNames), unknown = {};
+    Object.entries(o.pieces).forEach(([sl, n]) => { if (n && n.startsWith('#')) { unknown[sl] = n.slice(1); o.pieces[sl] = null; } });
+    if (!Number.isFinite(o.height) || !Number.isFinite(o.scale)) return null;
+    return { pieces: o.pieces, dyes: o.dyes, attitude: o.attitude, attitudeName: o.attitudeName, unknown, height: o.height, scale: o.scale };
+  } catch (e) { console.warn('[height] outfit QR', e); return null; }
+}
+function setOutfit(o, { quiet = false } = {}) {
+  look = { pieces: o.pieces || {}, dyes: o.dyes || {}, attitude: o.attitude || 0, attitudeName: o.attitudeName || null, unknown: o.unknown || {} };
+  if (!quiet) store.set(KEY_LOOK, look);
+  renderOutfit();
+}
+let catalog = null;
+async function renderOutfit() {
+  if (!look) { els.outfit.hidden = true; return; }
+  const D = window.CardData;
+  if (D && !catalog) catalog = D.loadCatalog().then(list => new Map(list.map(i => [i.name, i]))).catch(() => new Map());
+  let idx = null;
+  try { idx = (await engine()).index; } catch { /* list without icons */ }
+  const cat = catalog ? await catalog : new Map();
+  const label = n => (cat.get(n) ? cat.get(n).label : n.replace(/^CharSkyKid_/, '').replace(/^(Wing|Mask|Hair|Body|Hat|Horn|Neck|Feet|Face|Prop)_/, '').replace(/_/g, ' '));
+  const dyeCss = idx ? (await import('./avatar-engine.js')).dyeCss : null;
+  const swatch = id => { const d = idx && idx.dyes.find(x => x.id === id); return d ? `<i class="outfit-dye" title="${esc(d.name_en || id)}" style="--c:${dyeCss(d.hsv)}"></i>` : ''; };
+  els.outfitList.innerHTML = ORDER.map(sl => {
+    const n = look.pieces[sl], info = n && idx ? idx.pieces[n] : null;
+    if (!n && look.unknown[sl] == null) return '';
+    if (info && !info.file) return '';                                   // the game's "None" pieces
+    const icon = info && info.icon && D ? `<img src="${esc(D.iconURL(info.icon))}" alt="" loading="lazy">` : '<span class="outfit-noimg"></span>';
+    const note = look.unknown[sl] != null ? '網站還不認得這件' : idx && !info ? '網站還沒有這件的模型' : '';
+    const dy = (look.dyes[sl] || []).filter(Boolean).map(swatch).join('');
+    return `<li class="${note ? 'is-off' : ''}">${icon}<span class="outfit-slot">${SLOT_ZH[sl]}</span>
+      <span class="outfit-name">${esc(n ? label(n) : '—')}${note ? `<small>${note}</small>` : ''}</span><span class="outfit-dyes">${dy}</span></li>`;
+  }).join('');
+  els.outfitAtt.hidden = !look.attitudeName;
+  els.outfitAtt.textContent = look.attitudeName ? '姿態 · ' + (ATT_ZH[look.attitudeName] || look.attitudeName) : '';
+  els.outfit.hidden = false;
+}
+async function showKid(body) {
+  const my = ++kidJob;
+  try {
+    const api = await engine();
+    if (my !== kidJob) return;
+    const idx = api.index, pieces = {};
+    const defaults = Object.fromEntries(Object.entries(idx.defaults || {}).filter(([, n]) => (idx.pieces[n] || {}).file));
+    if (look) ORDER.forEach(sl => { const n = look.pieces[sl]; pieces[sl] = n && idx.pieces[n] ? n : null; });
+    else Object.assign(pieces, defaults);
+    if (!pieces.outfit) pieces.outfit = defaults.outfit || null;          // the body piece carries the head too
+    const clip = look && api.rules && api.rules.attitudeClip ? api.rules.attitudeClip(idx, look.attitude) : 'idle';
+    els.outfitNote.textContent = '舞台上的角色正在組裝…';
+    await api.wearLook({ pieces, dyes: look ? look.dyes : {}, clip, body: { height: body.height, scale: body.scale } });
+    if (my !== kidJob) return;
+    els.outfitNote.textContent = look ? '舞台上就是依這份 QR 組裝的你：穿搭、染色、姿態、身高與體型都照遊戲的規則還原。' : '';
+    kidShown = api;
+    if (stage) stage.setKid(api);
+    window.__heightKid = api;
+  } catch (e) {
+    console.warn('[height] kid unavailable:', e);
+    if (my === kidJob) els.outfitNote.textContent = look ? '3D 角色載入失敗，但上面的穿搭與身高結果不受影響。' : '';
+  }
+}
+
 // ── 3D stage ────────────────────────────────────────────────────────────
 let peek = 0;   // mobile: height of the collapsed sheet, so the diorama stays framed above it
 function safeRect() {
@@ -413,6 +497,7 @@ async function bootStage() {
       tag: $('stage-tag'), tagValue: $('stage-tag-v'), note: $('stage-note'), safeRect, reducedMotion
     });
     if (pendingStage) stage.setResult(...pendingStage);
+    if (kidShown) stage.setKid(kidShown);
     document.body.classList.add('stage-ready');
   } catch (err) {
     console.warn('[height] 3D stage unavailable:', err);
@@ -423,6 +508,8 @@ async function bootStage() {
 }
 
 // ── restore last values ─────────────────────────────────────────────────
+const savedLook = store.get(KEY_LOOK, null);
+if (savedLook && savedLook.pieces) setOutfit(savedLook, { quiet: true });
 const saved = store.get(KEY_INPUT, null);
 if (saved && Number.isFinite(saved.height) && Number.isFinite(saved.scale)) {
   els.inH.value = saved.height;
