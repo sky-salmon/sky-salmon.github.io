@@ -406,8 +406,9 @@ new MutationObserver(() => requestAnimationFrame(updateMore)).observe(els.scroll
 
 // ── the player's own kid ────────────────────────────────────────────────
 // An outfit QR (sky.thatg.co/o=…) carries the whole look: every slot, its dyes, the stance and the body. The kid is
-// assembled from the game's own models (assets/js/avatar-engine.js) and replaces the stand-in on the stage; a
-// manual entry dresses the default kid (or the last scanned look) at that height.
+// assembled from the game's own models (assets/js/avatar-engine.js) and replaces the stand-in on the stage.
+// Until a visitor has scanned their own QR, the stage shows the site's kid (assets/models/hero.json, the same one
+// as on the home island): at a neutral build before any result, at the typed height for a manual entry.
 const KEY_LOOK = 'candle.height.look';
 const ORDER = ['outfit', 'cape', 'hair', 'hat', 'horn', 'mask', 'face', 'neck', 'shoes', 'prop'];
 const SLOT_ZH = { cape: '斗篷', mask: '面具', hair: '髮型', outfit: '服裝', hat: '髮飾', horn: '頭飾', neck: '項鍊', face: '面飾', shoes: '鞋子', prop: '道具' };
@@ -419,6 +420,8 @@ let lookFresh = false;    // the look came from the QR just scanned (not from an
 let kidApi = null, kidShown = null, kidJob = 0, qrNames = null;
 // a failed load (offline, CDN hiccup) is not kept: the next result tries again
 const engine = () => (kidApi ||= import('./avatar-engine.js').then(m => m.createAvatar()).catch(e => { kidApi = null; throw e; }));
+let hostLookPromise = null;
+const hostLook = () => (hostLookPromise ||= fetch('assets/models/hero.json').then(r => (r.ok ? r.json() : null)).then(o => (o && o.pieces ? o : null)).catch(() => null));
 
 async function decodeOutfit(text) {
   if (!/o=[A-Za-z0-9+/_-]{20,}/.test(text)) return null;
@@ -466,18 +469,18 @@ const clampTo = (v, [lo, hi]) => Math.min(hi, Math.max(lo, v));
 async function showKid(body, src) {
   const my = ++kidJob;
   try {
-    const api = await engine();
+    const [api, host] = await Promise.all([engine(), look ? null : hostLook()]);
     if (my !== kidJob) return;
-    const idx = api.index, pieces = {};
+    const idx = api.index, pieces = {}, worn = look || host;   // the visitor's own look, else the site's kid
     const defaults = Object.fromEntries(Object.entries(idx.defaults || {}).filter(([, n]) => (idx.pieces[n] || {}).file));
-    if (look) ORDER.forEach(sl => { const n = look.pieces[sl]; pieces[sl] = n && idx.pieces[n] ? n : null; });
+    if (worn) ORDER.forEach(sl => { const n = worn.pieces[sl]; pieces[sl] = n && idx.pieces[n] ? n : null; });
     else Object.assign(pieces, defaults);
     if (!pieces.outfit) pieces.outfit = defaults.outfit || null;          // the body piece carries the head too
-    const clip = look && api.rules && api.rules.attitudeClip ? api.rules.attitudeClip(idx, look.attitude) : 'idle';
+    const clip = worn && api.rules && api.rules.attitudeClip ? api.rules.attitudeClip(idx, worn.attitude) : 'idle';
     els.outfitNote.textContent = '舞台上的角色正在組裝…';
     // the game's own range; typed numbers far outside it would stretch the kid off the stage (the ticket keeps them)
     const R = api.rules || {}, shape = { height: clampTo(body.height, R.HEIGHT_RANGE || [-2, 2]), scale: clampTo(body.scale, R.SCALE_RANGE || [-0.2, 0.2]) };
-    const shown = await api.wearLook({ pieces, dyes: look ? look.dyes : {}, clip, body: shape });
+    const shown = await api.wearLook({ pieces, dyes: worn ? worn.dyes || {} : {}, clip, body: shape });
     if (!shown || my !== kidJob) return;
     els.outfitNote.textContent = !look ? ''
       : src === 'qr' && lookFresh ? '舞台上就是依這份 QR 組裝的你：穿搭、染色、姿態、身高與體型都照遊戲的規則還原。'
@@ -532,6 +535,8 @@ if (saved && Number.isFinite(saved.height) && Number.isFinite(saved.scale)) {
   els.inH.value = saved.height;
   els.inS.value = saved.scale;
   showResult(saved.height, saved.scale, 'saved', { quiet: true });
+} else {
+  showKid({ height: 0, scale: 0 }, 'host');   // nothing measured yet: the kid waits on the stage at a neutral build
 }
 
 window.__height = { compute, extractParams };
