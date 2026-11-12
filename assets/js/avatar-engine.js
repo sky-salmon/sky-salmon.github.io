@@ -23,23 +23,32 @@ const hsvColor = h => new THREE.Color().setRGB(...hsvToRgb(h).map(x => 2 * x), T
 const toSrgb = x => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
 /** CSS colour of a dye as it shows on white cloth. */
 export const dyeCss = hsv => `rgb(${hsvToRgb(hsv).map(x => Math.round(255 * toSrgb(x))).join(',')})`;
+const HEAD_TOP = 0.75;  // head bone → top of the skull, in head-bone units (measured on the bare kid: 14.86 vs 14.11)
 const colorOf = c => (Array.isArray(c) ? (c.length === 3 && c.some(x => x > 1) ? hsvColor(c) : new THREE.Color(...c)) : new THREE.Color(1, 1, 1));
 
+// createAvatar(canvas, opts): its own renderer, camera, orbit controls and render loop.
+// createAvatar(null, { host: true }): no renderer — `object` goes into the caller's scene and the caller calls
+// update(dt) every frame (the height page's stage does this).
 export async function createAvatar(canvas, opts = {}) {
   const BASE = opts.base || 'assets/avatar/';
   const status = opts.onStatus || (() => {});
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  const scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x8890a0, 1.6));
-  const sun = new THREE.DirectionalLight(0xffffff, 1.8); sun.position.set(-10, 20, -15); scene.add(sun);
-  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 500);
-  camera.position.set(0, 9, -46);  // the kid faces -Z (Sky convention): front view from -Z
-  const controls = new OrbitControls(camera, canvas);
-  controls.target.set(0, 7.6, 0);
-  controls.enableDamping = true; controls.minDistance = 10; controls.maxDistance = 120; controls.enablePan = false;
-  controls.update();
+  const hosted = !!opts.host;
+  let renderer = null, scene, camera = null, controls = null;
+  if (hosted) scene = new THREE.Group();
+  else {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    scene = new THREE.Scene();
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x8890a0, 1.6));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.8); sun.position.set(-10, 20, -15); scene.add(sun);
+    camera = new THREE.PerspectiveCamera(30, 1, 0.1, 500);
+    camera.position.set(0, 9, -46);  // the kid faces -Z (Sky convention): front view from -Z
+    controls = new OrbitControls(camera, canvas);
+    controls.target.set(0, 7.6, 0);
+    controls.enableDamping = true; controls.minDistance = 10; controls.maxDistance = 120; controls.enablePan = false;
+    controls.update();
+  }
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   const load = url => new Promise((res, rej) => loader.load(url, res, undefined, rej));
 
@@ -245,12 +254,13 @@ export async function createAvatar(canvas, opts = {}) {
   // Some clip packs keep the hip ~1 unit higher than the skeleton they were exported with, so standing poses
   // float. After a clip settles, put the lower toe back on the ground (sitting / kneeling poses are left alone).
   let groundAt = 0, groundY = 0;
-  const v1 = new THREE.Vector3();
+  const v1 = new THREE.Vector3(), v2 = new THREE.Vector3();
   function measureGround() {
     rig.position.y = 0; rig.updateMatrixWorld(true);
-    const y = n => { const b = rig.getObjectByName(n); return b ? b.getWorldPosition(v1).y : NaN; };
+    // measured in the rig's parent space, so a hosted (scaled) rig grounds the same way
+    const y = n => { const b = rig.getObjectByName(n); return b ? rig.parent.worldToLocal(b.getWorldPosition(v1)).y : NaN; };
     const toe = Math.min(y('L_toe'), y('R_toe')), hip = y('M_hip');
-    const rootS = (rig.getObjectByName('M_root') || rig).getWorldScale(v1).y || 1;
+    const rootS = ((rig.getObjectByName('M_root') || rig).getWorldScale(v1).y / rig.parent.getWorldScale(v2).y) || 1;
     groundY = Number.isFinite(toe) && hip > 5.5 * rootS && toe > 0.25 * rootS ? 0.07 * rootS - toe : 0;
     rig.position.y = groundY; rig.updateMatrixWorld(true);
   }
@@ -271,32 +281,47 @@ export async function createAvatar(canvas, opts = {}) {
     }));
     setBody(look.body || { height: 0, scale: 0 });
     await play(look.clip || 'idle');
-    if (opts.autoFrame !== false) {  // after the pose and the rules have run for a couple of frames
+    if (!hosted && opts.autoFrame !== false) {  // after the pose and the rules have run for a couple of frames
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
       frame(opts.view || 'front');
     }
   }
 
-  function resize() {
-    const r = canvas.getBoundingClientRect();
-    renderer.setSize(r.width, r.height, false);
-    camera.aspect = r.width / Math.max(1, r.height);
-    camera.updateProjectionMatrix();
-  }
-  new ResizeObserver(resize).observe(canvas);
-  resize();
-  const clock = new THREE.Clock();
-  renderer.setAnimationLoop(() => {
+  function update(dt) {
     if (rules && rules.restoreAvatarFrame) rules.restoreAvatarFrame(rig);
-    mixer.update(Math.min(clock.getDelta(), 0.1));
+    mixer.update(Math.min(dt, 0.1));
     if (rules && rules.updateAvatarFrame) { try { rules.updateAvatarFrame(THREE, rig); } catch (e) { console.warn('frame rules', e); rules.updateAvatarFrame = null; } }
     if (groundAt && performance.now() >= groundAt) { groundAt = 0; measureGround(); }
-    controls.update();
-    renderer.render(scene, camera);
-  });
+  }
+  // height of the top of the head (not the hat) above the feet, in the units of the rig's parent
+  function headTop() {
+    rig.updateMatrixWorld(true);
+    const h = rig.getObjectByName('M_head');
+    if (!h) return 15;
+    const y = rig.parent.worldToLocal(h.getWorldPosition(v1)).y;
+    const s = h.getWorldScale(v2).y / rig.parent.getWorldScale(v1).y;
+    return y + HEAD_TOP * s;
+  }
+  if (!hosted) {
+    const resize = () => {
+      const r = canvas.getBoundingClientRect();
+      renderer.setSize(r.width, r.height, false);
+      camera.aspect = r.width / Math.max(1, r.height);
+      camera.updateProjectionMatrix();
+    };
+    new ResizeObserver(resize).observe(canvas);
+    resize();
+    const clock = new THREE.Clock();
+    renderer.setAnimationLoop(() => {
+      update(clock.getDelta());
+      controls.update();
+      renderer.render(scene, camera);
+    });
+  }
   // camera that fits the kid as it is now (height changes how tall it is): front / side / back / head
   const tmp = new THREE.Vector3();
   function frame(view = 'front') {
+    if (hosted) return;
     rig.updateMatrixWorld(true);
     const head = rig.getObjectByName('M_head');
     const headY = head ? head.getWorldPosition(tmp).y : 12;
@@ -332,5 +357,5 @@ export async function createAvatar(canvas, opts = {}) {
     return new Promise(res => c.toBlob(res, 'image/png'));
   }
   return { THREE, index: IDX, rig, clips, worn, dyes, camera, controls, scene, renderer, rules, wear, wearLook, play, setDyes, setBody,
-    snapshot, frame, get body() { return body; }, get notes() { return rulesNotes; } };
+    snapshot, frame, update, headTop, object: scene, get body() { return body; }, get notes() { return rulesNotes; } };
 }

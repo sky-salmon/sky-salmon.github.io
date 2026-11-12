@@ -3,66 +3,50 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>衣櫃圖鑑 — candle·kit</title>
-<meta name="description" content="Sky 光遇衣櫃圖鑑：瀏覽每一件斗篷、面具、髮型與服裝，在 3D 小光人身上試穿、換染色，把整套造型變成連結分享給朋友。">
+<meta name="description" content="Sky 光遇衣櫃圖鑑：依部位、季節瀏覽每一件斗篷、面具、髮型、服裝與道具，查看所屬季節、畢業禮與禮包價格。">
 <meta name="theme-color" content="#111312">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/wardrobe.css">
-<script type="importmap">
-{ "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-} }
-</script>
 </head>
 <body data-page="wardrobe">
 <main class="wd">
-  <section class="wd-stage" aria-label="3D 試穿">
-    <canvas id="wd-canvas" aria-label="穿著目前造型的 3D 小光人，可以拖曳旋轉、滾輪縮放"></canvas>
-    <div class="wd-banner" id="wd-banner" hidden></div>
-    <div class="wd-anim" role="group" aria-label="動作" id="wd-anims"></div>
-    <div class="wd-tools">
-      <button type="button" class="wd-tool" id="wd-random" aria-label="隨機造型">隨機</button>
-      <button type="button" class="wd-tool" id="wd-reset" aria-label="換回預設造型">重設</button>
-      <button type="button" class="wd-tool" id="wd-shot" aria-label="下載目前畫面">截圖</button>
-      <button type="button" class="wd-tool is-primary" id="wd-share">分享造型</button>
-    </div>
-    <p class="wd-status" id="wd-status" role="status">載入中…</p>
-  </section>
+  <header class="wd-head">
+    <span class="eyebrow">CANDLE·KIT / WARDROBE</span>
+    <h1 class="title">衣櫃圖鑑 <em>Catalog</em></h1>
+    <p class="lead">依部位與季節瀏覽遊戲裡的每一件物品。想看自己的角色穿起來的樣子，到 <a href="height.html">身高</a> 頁上傳服裝 QR。</p>
+  </header>
+  <p class="wd-banner" id="wd-banner" hidden></p>
 
-  <section class="wd-side" aria-label="衣櫃">
-    <header class="wd-head">
-      <span class="eyebrow">CANDLE·KIT / WARDROBE</span>
-      <h1 class="title">衣櫃圖鑑 <em>Wardrobe</em></h1>
-      <p class="lead">點物品就能穿在小光人身上試看。換好的整套造型可以變成連結，傳給朋友看。</p>
-    </header>
+  <div class="wd-bar">
     <div class="wd-slots" role="tablist" aria-label="部位" id="wd-slots"></div>
     <div class="wd-filters">
       <label class="wd-search"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.4"/><path d="m12.6 12.6 4.4 4.4"/></svg>
         <input type="search" id="wd-q" placeholder="搜尋名稱或季節，例如 Deer、梵谷、AP31" autocomplete="off" spellcheck="false" aria-label="搜尋"></label>
       <select class="wd-select" id="wd-season" aria-label="季節"></select>
+      <select class="wd-select" id="wd-sort" aria-label="排序">
+        <option value="closet">衣櫃順序</option>
+        <option value="new">季節：新到舊</option>
+        <option value="old">季節：舊到新</option>
+        <option value="name">名稱</option>
+      </select>
     </div>
-    <div class="wd-grid" id="wd-grid" aria-live="polite"></div>
-    <div class="wd-detail" id="wd-detail" aria-live="polite"></div>
-  </section>
-</main>
-
-<div class="wd-sheet" id="wd-share-sheet" hidden>
-  <div class="wd-sheet-in" role="dialog" aria-modal="true" aria-labelledby="wd-share-title">
-    <h2 id="wd-share-title">分享這套造型</h2>
-    <p class="hint">朋友打開連結，就會看到小光人穿著這一套，也可以接著自己換。</p>
-    <div class="wd-link"><input class="field" id="wd-link" readonly aria-label="造型連結"><button type="button" class="btn btn-primary" id="wd-copy">複製</button></div>
-    <div class="wd-sheet-foot"><button type="button" class="btn" id="wd-native" hidden>傳送…</button><span class="spacer"></span><button type="button" class="btn" data-close>關閉</button></div>
+    <p class="wd-count" id="wd-count" aria-live="polite"></p>
   </div>
-</div>
+
+  <div class="wd-body">
+    <div class="wd-grid" id="wd-grid"><p class="wd-empty">載入中…</p></div>
+    <aside class="wd-detail" id="wd-detail" aria-live="polite" hidden></aside>
+  </div>
+</main>
 
 <script src="assets/js/i18n-dict.js"></script>
 <script src="assets/js/i18n.js"></script>
 <script src="assets/js/site.js"></script>
 <script src="assets/js/seasons-data.js"></script>
 <script src="assets/js/card-data.js"></script>
-<script type="module" src="assets/js/wardrobe.js"></script>
+<script src="assets/js/wardrobe.js"></script>
 </body>
 </html>
