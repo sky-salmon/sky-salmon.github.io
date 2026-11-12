@@ -5,6 +5,7 @@ import { makeIsland, makeGrass, makeFlowers, makePebbles, windUniforms, ISLAND_R
 import { makeCharacter, makeBench, makeCandle, makeFlame, makeBird, makeShelf, decorateShelf, makeBook, makeStarMarker, makeRocks, makeSun, makeButterflies } from './models.js';
 import { loadToonModel, wrapGltf, findNodes, modelStatus } from './gltf.js';
 import { skyKid, skyBench, skyCandles, skyFox, skyShelf, skyButterflies, skyGround } from './sky.js';
+import { savedLook, KEY_LOOK, KEY_INPUT } from '../saved-look.js';
 import { smoothstep, clamp01 } from './util.js';
 
 // canvas-drawn labels need the webfonts first (don't wait forever if they're blocked)
@@ -109,14 +110,23 @@ function place(model, { x = 0, y = 0, z = 0, ry = 0, s = 1 } = {}) {
 }
 
 // The kid is the heaviest thing here (the avatar engine, its index, a skeleton and ten outfit pieces), so the
-// island shows first and the kid steps in when ready. assets/models/hero.json holds the look.
+// island shows first and the kid steps in when ready. It wears what the visitor last scanned on the height page
+// (kept in this browser), else the game's starting outfit.
 (async () => {
   let kid;
   try {
-    const res = await fetch(new URL('../../models/hero.json', import.meta.url));
-    if (!res.ok) throw new Error('hero.json ' + res.status);
-    kid = await skyKid(await res.json());
+    let worn = JSON.stringify(savedLook());
+    kid = await skyKid(JSON.parse(worn));
     modelStatus.character = 'game';
+    // a QR scanned in another tab, or a return here through the back button, re-dresses the kid
+    const refresh = () => {
+      const now = JSON.stringify(savedLook());
+      if (now === worn) return;
+      worn = now;
+      kid.wear(JSON.parse(now)).catch(err => console.warn('[models] kid could not be re-dressed', err));
+    };
+    addEventListener('pageshow', e => { if (e.persisted) refresh(); });
+    addEventListener('storage', e => { if (e.key === null || e.key === KEY_LOOK || e.key === KEY_INPUT) refresh(); });
   } catch (err) {
     console.warn('[models] game character failed to load, using placeholder', err);
     modelStatus.character = 'placeholder';

@@ -1,13 +1,13 @@
 // 身高計算 — reads an outfit QR screenshot on-device, finds the height/scale
 // parameters, applies the community estimate formula and drives the 3D stage.
 // The 3D stage is loaded lazily, so the calculator keeps working without WebGL/CDN.
+import { KEY_LOOK, KEY_INPUT } from './saved-look.js';   // the last look and values; the home island reads them too
 const { store, toast, loadImage, readFileAsDataURL, bindDropzone } = window.Site;
 const $ = id => document.getElementById(id);
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const narrowMQ = window.matchMedia('(max-width: 760px)');
 
 const KEY_LAST = 'candle.height.last';    // read by card.html
-const KEY_INPUT = 'candle.height.input';  // this page's own memory of the last values
 
 // ── formula ─────────────────────────────────────────────────────────────
 // Community-shared estimate: smaller number = taller. The range only depends on scale.
@@ -407,9 +407,9 @@ new MutationObserver(() => requestAnimationFrame(updateMore)).observe(els.scroll
 // ── the player's own kid ────────────────────────────────────────────────
 // An outfit QR (sky.thatg.co/o=…) carries the whole look: every slot, its dyes, the stance and the body. The kid is
 // assembled from the game's own models (assets/js/avatar-engine.js) and replaces the stand-in on the stage.
-// Until a visitor has scanned their own QR, the stage shows the site's kid (assets/models/hero.json, the same one
-// as on the home island): at a neutral build before any result, at the typed height for a manual entry.
-const KEY_LOOK = 'candle.height.look';
+// Until a visitor has scanned their own QR, the stage shows the game's starting outfit: at a neutral build before any
+// result, at the typed height for a manual entry. The scanned look is kept in this browser (saved-look.js), and the
+// home island's kid wears it too.
 const ORDER = ['outfit', 'cape', 'hair', 'hat', 'horn', 'mask', 'face', 'neck', 'shoes', 'prop'];
 const SLOT_ZH = { cape: '斗篷', mask: '面具', hair: '髮型', outfit: '服裝', hat: '髮飾', horn: '頭飾', neck: '項鍊', face: '面飾', shoes: '鞋子', prop: '道具' };
 const ATT_ZH = { Neutral: '一般', ColdWind: '怕冷', HandsOut: '張開雙手', Proud: '驕傲', Sneaky: '偷偷摸摸', Tough: '強悍', Solemn: '莊重',
@@ -420,8 +420,6 @@ let lookFresh = false;    // the look came from the QR just scanned (not from an
 let kidApi = null, kidShown = null, kidJob = 0, qrNames = null;
 // a failed load (offline, CDN hiccup) is not kept: the next result tries again
 const engine = () => (kidApi ||= import('./avatar-engine.js').then(m => m.createAvatar()).catch(e => { kidApi = null; throw e; }));
-let hostLookPromise = null;
-const hostLook = () => (hostLookPromise ||= fetch('assets/models/hero.json').then(r => (r.ok ? r.json() : null)).then(o => (o && o.pieces ? o : null)).catch(() => null));
 
 async function decodeOutfit(text) {
   if (!/o=[A-Za-z0-9+/_-]{20,}/.test(text)) return null;
@@ -469,9 +467,9 @@ const clampTo = (v, [lo, hi]) => Math.min(hi, Math.max(lo, v));
 async function showKid(body, src) {
   const my = ++kidJob;
   try {
-    const [api, host] = await Promise.all([engine(), look ? null : hostLook()]);
+    const api = await engine();
     if (my !== kidJob) return;
-    const idx = api.index, pieces = {}, worn = look || host;   // the visitor's own look, else the site's kid
+    const idx = api.index, pieces = {}, worn = look;   // the visitor's own look, else the starting outfit
     const defaults = Object.fromEntries(Object.entries(idx.defaults || {}).filter(([, n]) => (idx.pieces[n] || {}).file));
     if (worn) ORDER.forEach(sl => { const n = worn.pieces[sl]; pieces[sl] = n && idx.pieces[n] ? n : null; });
     else Object.assign(pieces, defaults);
@@ -536,7 +534,7 @@ if (saved && Number.isFinite(saved.height) && Number.isFinite(saved.scale)) {
   els.inS.value = saved.scale;
   showResult(saved.height, saved.scale, 'saved', { quiet: true });
 } else {
-  showKid({ height: 0, scale: 0 }, 'host');   // nothing measured yet: the kid waits on the stage at a neutral build
+  showKid({ height: 0, scale: 0 }, 'default');   // nothing measured yet: the kid waits on the stage at a neutral build
 }
 
 window.__height = { compute, extractParams };
