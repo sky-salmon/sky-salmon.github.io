@@ -1,10 +1,10 @@
 // Floating-island home: scene assembly, render loop and scroll-driven camera.
 import * as THREE from 'three';
 import { outlineUniforms } from './toon.js';
-import { makeIsland, makeGrass, makeFlowers, makePebbles, windUniforms, ISLAND_RADIUS } from './terrain.js';
-import { makeCharacter, makeBench, makeCandle, makeFlame, makeBird, makeShelf, decorateShelf, makeBook, makeStarMarker, makeRocks, makeSun, makeButterflies } from './models.js';
+import { makeIsland, makeGrass, makeFlowers, windUniforms, ISLAND_RADIUS } from './terrain.js';
+import { makeFlame, decorateShelf, makeBook, makeStarMarker, makeRocks, makeSun } from './models.js';
 import { loadToonModel, wrapGltf, findNodes, modelStatus } from './gltf.js';
-import { skyKid, skyBench, skyCandles, skyFox, skyShelf, skyButterflies, skyGround } from './sky.js';
+import { skyKid, skyBench, skyCandles, skyFox, skyShelf, skyShelfFrame, skyButterflies, skyGround } from './sky.js';
 import { savedLook, KEY_LOOK, KEY_INPUT } from '../saved-look.js';
 import { smoothstep, clamp01 } from './util.js';
 
@@ -49,8 +49,8 @@ scene.add(fill);
 const world = new THREE.Group();
 scene.add(world);
 
-// Authored models live in assets/models/<name>.glb; anything missing falls back to the
-// procedural placeholder in models.js / terrain.js.
+// The island, book and floating rocks have no game model: an authored assets/models/<name>.glb, else the
+// procedural one in terrain.js / models.js.
 async function modelOr(name, fallback, autoplay = ['idle']) {
   const gltf = await loadToonModel(name);
   if (!gltf) return fallback();
@@ -58,32 +58,32 @@ async function modelOr(name, fallback, autoplay = ['idle']) {
   wrapped.isGlb = true;
   return wrapped;
 }
-// Models taken from the game (sky.js); a file that fails to load falls back to the procedural stand-in.
-async function gameOr(name, make, fallback) {
+// Everything else is the game's own model (sky.js); one whose file fails to load is left out.
+async function game(name, make) {
   try {
     const model = await make();
     modelStatus[name] = 'game';
     return model;
   } catch (err) {
-    console.warn(`[models] game ${name} failed to load, using placeholder`, err);
-    modelStatus[name] = 'placeholder';
-    return fallback();
+    console.warn(`[models] game ${name} failed to load, left out`, err);
+    modelStatus[name] = 'missing';
+    return null;
   }
 }
 const [islandGltf, benchM, candleM, foxM, shelfM, fliesM, bookM, rocksGltf] = await Promise.all([
   loadToonModel('island'),
-  gameOr('bench', skyBench, makeBench),
-  gameOr('candle', skyCandles, makeCandle),
-  gameOr('fox', skyFox, makeBird),
-  gameOr('shelf', skyShelf, makeShelf),
-  gameOr('butterflies', () => skyButterflies(3), () => makeButterflies(3)),
+  game('bench', skyBench),
+  game('candle', skyCandles),
+  game('fox', skyFox),
+  game('shelf', skyShelf),
+  game('butterflies', () => skyButterflies(3)),
   modelOr('book', makeBook, []),
   loadToonModel('rocks')
 ]);
 world.add(islandGltf ? islandGltf.scene : makeIsland());
 
 const LAYOUT = {
-  character: { x: -2.05, z: 0.85, ry: 0.4, s: 1.32 },
+  character: { x: -2.05, z: 0.85, ry: 0.4 },
   bench: { x: 0.65, z: 0.05, ry: -0.06 },
   shelf: { x: 3.35, z: -1.75, ry: -0.42 },
   book: { x: 0.35, z: 2.05, ry: 0.22 }
@@ -94,10 +94,11 @@ const avoid = [
   { x: LAYOUT.shelf.x, z: LAYOUT.shelf.z, rx: 1.5, rz: 0.6 },
   { x: LAYOUT.character.x, z: LAYOUT.character.z, rx: 0.4, rz: 0.4 }
 ];
-const groundM = await gameOr('ground', () => skyGround(ISLAND_RADIUS, [...avoid, { x: LAYOUT.bench.x, z: LAYOUT.bench.z, rx: 1.7, rz: 0.8 }]), () => ({ object: makePebbles(46) }));
-world.add(groundM.object);
-world.add(makeGrass(isSmall() ? 1500 : 2400, avoid, groundM.heightAt));
-world.add(makeFlowers(70, avoid, groundM.heightAt));
+const groundM = await game('ground', () => skyGround(ISLAND_RADIUS, [...avoid, { x: LAYOUT.bench.x, z: LAYOUT.bench.z, rx: 1.7, rz: 0.8 }]));
+if (groundM) world.add(groundM.object);
+const heightAt = groundM ? groundM.heightAt : undefined;
+world.add(makeGrass(isSmall() ? 1500 : 2400, avoid, heightAt));
+world.add(makeFlowers(70, avoid, heightAt));
 
 const animated = [];
 function place(model, { x = 0, y = 0, z = 0, ry = 0, s = 1 } = {}) {
@@ -118,6 +119,13 @@ function place(model, { x = 0, y = 0, z = 0, ry = 0, s = 1 } = {}) {
     let worn = JSON.stringify(savedLook());
     kid = await skyKid(JSON.parse(worn));
     modelStatus.character = 'game';
+    place(kid, { ...LAYOUT.character, s: 0.001 });
+    const born = elapsed, base = kid.update;
+    kid.update = (t, dt) => {
+      const k = reducedMotion ? 1 : clamp01((t - born) / 0.45);
+      kid.object.scale.setScalar(Math.max(0.001, 1 - (1 - k) ** 3));
+      base(t, dt);
+    };
     // a QR scanned in another tab, or a return here through the back button, re-dresses the kid
     const refresh = () => {
       const now = JSON.stringify(savedLook());
@@ -128,55 +136,46 @@ function place(model, { x = 0, y = 0, z = 0, ry = 0, s = 1 } = {}) {
     addEventListener('pageshow', e => { if (e.persisted) refresh(); });
     addEventListener('storage', e => { if (e.key === null || e.key === KEY_LOOK || e.key === KEY_INPUT) refresh(); });
   } catch (err) {
-    console.warn('[models] game character failed to load, using placeholder', err);
-    modelStatus.character = 'placeholder';
-    kid = makeCharacter();
+    console.warn('[models] game character failed to load, left out', err);
+    modelStatus.character = 'missing';
   }
-  const full = modelStatus.character === 'game' ? 1 : LAYOUT.character.s;   // the placeholder was built small
-  place(kid, { ...LAYOUT.character, s: 0.001 });
-  const born = elapsed, base = kid.update;
-  kid.update = (t, dt) => {
-    const k = reducedMotion ? 1 : clamp01((t - born) / 0.45);
-    kid.object.scale.setScalar(Math.max(0.001, full * (1 - (1 - k) ** 3)));
-    if (base) base(t, dt);
-  };
 })();
 
-place(benchM, LAYOUT.bench);
+if (benchM) place(benchM, LAYOUT.bench);
 
-// The game bench's seat is uneven: rest things on it by casting down onto the stone.
-const SEAT_Y = 0.82;   // seat height of the placeholder bench
+// The game bench's seat is uneven: rest things on it by casting down onto the stone (the grass without it).
 const dropRay = new THREE.Raycaster(), dropFrom = new THREE.Vector3(), DOWN = new THREE.Vector3(0, -1, 0);
 world.updateMatrixWorld(true);
 function seatAt(x, z) {
+  if (!benchM) return 0;
   dropRay.set(dropFrom.set(x, 6, z), DOWN);
   const hit = dropRay.intersectObject(benchM.object, true)[0];
-  return hit ? hit.point.y : SEAT_Y;
+  return hit ? hit.point.y : 0;
 }
 
-const CANDLE_AT = { x: LAYOUT.bench.x - 0.5, z: -0.02 };
-const anchors = findNodes(candleM.object, 'flame_anchor');
-if (anchors.length > 1 || modelStatus.candle === 'game') {
+if (candleM) {
+  const CANDLE_AT = { x: LAYOUT.bench.x - 0.5, z: -0.02 };
   place(candleM, CANDLE_AT);
   for (const candle of candleM.object.children) {
     if (candle.userData.settle) candle.position.y = seatAt(CANDLE_AT.x + candle.position.x, CANDLE_AT.z + candle.position.z) - 0.008;
   }
-} else {
-  place(candleM, { ...CANDLE_AT, y: seatAt(CANDLE_AT.x, CANDLE_AT.z) - 0.01 });
+  findNodes(candleM.object, 'flame_anchor').forEach((anchor, i) => {   // one candle carries the light and the sparks
+    const flame = makeFlame({ light: i === 0, sparks: i === 0, glow: i === 0, phase: i * 1.7 });
+    flame.object.scale.setScalar(anchor.userData.size || 1);
+    anchor.add(flame.object);
+    animated.push(flame);
+  });
 }
-(anchors.length ? anchors : [candleM.object]).forEach((anchor, i) => {
-  const flame = makeFlame({ light: i === 0, sparks: i === 0, glow: i === 0, phase: i * 1.7 });
-  flame.object.scale.setScalar(anchor.userData.size || 1);
-  anchor.add(flame.object);
-  animated.push(flame);
-});
 
-const FOX_AT = { x: LAYOUT.bench.x + 0.62, z: 0.06 };
-place(foxM, { ...FOX_AT, y: seatAt(FOX_AT.x, FOX_AT.z) - 0.01, ry: -0.5, s: modelStatus.fox === 'game' ? 1 : 1.25 });
+if (foxM) {
+  const FOX_AT = { x: LAYOUT.bench.x + 0.62, z: 0.06 };
+  place(foxM, { ...FOX_AT, y: seatAt(FOX_AT.x, FOX_AT.z) - 0.01, ry: -0.5 });
+}
 
-place(shelfM, LAYOUT.shelf);
-const shelfDeco = decorateShelf(shelfM.object);
-const shelf = { object: shelfM.object, icons: shelfDeco.icons, bubbleNode: shelfDeco.bubbleNode, height: shelfDeco.height };
+const shelfModel = shelfM || skyShelfFrame();
+place(shelfModel, LAYOUT.shelf);
+const shelfDeco = decorateShelf(shelfModel.object);
+const shelf = { object: shelfModel.object, icons: shelfDeco.icons, bubbleNode: shelfDeco.bubbleNode, height: shelfModel.height };
 
 if (bookM.isGlb) {   // authored book: scrub its `open` clip and float a sparkle above it
   const open = bookM.actions.open, star = makeStarMarker(), base = bookM.update;
@@ -197,7 +196,7 @@ const ROCK_SPOTS = [[1.75, 2.6, -1.3, 0.16], [1.35, 1.95, -0.9, 0.11], [5.4, 3.1
 place(makeRocks(ROCK_SPOTS, rocksGltf ? findNodes(rocksGltf.scene, 'rock_') : null));
 window.__models = modelStatus;
 const sun = place(makeSun(), { x: -3.2, y: 4.5, z: -4.0 });
-place(fliesM);
+if (fliesM) place(fliesM);
 
 // ── camera keyframes ────────────────────────────────────────────────────
 const shelfCenter = new THREE.Vector3(LAYOUT.shelf.x, shelf.height * 0.55, LAYOUT.shelf.z);

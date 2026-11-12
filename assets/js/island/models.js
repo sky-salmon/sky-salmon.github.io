@@ -1,136 +1,9 @@
-// Procedural toon props. Every model is built from primitives — no external assets.
+// Procedural toon props the game has no model for (candle flame, book, sun, rocks), built from primitives,
+// and the stickers the bookshelf menu hangs on its slots. The kid, bench, candles, fox, shelf and butterflies
+// are the game's own (sky.js).
 import * as THREE from 'three';
 import { part, toon, addOutline } from './toon.js';
-import { organic, canvasTexture, blobShadow, rng } from './util.js';
-
-// ── caped child ──────────────────────────────────────────────────────────
-export function makeCharacter() {
-  const root = new THREE.Group();
-  const body = new THREE.Group();
-  root.add(body);
-  const C = {
-    cape: '#ec7a3c', tunic: '#f4f0e8', legs: '#3b3944', skin: '#8a6450',
-    mask: '#3a2f2a', hair: '#f6f5f2', eye: '#fff6d6', scarf: '#fbf8f2'
-  };
-
-  for (const sx of [-0.1, 0.1]) {
-    const leg = part(new THREE.CylinderGeometry(0.072, 0.062, 0.5, 12), C.legs);
-    leg.position.set(sx, 0.29, 0);
-    body.add(leg);
-    const foot = part(new THREE.SphereGeometry(0.08, 12, 8), C.legs);
-    foot.scale.set(1, 0.62, 1.45);
-    foot.position.set(sx, 0.05, 0.035);
-    body.add(foot);
-  }
-
-  // puffy shorts/tunic
-  const tunic = part(new THREE.SphereGeometry(0.2, 20, 14), C.tunic);
-  tunic.scale.set(0.9, 0.9, 0.72);
-  tunic.position.set(0, 0.64, -0.02);
-  body.add(tunic);
-
-  // cape: a lathed shell (outer + inner surface) open at the front, zig-zag hem
-  const outer = [[0.12, 1.07], [0.2, 1.0], [0.29, 0.84], [0.37, 0.64], [0.45, 0.43]];
-  const inner = outer.slice().reverse().map(([r, y]) => [r - 0.03, y + 0.012]);
-  const prof = [...outer, ...inner, outer[0]].map(([r, y]) => new THREE.Vector2(r, y));
-  const gap = 0.72;
-  const capeGeo = new THREE.LatheGeometry(prof, 40, gap / 2, Math.PI * 2 - gap);
-  const cp = capeGeo.attributes.position;
-  for (let i = 0; i < cp.count; i++) {
-    const y = cp.getY(i);
-    if (y < 0.5) {
-      const phi = Math.atan2(cp.getX(i), cp.getZ(i));
-      cp.setY(i, y + Math.abs(Math.sin(phi * 4.5)) * 0.07 - 0.02);
-    }
-  }
-  capeGeo.computeVertexNormals();
-  const cape = part(capeGeo, C.cape, { side: THREE.DoubleSide });
-  body.add(cape);
-
-  // fluffy scarf collar
-  const scarf = new THREE.Group();
-  for (let i = 0; i < 9; i++) {
-    const a = (i / 9) * Math.PI * 2;
-    const puff = part(new THREE.SphereGeometry(0.075, 12, 10), C.scarf);
-    puff.position.set(Math.sin(a) * 0.14, 1.07 + Math.cos(a * 2) * 0.01, Math.cos(a) * 0.14);
-    scarf.add(puff);
-  }
-  const drape = part(new THREE.SphereGeometry(0.075, 12, 10), C.scarf);
-  drape.scale.set(1, 1.3, 0.7);
-  drape.position.set(0, 0.97, 0.16);
-  scarf.add(drape);
-  body.add(scarf);
-
-  // head
-  const head = new THREE.Group();
-  head.position.y = 1.32;
-  body.add(head);
-  const skull = part(new THREE.SphereGeometry(0.27, 24, 18), C.skin);
-  head.add(skull);
-  const mask = part(new THREE.SphereGeometry(0.21, 22, 16), C.mask);
-  mask.scale.set(1.12, 1.05, 0.6);
-  mask.position.set(0, -0.01, 0.175);
-  head.add(mask);
-  const eyeMat = new THREE.MeshBasicMaterial({ color: C.eye });
-  for (const sx of [-0.078, 0.078]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.038, 12, 10), eyeMat);
-    eye.scale.set(1, 1.25, 0.5);
-    eye.position.set(sx, 0.015, 0.298);
-    head.add(eye);
-  }
-  // hair: soft cap + bangs + back tufts + a cowlick
-  const cap = part(new THREE.SphereGeometry(0.3, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), C.hair);
-  cap.position.set(0, 0.04, -0.03);
-  cap.rotation.x = -0.55;   // front edge lifts above the eyes, back falls to the nape
-  head.add(cap);
-  // tufts frame the face from the sides/back; bangs sit high so the mask stays visible
-  const tufts = [[-0.25, 0.04, 0.02, 0.11], [0.25, 0.04, 0.02, 0.11], [-0.25, -0.12, -0.05, 0.1], [0.25, -0.12, -0.05, 0.1],
-    [-0.15, -0.15, -0.19, 0.12], [0.15, -0.15, -0.19, 0.12], [0, -0.08, -0.25, 0.14], [-0.1, 0.25, 0.1, 0.09], [0.1, 0.25, 0.1, 0.09], [0, 0.27, 0.06, 0.1]];
-  for (const [x, y, z, r] of tufts) {
-    const t = part(new THREE.SphereGeometry(r, 12, 10), C.hair);
-    t.position.set(x, y, z);
-    head.add(t);
-  }
-  const curl = part(new THREE.ConeGeometry(0.06, 0.26, 10), C.hair);
-  curl.position.set(0.03, 0.34, -0.02);
-  curl.rotation.set(-0.35, 0, -0.5);
-  head.add(curl);
-  const gem = part(new THREE.OctahedronGeometry(0.035), '#f2c46d');
-  gem.position.set(0, 0.215, 0.255);
-  head.add(gem);
-
-  const shadow = blobShadow(1.0, 0.7, 0.38);
-  root.add(shadow);
-
-  return {
-    object: root,
-    update(t) {
-      body.position.y = Math.sin(t * 1.6) * 0.012;
-      head.rotation.y = Math.sin(t * 0.45) * 0.28;
-      head.rotation.z = Math.sin(t * 0.7) * 0.05;
-      cape.rotation.y = Math.sin(t * 1.1) * 0.035;
-      cape.scale.x = 1 + Math.sin(t * 1.6) * 0.015;
-    }
-  };
-}
-
-// ── stone bench ──────────────────────────────────────────────────────────
-export function makeBench() {
-  const g = new THREE.Group();
-  const stone = '#ddd3c5';
-  const slabGeo = organic(new THREE.BoxGeometry(3.0, 0.3, 0.92, 10, 2, 4), 0.06, 1.6, 2);
-  const slab = part(slabGeo, stone, { flat: true });
-  slab.position.y = 0.66;
-  g.add(slab);
-  for (const sx of [-1.0, 1.0]) {
-    const legGeo = organic(new THREE.BoxGeometry(0.55, 0.56, 0.66, 3, 3, 3), 0.05, 2.2, sx > 0 ? 5 : 9);
-    const leg = part(legGeo, '#cfc3b3', { flat: true });
-    leg.position.set(sx, 0.27, 0);
-    g.add(leg);
-  }
-  g.add(blobShadow(3.6, 1.5, 0.3));
-  return { object: g, seatY: 0.82 };
-}
+import { canvasTexture, blobShadow, rng } from './util.js';
 
 // ── candle with flame, glow and sparks ───────────────────────────────────
 let glowTex = null;
@@ -143,23 +16,6 @@ function glowTexture() {
     ctx.fillStyle = gr; ctx.fillRect(0, 0, s, s);
   });
   return glowTex;
-}
-
-// Procedural candle body; the flame effect is added at its flame_anchor (same as an authored candle.glb).
-export function makeCandle() {
-  const g = new THREE.Group();
-  const wax = part(new THREE.CylinderGeometry(0.055, 0.06, 0.46, 14), '#f7f3ea');
-  wax.position.y = 0.23;
-  g.add(wax);
-  const drip = part(new THREE.SphereGeometry(0.035, 10, 8), '#f7f3ea');
-  drip.scale.set(1, 1.6, 1);
-  drip.position.set(0.05, 0.38, 0.02);
-  g.add(drip);
-  const wick = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.06, 6), new THREE.MeshBasicMaterial({ color: '#2a231f' }));
-  wick.position.y = 0.49;
-  g.add(wick);
-  g.add(empty('flame_anchor', 0, 0.5, 0));
-  return { object: g };
 }
 
 // Flame + glow + flickering light + rising sparks; origin = base of the flame.
@@ -216,67 +72,6 @@ export function makeFlame({ light: withLight = true, sparks: withSparks = true, 
   };
 }
 
-// ── little round bird ────────────────────────────────────────────────────
-export function makeBird() {
-  const root = new THREE.Group();
-  const b = new THREE.Group();
-  root.add(b);
-  const orange = '#f49a46', cream = '#fff1db', dark = '#2a231f';
-  const body = part(new THREE.SphereGeometry(0.17, 20, 14), orange);
-  body.scale.set(1, 0.92, 1.12);
-  body.position.y = 0.17;
-  b.add(body);
-  const belly = part(new THREE.SphereGeometry(0.12, 16, 12), cream);
-  belly.scale.set(0.9, 1, 0.5);
-  belly.position.set(0, 0.17, 0.115);
-  b.add(belly);
-  const head = new THREE.Group();
-  head.position.set(0, 0.34, 0.06);
-  b.add(head);
-  head.add(part(new THREE.SphereGeometry(0.115, 18, 12), orange));
-  const beak = part(new THREE.ConeGeometry(0.03, 0.07, 8), '#f6c945');
-  beak.rotation.x = Math.PI / 2;
-  beak.position.set(0, -0.01, 0.12);
-  head.add(beak);
-  for (const sx of [-0.05, 0.05]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), new THREE.MeshBasicMaterial({ color: dark }));
-    eye.position.set(sx, 0.025, 0.095);
-    head.add(eye);
-  }
-  const tuft = part(new THREE.ConeGeometry(0.025, 0.09, 6), orange);
-  tuft.position.set(0, 0.12, -0.01);
-  tuft.rotation.x = -0.4;
-  head.add(tuft);
-  const wings = [];
-  for (const sx of [-1, 1]) {
-    const w = part(new THREE.SphereGeometry(0.1, 12, 8), '#e07e2e');
-    w.scale.set(0.35, 0.75, 1.1);
-    w.position.set(sx * 0.15, 0.19, -0.02);
-    b.add(w); wings.push(w);
-  }
-  const tail = part(new THREE.ConeGeometry(0.07, 0.18, 4), '#e07e2e');
-  tail.rotation.x = -2.1;
-  tail.position.set(0, 0.2, -0.2);
-  b.add(tail);
-  for (const sx of [-0.05, 0.05]) {
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.05, 5), new THREE.MeshBasicMaterial({ color: dark }));
-    leg.position.set(sx, 0.02, 0.02);
-    b.add(leg);
-  }
-  root.add(blobShadow(0.42, 0.32, 0.35));
-  return {
-    object: root,
-    update(t) {
-      const cycle = t % 5.5;
-      const hop = cycle > 4.6 && cycle < 5.1 ? Math.sin((cycle - 4.6) / 0.5 * Math.PI) : 0;
-      b.position.y = hop * 0.12;
-      head.rotation.y = Math.sin(t * 0.8) * 0.6 * (Math.sin(t * 0.3) > 0 ? 1 : 0.2);
-      head.rotation.x = Math.sin(t * 2.1) * 0.05;
-      wings.forEach((w, i) => { w.rotation.z = (i ? -1 : 1) * hop * 0.9; });
-    }
-  };
-}
-
 // ── bookshelf menu ───────────────────────────────────────────────────────
 const ICON_DRAW = {
   card(ctx) { ctx.strokeRect(-46, -32, 92, 64); ctx.beginPath(); ctx.arc(-18, -6, 11, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-34, 22); ctx.quadraticCurveTo(-18, 2, -2, 22); ctx.moveTo(12, -12); ctx.lineTo(34, -12); ctx.moveTo(12, 4); ctx.lineTo(34, 4); ctx.moveTo(12, 18); ctx.lineTo(26, 18); ctx.stroke(); },
@@ -321,7 +116,7 @@ export const SHELF_ITEMS = [
   { kind: 'about', label: '關於這裡', href: '#about' }
 ];
 
-// Put sticker icons + labels on a shelf (procedural or glTF) at its slot_N / label_N
+// Put sticker icons + labels on the shelf at its slot_N / label_N
 // empties. Returns the clickable icons and the speech-bubble anchor.
 export function decorateShelf(root) {
   root.updateMatrixWorld(true);
@@ -356,52 +151,6 @@ function empty(name, x, y, z, rx = 0) {
   const o = new THREE.Object3D();
   o.name = name; o.position.set(x, y, z); o.rotation.x = rx;
   return o;
-}
-
-export function makeShelf() {
-  const g = new THREE.Group();
-  const W = 2.5, H = 3.2, D = 0.56;
-  const wood = '#dcb57f', woodDark = '#c99c62';
-
-  for (const sx of [-1, 1]) {
-    const post = part(organic(new THREE.BoxGeometry(0.24, H, D, 1, 8, 2), 0.03, 1.4, sx > 0 ? 3 : 8), wood, { flat: true });
-    post.position.set(sx * (W / 2), H / 2, 0);
-    g.add(post);
-  }
-  const back = part(new THREE.BoxGeometry(W, H - 0.3, 0.05), '#f7f0e2');
-  back.position.set(0, (H - 0.3) / 2 + 0.05, -D / 2 + 0.04);
-  g.add(back);
-
-  const boardYs = [0.3, 1.25, 2.18];
-  for (const [i, y] of boardYs.entries()) {
-    const board = part(organic(new THREE.BoxGeometry(W, 0.13, D, 6, 1, 2), 0.025, 2, 10 + i), woodDark, { flat: true });
-    board.position.set(0, y, 0.02);
-    board.rotation.z = (i - 1) * 0.015;
-    g.add(board);
-  }
-
-  // crown with a hand-cut, bumpy top edge
-  const hw = W / 2 + 0.34;
-  const s = new THREE.Shape();
-  s.moveTo(-hw, 0); s.lineTo(hw, 0); s.lineTo(hw + 0.06, 0.24);
-  [[hw - 0.12, 0.4], [hw * 0.62, 0.36], [hw * 0.38, 0.52], [0.12, 0.74], [-0.22, 0.6], [-hw * 0.48, 0.48], [-hw * 0.78, 0.38], [-hw + 0.04, 0.42]]
-    .forEach(([x, y]) => s.lineTo(x, y));
-  s.lineTo(-hw - 0.06, 0.24); s.closePath();
-  const crownGeo = new THREE.ExtrudeGeometry(s, { depth: D + 0.16, bevelEnabled: true, bevelSize: 0.04, bevelThickness: 0.04, bevelSegments: 1 });
-  crownGeo.translate(0, 0, -(D + 0.16) / 2);
-  const crown = part(crownGeo, wood, { flat: true });
-  crown.position.y = H - 0.12;
-  g.add(crown);
-
-  // the same empties an authored shelf.glb must provide
-  for (let i = 0; i < 6; i++) {
-    const row = Math.floor(i / 2), col = i % 2, boardY = boardYs[2 - row], x = (col ? 1 : -1) * 0.58;
-    g.add(empty(`slot_${i + 1}`, x, boardY + 0.42, 0.02, -0.08));
-    g.add(empty(`label_${i + 1}`, x, boardY + 0.005, D / 2 + 0.035));
-  }
-  g.add(empty('bubble_anchor', -0.9, H + 0.75, 0));
-  g.add(blobShadow(3.4, 1.4, 0.3));
-  return { object: g };
 }
 
 // ── book lying on the grass + floating sparkle marker ────────────────────
@@ -530,49 +279,6 @@ export function makeSun() {
     update(t) {
       stars.forEach(st => st.scale.setScalar(0.22 + Math.sin(t * 2.2 + st.userData.phase) * 0.07));
       g.rotation.z = Math.sin(t * 0.3) * 0.05;
-    }
-  };
-}
-
-// ── butterflies ──────────────────────────────────────────────────────────
-export function makeButterflies(n) {
-  const g = new THREE.Group();
-  const wingTex = canvasTexture(128, (ctx, s) => {
-    const gr = ctx.createLinearGradient(0, 0, s, s);
-    gr.addColorStop(0, '#ffd27a'); gr.addColorStop(1, '#f39a46');
-    ctx.fillStyle = gr;
-    ctx.beginPath(); ctx.ellipse(s * 0.55, s * 0.38, s * 0.42, s * 0.3, -0.3, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(s * 0.45, s * 0.74, s * 0.26, s * 0.2, 0.4, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = 'rgba(42,35,31,0.7)'; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.ellipse(s * 0.55, s * 0.38, s * 0.42, s * 0.3, -0.3, 0, Math.PI * 2); ctx.stroke();
-  });
-  const mat = new THREE.MeshBasicMaterial({ map: wingTex, transparent: true, side: THREE.DoubleSide, alphaTest: 0.1, depthWrite: false });
-  const flies = [];
-  for (let i = 0; i < n; i++) {
-    const fly = new THREE.Group();
-    const wings = [-1, 1].map(side => {
-      const pivot = new THREE.Group();
-      const w = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.28), mat);
-      w.rotation.x = -Math.PI / 2;
-      w.position.x = side * 0.14;
-      w.scale.x = side;
-      pivot.add(w);
-      fly.add(pivot);
-      return pivot;
-    });
-    g.add(fly);
-    flies.push({ fly, wings, seed: i * 2.3, center: [-0.5 + i * 1.6, 1.8 + i * 0.5, 0.6 - i * 0.8] });
-  }
-  return {
-    object: g,
-    update(t) {
-      for (const f of flies) {
-        const k = t * 0.35 + f.seed;
-        f.fly.position.set(f.center[0] + Math.sin(k) * 1.6, f.center[1] + Math.sin(k * 2.3) * 0.35, f.center[2] + Math.cos(k * 1.3) * 1.1);
-        f.fly.rotation.y = Math.atan2(Math.cos(k), -Math.sin(k * 1.3));
-        const flap = Math.sin(t * 16 + f.seed) * 0.9;
-        f.wings[0].rotation.z = -flap; f.wings[1].rotation.z = flap;
-      }
     }
   };
 }
