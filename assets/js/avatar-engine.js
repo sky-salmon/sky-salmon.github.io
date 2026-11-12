@@ -42,7 +42,21 @@ export async function createAvatar(canvas, opts = {}) {
   const rig = rg.scene;
   scene.add(rig);
   const mixer = new THREE.AnimationMixer(rig);
-  const clips = Object.fromEntries(rg.animations.map(c => [c.name, c]));
+  // Clean clips before use: bone translations other than the hip's don't decode reliably yet (chest/shoulders
+  // pushed several times their length), so bones keep their skeleton lengths and only rotate. Cape bones are
+  // optionally held at their modelled pose (the game drives them with cloth, not with these keys).
+  const CAPE = /^[LMR]_cap[BF](Root|Tip)$/;
+  const holdCape = opts.capeFromClips !== true;
+  function cleanClip(c) {
+    c.tracks = c.tracks.filter(tr => {
+      const i = tr.name.lastIndexOf('.'), bone = tr.name.slice(0, i), prop = tr.name.slice(i + 1);
+      if (prop === 'position' && bone !== 'M_hip') return false;
+      if (holdCape && CAPE.test(bone)) return false;
+      return true;
+    });
+    return c;
+  }
+  const clips = Object.fromEntries(rg.animations.map(c => [c.name, cleanClip(c)]));
   const worn = {};          // slot → { name, obj }
   const dyes = {};          // slot → [primary, secondary]
   const gltfCache = new Map(), texCache = new Map(), loadToken = {};
@@ -184,7 +198,7 @@ export async function createAvatar(canvas, opts = {}) {
     if (clips[id]) return Promise.resolve(clips[id]);
     const def = IDX.clips.find(c => c.id === id);
     if (!def || !def.file || def.file === IDX.skeleton) return Promise.resolve(null);
-    if (!clipLoads.has(def.file)) clipLoads.set(def.file, load(BASE + def.file).then(g => { g.animations.forEach(c => { clips[c.name] = c; }); }).catch(e => console.warn(e)));
+    if (!clipLoads.has(def.file)) clipLoads.set(def.file, load(BASE + def.file).then(g => { g.animations.forEach(c => { clips[c.name] = cleanClip(c); }); }).catch(e => console.warn(e)));
     return clipLoads.get(def.file).then(() => clips[id] || null);
   }
   async function play(id) {
@@ -200,16 +214,31 @@ export async function createAvatar(canvas, opts = {}) {
     if (!clip) return;
     if (action && action.getClip() === clip) return;
     if (action) action.fadeOut(0.25);
+    if (rules && rules.restoreAvatarFrame) rules.restoreAvatarFrame(rig);  // the mixer must bind the plain pose
     action = mixer.clipAction(clip);
     const def = IDX.clips.find(c => c.id === clip.name);
     action.reset().setLoop(def && def.loop === false ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
     action.clampWhenFinished = true;
     action.fadeIn(0.25).play();
+    groundAt = performance.now() + 350;  // re-measure the feet once the fade is over
+  }
+  // Some clip packs keep the hip ~1 unit higher than the skeleton they were exported with, so standing poses
+  // float. After a clip settles, put the lower toe back on the ground (sitting / kneeling poses are left alone).
+  let groundAt = 0, groundY = 0;
+  const v1 = new THREE.Vector3();
+  function measureGround() {
+    rig.position.y = 0; rig.updateMatrixWorld(true);
+    const y = n => { const b = rig.getObjectByName(n); return b ? b.getWorldPosition(v1).y : NaN; };
+    const toe = Math.min(y('L_toe'), y('R_toe')), hip = y('M_hip');
+    const rootS = (rig.getObjectByName('M_root') || rig).getWorldScale(v1).y || 1;
+    groundY = Number.isFinite(toe) && hip > 5.5 * rootS && toe > 0.25 * rootS ? 0.07 * rootS - toe : 0;
+    rig.position.y = groundY; rig.updateMatrixWorld(true);
   }
   function setDyes(slot, v) { dyes[slot] = v; applyDye(slot); }
   function setBody(b) {
     body = { height: +b.height || 0, scale: +b.scale || 0 };
     if (rules && rules.applyBodyShape) rules.applyBodyShape(THREE, rig, body);
+    groundAt = performance.now() + 50;
   }
   async function wearLook(look) {
     Object.keys(dyes).forEach(k => delete dyes[k]);
@@ -238,8 +267,10 @@ export async function createAvatar(canvas, opts = {}) {
   resize();
   const clock = new THREE.Clock();
   renderer.setAnimationLoop(() => {
+    if (rules && rules.restoreAvatarFrame) rules.restoreAvatarFrame(rig);
     mixer.update(Math.min(clock.getDelta(), 0.1));
     if (rules && rules.updateAvatarFrame) { try { rules.updateAvatarFrame(THREE, rig); } catch (e) { console.warn('frame rules', e); rules.updateAvatarFrame = null; } }
+    if (groundAt && performance.now() >= groundAt) { groundAt = 0; measureGround(); }
     controls.update();
     renderer.render(scene, camera);
   });
