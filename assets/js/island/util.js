@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // Small seeded PRNG so the scene looks the same on every load.
 export function rng(seed) {
@@ -19,25 +18,6 @@ export function noise3(x, y, z, seed = 0) {
     Math.sin(z * 1.9 + x * 0.7 + seed * 2.1) * 0.6 +
     Math.sin((x + y + z) * 3.1 + seed) * 0.25
   ) / 1.85;
-}
-
-// Merge vertices (so displacement keeps the surface closed) and push each one
-// along its normal by noise. weight(x,y,z) can fade the effect out.
-export function organic(geometry, amp, freq, seed = 1, weight = null) {
-  let g = geometry;
-  for (const name of Object.keys(g.attributes)) if (name !== 'position') g.deleteAttribute(name);
-  g = mergeVertices(g, 1e-4);
-  g.computeVertexNormals();
-  const pos = g.attributes.position, nrm = g.attributes.normal;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-    const w = weight ? weight(x, y, z) : 1;
-    const n = noise3(x * freq, y * freq, z * freq, seed) * amp * w;
-    pos.setXYZ(i, x + nrm.getX(i) * n, y + nrm.getY(i) * n, z + nrm.getZ(i) * n);
-  }
-  pos.needsUpdate = true;
-  g.computeVertexNormals();
-  return g;
 }
 
 export function canvasTexture(size, draw, h = size) {

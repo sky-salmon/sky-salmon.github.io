@@ -1,11 +1,11 @@
 // 身高計算 — 3D "studio" stage: cream disc, lantern tower, the player's character,
 // a measuring stick (ticks drawn as an SVG overlay projected from 3D), a crab and candles.
-// Model slots try an authored assets/models/<name>.glb first, then the game's own model (island/sky.js: the lantern
-// post, the crab, the candles, the pebbles), and fall back to procedural placeholders.
+// The props are the game's own models (island/sky.js: the lantern post, the crab, the candles, the pebbles); one that
+// fails to load is simply left out. The player's kid arrives through setKid.
 import * as THREE from 'three';
 import { part, toon, addOutline, outlineUniforms } from './island/toon.js';
-import { loadToonModel, wrapGltf, findNodes } from './island/gltf.js';
-import { makeCharacter, makeCandle, makeFlame } from './island/models.js';
+import { findNodes } from './island/gltf.js';
+import { makeFlame } from './island/models.js';
 import { skyLantern, skyCrab, skyCandles, skyRocks } from './island/sky.js';
 import { canvasTexture, rng } from './island/util.js';
 
@@ -100,142 +100,15 @@ function makeStageDisc() {
   return g;
 }
 
-// a few pebbles near the rim (in disc space): the game's small rock cluster, else little stones
-const PEBBLE_TINTS = ['#e8dcc8', '#f1e8da'];
+// a few pebbles near the rim, in disc space: [x, z, size, turn]
 const PEBBLES = (() => {
   const rand = rng(11), out = [];
   for (let i = 0; i < 6; i++) {
     const a = -0.5 + i * 1.05 + rand() * 0.3, r = DISC_R * (0.72 + rand() * 0.12), s = 0.06 + rand() * 0.06;
-    out.push([Math.cos(a) * r, Math.sin(a) * r * 0.9, s, i]);
+    out.push([Math.cos(a) * r, Math.sin(a) * r * 0.9, s * 3.4, i * 2]);
   }
   return out;
 })();
-function makePebbles() {
-  const g = new THREE.Group();
-  PEBBLES.forEach(([x, z, s, i]) => {
-    const p = part(new THREE.DodecahedronGeometry(s, 0), PEBBLE_TINTS[i % 2], { flat: true });
-    p.scale.y = 0.6;
-    p.position.set(x, s * 0.35, z);
-    p.rotation.set(i, i * 2, 0);
-    g.add(p);
-  });
-  return g;
-}
-
-// ── placeholder: lantern tower ──────────────────────────────────────────
-function makePillar() {
-  const g = new THREE.Group();
-  const stone = '#f2eadc', stoneDark = '#ded1bb', roof = '#cf7440', gold = '#f2c46d';
-  const add = (mesh, y) => { mesh.position.y = y; g.add(mesh); return mesh; };
-  const oct = (rt, rb, h, color) => {
-    const m = part(new THREE.CylinderGeometry(rt, rb, h, 8), color, { flat: true });
-    m.rotation.y = Math.PI / 8;   // a flat face toward the viewer
-    return m;
-  };
-  add(oct(0.64, 0.7, 0.2, stoneDark), 0.1);
-  add(oct(0.52, 0.58, 0.18, stone), 0.29);
-  add(oct(0.33, 0.41, 2.0, stone), 1.38);
-  add(oct(0.42, 0.42, 0.07, stoneDark), 0.98);
-  add(oct(0.37, 0.37, 0.07, stoneDark), 2.08);
-  add(oct(0.5, 0.38, 0.16, stoneDark), 2.45);
-
-  // little arched door at the foot
-  const s = new THREE.Shape();
-  s.moveTo(-0.1, 0); s.lineTo(-0.1, 0.2); s.absarc(0, 0.2, 0.1, Math.PI, 0, true); s.lineTo(0.1, 0); s.closePath();
-  const door = part(new THREE.ExtrudeGeometry(s, { depth: 0.03, bevelEnabled: false }), '#7b5a44');
-  door.position.set(0, 0.38, 0.355);
-  door.rotation.x = -0.04;
-  g.add(door);
-
-  // lantern chamber: glowing core between four posts
-  const windowMat = new THREE.MeshBasicMaterial({ color: '#ffd98c' });
-  const core = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.27, 0.5, 8), windowMat);
-  core.rotation.y = Math.PI / 8;
-  addOutline(core);
-  add(core, 2.79);
-  for (let i = 0; i < 4; i++) {
-    const a = Math.PI / 4 + i * Math.PI / 2;
-    const post = part(new THREE.BoxGeometry(0.08, 0.56, 0.08), '#8a6a50');
-    post.position.set(Math.sin(a) * 0.37, 2.81, Math.cos(a) * 0.37);
-    post.rotation.y = a;
-    g.add(post);
-  }
-  add(oct(0.48, 0.48, 0.09, stoneDark), 3.12);
-  const cap = part(new THREE.ConeGeometry(0.6, 0.62, 8), roof, { flat: true });
-  cap.rotation.y = Math.PI / 8;
-  add(cap, 3.47);
-  add(part(new THREE.SphereGeometry(0.07, 12, 10), gold), 3.82);
-  add(part(new THREE.ConeGeometry(0.03, 0.14, 8), gold), 3.94);
-
-  return { object: g, windowMat, lightAnchor: new THREE.Vector3(0, 2.79, 0) };
-}
-
-// ── placeholder: round critter ──────────────────────────────────────────
-function makeCritter() {
-  const root = new THREE.Group(), body = new THREE.Group(), head = new THREE.Group();
-  root.add(body);
-  const fur = '#cfe1bf', furDark = '#b5cda3', cream = '#fbf4e4', dark = '#2a231f';
-  const torso = part(new THREE.SphereGeometry(0.3, 24, 18), fur);
-  torso.scale.set(1.06, 0.9, 1);
-  torso.position.y = 0.28;
-  body.add(torso);
-  const belly = part(new THREE.SphereGeometry(0.2, 18, 12), cream, { outline: false });
-  belly.scale.set(0.95, 0.8, 0.5);
-  belly.position.set(0, 0.22, 0.2);
-  body.add(belly);
-  body.add(head);
-  const eyeMat = new THREE.MeshBasicMaterial({ color: dark }), shine = new THREE.MeshBasicMaterial({ color: '#ffffff' });
-  for (const sx of [-1, 1]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.036, 12, 10), eyeMat);
-    eye.scale.set(1, 1.3, 0.6);
-    eye.position.set(sx * 0.1, 0.34, 0.268);
-    head.add(eye);
-    const hl = new THREE.Mesh(new THREE.SphereGeometry(0.011, 8, 6), shine);
-    hl.position.set(sx * 0.1 + 0.012, 0.355, 0.288);
-    head.add(hl);
-    const blush = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 8),
-      new THREE.MeshBasicMaterial({ color: '#f3a58c', transparent: true, opacity: 0.75 }));
-    blush.scale.set(1.2, 0.6, 0.3);
-    blush.position.set(sx * 0.19, 0.28, 0.235);
-    head.add(blush);
-    const ear = part(new THREE.SphereGeometry(0.075, 12, 10), furDark);
-    ear.scale.set(0.8, 1.35, 0.7);
-    ear.position.set(sx * 0.17, 0.52, -0.02);
-    ear.rotation.z = -sx * 0.45;
-    head.add(ear);
-    const foot = part(new THREE.SphereGeometry(0.07, 12, 8), furDark);
-    foot.scale.set(1, 0.55, 1.3);
-    foot.position.set(sx * 0.13, 0.035, 0.1);
-    root.add(foot);
-  }
-  const stem = part(new THREE.CylinderGeometry(0.012, 0.014, 0.12, 6), '#6f9a52');
-  stem.position.set(0, 0.6, 0);
-  head.add(stem);
-  for (const sx of [-1, 1]) {
-    const leaf = part(new THREE.SphereGeometry(0.06, 12, 8), '#93c06c');
-    leaf.scale.set(1.3, 0.3, 0.7);
-    leaf.position.set(sx * 0.06, 0.665, 0);
-    leaf.rotation.z = sx * 0.5;
-    head.add(leaf);
-  }
-  const tail = part(new THREE.SphereGeometry(0.07, 10, 8), cream);
-  tail.position.set(0, 0.16, -0.3);
-  body.add(tail);
-  root.add(softShadow(0.8, 0.55, 0.3));
-
-  return {
-    object: root,
-    update(t) {
-      const breathe = Math.sin(t * 2.2);
-      body.scale.set(1 - breathe * 0.015, 1 + breathe * 0.03, 1 - breathe * 0.015);
-      const c = t % 7.5;
-      const hop = c > 6.6 && c < 7.2 ? Math.sin(((c - 6.6) / 0.6) * Math.PI) : 0;
-      body.position.y = hop * 0.14;
-      head.rotation.z = Math.sin(t * 0.9) * 0.08;
-      root.rotation.y = 0.55 + Math.sin(t * 0.35) * 0.25;
-    }
-  };
-}
 
 // ── measuring stick ─────────────────────────────────────────────────────
 function makeRulerStick() {
@@ -283,100 +156,62 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
   const disc = makeStageDisc();
   scene.add(disc);
 
-  // model slots: an authored .glb, else the game's model, else the placeholder
+  // the game's props (island/sky.js); one that fails to load is left out
   const status = {};
   window.__heightModels = status;
-  async function slot(name, game, fallback, autoplay = ['idle']) {
-    const gltf = await loadToonModel(name);
-    if (gltf) { status[name] = 'glb'; return Object.assign(wrapGltf(gltf, autoplay), { isGlb: true }); }
-    if (game) {
-      try { const m = await game(); status[name] = 'game'; return m; }
-      catch (err) { console.warn(`[height] game ${name} failed to load, using placeholder`, err); }
-    }
-    status[name] = 'placeholder';
-    return fallback();
-  }
-  const [charM, pillarM, critterM, candleM, pebbles] = await Promise.all([
-    slot('character', null, makeCharacter),   // the player's kid arrives later through setKid
-    slot('pillar', skyLantern, makePillar),
-    slot('critter', skyCrab, makeCritter),
-    slot('candle', skyCandles, makeCandle, []),
-    skyRocks(PEBBLES.map(([x, z, s, i]) => [x, z, s * 3.4, i * 2]), ['#ddcfb8', '#e6dac6'])   // the cluster is flat: a shade darker
-      .then(m => { status.pebbles = 'game'; return m.object; })
-      .catch(err => { console.warn('[height] game pebbles failed to load', err); status.pebbles = 'placeholder'; return makePebbles(); })
+  const game = (name, make) => make()
+    .then(m => { status[name] = 'game'; return m; })
+    .catch(err => { console.warn(`[height] game ${name} failed to load, left out`, err); status[name] = 'missing'; return null; });
+  const [pillarM, critterM, candleM, pebblesM] = await Promise.all([
+    game('pillar', skyLantern),
+    game('critter', skyCrab),
+    game('candle', skyCandles),
+    game('pebbles', () => skyRocks(PEBBLES, ['#ddcfb8', '#e6dac6']))   // the cluster is flat: a shade darker than the disc
   ]);
-  disc.add(pebbles);
-  const animated = [charM, pillarM, critterM, candleM].filter(m => m.update);
+  if (pebblesM) disc.add(pebblesM.object);
+  const animated = critterM ? [critterM] : [];
 
-  // character: authored GLB is already ~2.2 tall; the placeholder gets normalised to it
+  // the player's kid stands here once setKid hands it over; until then the band and leader assume BASE_H
   const charRoot = new THREE.Group();
-  charRoot.add(charM.object);
   scene.add(charRoot);
-  if (!charM.isGlb) {
-    charM.object.traverse(o => {   // swap the island's grass-tinted blob for our warm one
-      if (o.isMesh && o.geometry.type === 'PlaneGeometry' && o.material.transparent && !o.material.depthWrite) o.visible = false;
-    });
-  }
-  const box = new THREE.Box3().setFromObject(charM.object);
-  const rawH = Math.max(0.1, box.max.y - Math.max(0, box.min.y));
-  const norm = charM.isGlb ? 1 : BASE_H / rawH;
-  charM.object.scale.setScalar(norm);
-  const charH = charM.isGlb ? rawH : BASE_H;
+  const charH = BASE_H;
   const charShadow = softShadow(1.25, 0.85, 0.34);
   scene.add(charShadow);
 
-  // pillar + its window light
+  // lantern post + the light in its cage
   const pillarRoot = new THREE.Group();
-  pillarRoot.add(pillarM.object);
   scene.add(pillarRoot);
-  const pBox = new THREE.Box3().setFromObject(pillarM.object);
-  const pillarTop = pBox.max.y;
-  let lightAnchor = pillarM.lightAnchor ? pillarM.lightAnchor.clone() : null;
-  if (!lightAnchor) {
-    const n = findNodes(pillarM.object, 'light_anchor')[0];
-    lightAnchor = n ? n.getWorldPosition(new THREE.Vector3()) : new THREE.Vector3(0, pillarTop * 0.72, 0);
+  let lanternLight = null, lanternGlow = null;
+  if (pillarM) {
+    const lantern = new THREE.Group();
+    lantern.position.copy(pillarM.lightAnchor);
+    lanternGlow = glowSprite(1.6, 0.375);   // the cage is closed: a small, soft halo keeps the stone from washing out
+    lanternLight = new THREE.PointLight('#ffc469', 2.6, 5.5, 1.4);
+    lantern.add(lanternGlow, lanternLight);
+    pillarRoot.add(pillarM.object, lantern, softShadow(1.9, 1.3, 0.3));
   }
-  const lantern = new THREE.Group();
-  lantern.position.copy(lightAnchor);
-  pillarRoot.add(lantern);
-  // the game's lantern is a closed cage: a smaller, softer halo keeps its stone from washing out
-  const glowK = status.pillar === 'game' ? 0.5 : 1;
-  const lanternGlow = glowSprite(status.pillar === 'game' ? 1.6 : 2.1, 0.75 * glowK);
-  lantern.add(lanternGlow);
-  const lanternLight = new THREE.PointLight('#ffc469', 2.6, 5.5, 1.4);
-  lantern.add(lanternLight);
-  pillarRoot.add(softShadow(1.9, 1.3, 0.3));
+  // the camera frames the lantern's spot either way, so the stage doesn't jump if it is missing
+  const pillarTop = pillarM ? new THREE.Box3().setFromObject(pillarM.object).max.y : 3.43;
+  if (note && !pillarM) note.style.display = 'none';   // the "ref. tower" note points at the lantern
 
-  // ruler, critter, candle
+  // ruler, crab, candles
   const ruler = makeRulerStick();
   scene.add(ruler);
-  scene.add(critterM.object);
-  if (status.critter === 'game') critterM.object.add(softShadow(0.85, 0.6, 0.3));   // the stand-in brings its own
+  const critterRoot = new THREE.Group();
+  scene.add(critterRoot);
+  if (critterM) critterRoot.add(critterM.object, softShadow(0.85, 0.6, 0.3));
   const candleRoot = new THREE.Group();
-  const candleBody = new THREE.Group();
-  if (status.candle === 'placeholder') {   // the stand-in candle sits on a little saucer; the game's stand on the disc
-    const saucer = part(new THREE.CylinderGeometry(0.24, 0.2, 0.05, 24), '#e9d6b6');
-    saucer.position.y = 0.025;
-    candleRoot.add(saucer);
-    candleBody.position.y = 0.05;
-  }
-  candleBody.scale.setScalar(status.candle === 'game' ? 1.3 : candleM.isGlb ? 1 : 1.7);
-  candleBody.add(candleM.object);
-  candleRoot.add(candleBody, softShadow(0.75, 0.5, 0.3));
-  let flameAnchors = findNodes(candleM.object, 'flame_anchor');
-  if (!flameAnchors.length) {   // authored candle without the node: light it at the top of its bounds
-    const top = new THREE.Object3D();
-    top.position.y = new THREE.Box3().setFromObject(candleM.object).max.y;
-    candleM.object.add(top);
-    flameAnchors = [top];
-  }
-  flameAnchors.forEach((anchor, i) => {   // with several candles, one carries the light and the sparks
-    const flame = makeFlame({ light: i === 0, sparks: i === 0, glow: i === 0, phase: i * 1.7 });
-    flame.object.scale.setScalar(anchor.userData.size || 1);
-    anchor.add(flame.object);
-    animated.push(flame);
-  });
   scene.add(candleRoot);
+  if (candleM) {
+    candleM.object.scale.setScalar(1.3);
+    candleRoot.add(candleM.object, softShadow(0.75, 0.5, 0.3));
+    findNodes(candleM.object, 'flame_anchor').forEach((anchor, i) => {   // one candle carries the light and the sparks
+      const flame = makeFlame({ light: i === 0, sparks: i === 0, glow: i === 0, phase: i * 1.7 });
+      flame.object.scale.setScalar(anchor.userData.size || 1);
+      anchor.add(flame.object);
+      animated.push(flame);
+    });
+  }
 
   // drifting dust in the warm light
   const MOTES = 34, motePos = new Float32Array(MOTES * 3), moteSeed = [];
@@ -404,8 +239,8 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
     ruler.position.set(L.ruler[0], 0, L.ruler[1]);
     pillarRoot.position.set(L.pillar[0], 0, L.pillar[1]);
     pillarRoot.rotation.y = L.pillar[2];
-    critterM.object.position.set(L.critter[0], 0, L.critter[1]);
-    critterM.object.rotation.y = L.critter[2];
+    critterRoot.position.set(L.critter[0], 0, L.critter[1]);
+    critterRoot.rotation.y = L.critter[2];
     candleRoot.position.set(L.candle[0], 0, L.candle[1]);
   }
 
@@ -606,8 +441,10 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
 
     for (const m of animated) m.update(elapsed, dt);
     const flick = reducedMotion ? 1 : 1 + Math.sin(elapsed * 2.3) * 0.06 + Math.sin(elapsed * 5.1) * 0.03;
-    lanternLight.intensity = 2.6 * flick;
-    lanternGlow.material.opacity = 0.72 * glowK * flick;
+    if (lanternLight) {
+      lanternLight.intensity = 2.6 * flick;
+      lanternGlow.material.opacity = 0.36 * flick;
+    }
 
     for (let i = 0; i < MOTES; i++) {
       const s = moteSeed[i], y = (s.y + elapsed * s.sp) % 4;
@@ -640,7 +477,6 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
       holder.rotation.y = Math.PI;              // Sky kids face −Z; the stage camera looks from +Z
       holder.add(api.object);
       charRoot.add(holder);
-      charM.object.visible = false;
       kid = { api, holder, base: 0, top: 0 };
       if (!reducedMotion) { spring.x = 0.86; spring.v = 0; }
       spring.target = 1;

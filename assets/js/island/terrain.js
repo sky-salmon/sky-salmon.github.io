@@ -190,21 +190,3 @@ export function makeFlowers(count, avoid = [], heightAt = () => 0) {
   mesh.raycast = () => {};
   return mesh;
 }
-
-export function makePebbles(count) {
-  const palette = ['#f7c6c7', '#bfe0f2', '#fbe3a1', '#d9cdf5', '#f5f1e8'].map(h => new THREE.Color(h));
-  const mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.07, 8, 6), toon('#ffffff'), count);
-  const rand = rng(33), m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), v = new THREE.Vector3();
-  for (let i = 0; i < count; i++) {
-    const r = Math.sqrt(rand()) * (ISLAND_RADIUS - 0.3), a = rand() * Math.PI * 2;
-    const k = 0.6 + rand() * 1.1;
-    s.set(k * 1.3, k * 0.35, k);
-    v.set(Math.cos(a) * r, 0.01, Math.sin(a) * r);
-    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rand() * Math.PI);
-    m.compose(v, q, s);
-    mesh.setMatrixAt(i, m);
-    mesh.setColorAt(i, palette[Math.floor(rand() * palette.length)]);
-  }
-  mesh.raycast = () => {};
-  return mesh;
-}

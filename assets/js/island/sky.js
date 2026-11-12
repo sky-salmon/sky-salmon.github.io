@@ -1,8 +1,7 @@
 // Game models on the home island and the height stage: meshes taken from Sky's own files (assets/glb/),
 // coloured with the game's colour ramps (assets/avatar/tex/) where the mesh's UVs index one, and drawn in the
 // island's toon style.
-// Each maker returns the same shape as its procedural stand-in in models.js; main.js falls back to the stand-in
-// when a file fails to load.
+// Each maker returns { object, update? }; a page leaves a model out when its file fails to load.
 import * as THREE from 'three';
 import { toon, addOutline } from './toon.js';
 import { blobShadow, rng } from './util.js';
@@ -158,21 +157,30 @@ export async function skyFox() {
 // ── bookshelf menu ───────────────────────────────────────────────────────
 // Board tops under each of the six stickers (left, right per row, top row first), in model units.
 const SHELF_BOARDS = [[2.52, 2.6], [1.5, 1.42], [0.42, 0.5]];
+const SHELF_HEIGHT = 4.41;
 
-export async function skyShelf() {
-  const [geo, tex] = await Promise.all([geometry('CharSkyKid_Prop_AP10Bookshelf_01'), ramp('CharRampS10')]);
-  const box = new THREE.Box3().setFromBufferAttribute(geo.attributes.position);
+// the empties decorateShelf() hangs the stickers, their labels and the speech bubble on
+function shelfFrame() {
   const g = new THREE.Group();
-  g.add(toonMesh(geo, toon('#ffffff', { noCache: true, map: tex, side: THREE.DoubleSide })));
-  // the empties decorateShelf() hangs the stickers, their labels and the speech bubble on
   for (let i = 0; i < 6; i++) {
     const col = i % 2, top = SHELF_BOARDS[Math.floor(i / 2)][col], x = (col ? 1 : -1) * 0.66;
     g.add(empty(`slot_${i + 1}`, x, top + 0.52, 0.47, 0.9));
     g.add(empty(`label_${i + 1}`, x, top + 0.14, 0.48, 0.9));
   }
-  g.add(empty('bubble_anchor', -0.9, box.max.y + 0.6, 0));
-  g.add(blobShadow(4.4, 2.2, 0.3));
-  return { object: g };
+  g.add(empty('bubble_anchor', -0.9, SHELF_HEIGHT + 0.6, 0));
+  return g;
+}
+
+export async function skyShelf() {
+  const [geo, tex] = await Promise.all([geometry('CharSkyKid_Prop_AP10Bookshelf_01'), ramp('CharRampS10')]);
+  const g = shelfFrame();
+  g.add(toonMesh(geo, toon('#ffffff', { noCache: true, map: tex, side: THREE.DoubleSide })), blobShadow(4.4, 2.2, 0.3));
+  return { object: g, height: SHELF_HEIGHT };
+}
+
+// The shelf is also the site's menu: if its file fails to load, the stickers still hang where its boards would be.
+export function skyShelfFrame() {
+  return { object: shelfFrame(), height: SHELF_HEIGHT };
 }
 
 // ── ground: grassy mounds and pebbles ────────────────────────────────────
