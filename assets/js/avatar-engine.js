@@ -16,7 +16,13 @@ export function hsvToRgb([h, s, v]) {
   const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
   return [f(5), f(3), f(1)];
 }
-const hsvColor = h => new THREE.Color().setRGB(...hsvToRgb(h), THREE.SRGBColorSpace);
+// Dye / tint HSV is linear colour around a neutral of V 50 (DyeColorDefs "none" = 0,0,50; white_white = 85): scale by 2
+// so "no dye" multiplies by 1. Checked against the game: black_black leaves cloth slate grey, the Robe tint turns its
+// pale-peach ramp orange.
+const hsvColor = h => new THREE.Color().setRGB(...hsvToRgb(h).map(x => 2 * x), THREE.LinearSRGBColorSpace);
+const toSrgb = x => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+/** CSS colour of a dye as it shows on white cloth. */
+export const dyeCss = hsv => `rgb(${hsvToRgb(hsv).map(x => Math.round(255 * toSrgb(x))).join(',')})`;
 const colorOf = c => (Array.isArray(c) ? (c.length === 3 && c.some(x => x > 1) ? hsvColor(c) : new THREE.Color(...c)) : new THREE.Color(1, 1, 1));
 
 export async function createAvatar(canvas, opts = {}) {
@@ -45,7 +51,8 @@ export async function createAvatar(canvas, opts = {}) {
   // Clean clips before use: bone translations other than the hip's don't decode reliably yet (chest/shoulders
   // pushed several times their length), so bones keep their skeleton lengths and only rotate. Cape bones are
   // optionally held at their modelled pose (the game drives them with cloth, not with these keys).
-  const CAPE = /^[LMR]_cap[BF](Root|Tip)$/;
+  // capes skin to the Wing chains (front / side / back); a few to the cap bones
+  const CAPE = /^([LMR]_cap[BF](Root|Tip)|[LMR]_Wing[BFS](Root|Tip)(AUX)?)$/;
   const holdCape = opts.capeFromClips !== true;
   function cleanClip(c) {
     c.tracks = c.tracks.filter(tr => {
@@ -57,6 +64,19 @@ export async function createAvatar(canvas, opts = {}) {
     return c;
   }
   const clips = Object.fromEntries(rg.animations.map(c => [c.name, cleanClip(c)]));
+  // In game cloth lets the cape hang out over the arms; at its modelled pose it reads narrow. Spread the side and
+  // front chains outward a little (fitted to an in-game shot of the Robe: 15° sides, 6° front).
+  if (holdCape) {
+    rig.updateMatrixWorld(true);
+    const fwd = new THREE.Vector3(0, 0, 1), pq = new THREE.Quaternion();
+    for (const [n, deg] of [['L_WingSRoot', -15], ['R_WingSRoot', 15], ['L_WingFRoot', -6], ['R_WingFRoot', 6]]) {
+      const bn = rig.getObjectByName(n);
+      if (!bn || !bn.parent) continue;
+      bn.parent.getWorldQuaternion(pq);
+      const spin = new THREE.Quaternion().setFromAxisAngle(fwd, deg * Math.PI / 180);
+      bn.quaternion.premultiply(pq.clone().invert().multiply(spin).multiply(pq));
+    }
+  }
   const worn = {};          // slot → { name, obj }
   const dyes = {};          // slot → [primary, secondary]
   const gltfCache = new Map(), texCache = new Map(), loadToken = {};
@@ -296,7 +316,8 @@ export async function createAvatar(canvas, opts = {}) {
       const cy = top / 2 - top * 0.02;
       controls.target.set(0, cy, 0);
       const dir = { front: [0, -1], side: [1, 0], back: [0, 1], threeq: [-0.6, -0.8] }[view] || [0, -1];
-      camera.position.set(dir[0] * d, cy + top * 0.06, dir[1] * d);
+      const el = 0.3;                                   // look down ~17°, like the game's follow camera
+      camera.position.set(dir[0] * d, cy + d * el, dir[1] * d);
     }
     controls.update();
   }
