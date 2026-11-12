@@ -157,7 +157,7 @@
           iSeason = col('season'), iGroup = col('group'), iUlt = col('ultimate'), iOrder = col('order'),
           iUsd = col('iap_usd'), iPack = col('iap_pack'), iIap = col('iap_status'),
           iNameZh = col('name_zh'), iNameEn = col('name_en'), iPackZh = col('iap_pack_zh'),
-          iGameSeason = col('game_season'), iGameGroup = col('game_group');
+          iGameSeason = col('game_season'), iGameGroup = col('game_group'), iHidden = col('hidden');
         const cell = (f, i) => (i >= 0 ? (f[i] || '').trim() : '');
         const rows = [];
         lines.slice(1).forEach(line => {
@@ -166,7 +166,7 @@
           if (!dir || !name || (status && status !== 'ok' && status !== 'hidden') || !DIR_CAT[dir]) return;
           const path = dir + '/' + name;
           const fix = fixes ? (fixes[name] || {}) : null;
-          if (fix ? fix.hidden : status === 'hidden') return;
+          if (fix ? fix.hidden : (status === 'hidden' || cell(f, iHidden) === '1')) return;
           let group = cell(f, iGroup), season = iSeason >= 0 ? (cell(f, iSeason) || null) : undefined;
           if (fix) {  // game value + data/items.json correction
             if (iGameGroup >= 0) group = fix.group || cell(f, iGameGroup) || group;

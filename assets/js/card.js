@@ -68,15 +68,28 @@
     s.items.link = [{ k: 'l', id: 'google' }, { k: 'l', id: 'apple' }];
     return s;
   }
-  // Deep-merge saved data over a blank model so new fields always exist.
+  // Deep-merge saved data over a blank model so new fields always exist. The data can come from a share link, so
+  // anything that later reaches markup or CSS is checked here (views, theme colours and wallpapers, image data).
+  const own = (o, k) => typeof k === 'string' && Object.prototype.hasOwnProperty.call(o, k);
+  const SAFE_IMG = /^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/i;
+  const ASSET_ID = /^a[0-9a-z]{6,}$/;
+  function cleanTheme(th) {
+    if (!th || typeof th !== 'object') return null;
+    const o = Object.assign({}, th);
+    if (!/^#[0-9a-f]{6}$/i.test(o.solid)) delete o.solid;
+    if (!(typeof o.wp === 'string' && (ASSET_ID.test(o.wp) || /^preset:[\w-]+$/.test(o.wp))) && o.wp != null) delete o.wp;
+    ['overlay', 'blurPx', 'wpLum'].forEach(k => { if (k in o && !Number.isFinite(o[k] = Number(o[k]))) delete o[k]; });
+    ['mode', 'grad', 'paper', 'font', 'wpName'].forEach(k => { if (k in o && typeof o[k] !== 'string') delete o[k]; });
+    return o;
+  }
   function normalize(raw) {
     const b = blank();
     if (!raw || typeof raw !== 'object' || raw.v !== 3) return null;
     const s = Object.assign(b, raw);
-    s.design = DESIGN[s.design] ? s.design : 'classic';
+    s.design = own(DESIGN, s.design) ? s.design : 'classic';
     s.layout = Object.assign(blank().layout, raw.layout || {});
     const seen = new Set();
-    ['left', 'right'].forEach(k => { s.layout[k] = (Array.isArray(s.layout[k]) ? s.layout[k] : []).filter(id => SECTIONS[id] && !seen.has(id) && seen.add(id)); });
+    ['left', 'right'].forEach(k => { s.layout[k] = (Array.isArray(s.layout[k]) ? s.layout[k] : []).filter(id => own(SECTIONS, id) && !seen.has(id) && seen.add(id)); });
     SEC_IDS.forEach(id => { if (!seen.has(id)) s.layout.left.push(id); });
     s.layout.cols = s.layout.cols === 2 ? 2 : 1;
     if (s.layout.cols === 1 && s.layout.right.length) { s.layout.left.push(...s.layout.right); s.layout.right = []; }
@@ -87,9 +100,11 @@
     s.profile.h = Object.assign({ now: '', tall: '', short: '' }, s.profile.h || {});
     s.items = Object.assign(blank().items, raw.items || {});
     ITEM_SECS.forEach(k => { if (!Array.isArray(s.items[k])) s.items[k] = []; });
-    s.views = Object.assign(blank().views, raw.views || {});
+    s.views = blank().views;
+    Object.entries(raw.views || {}).forEach(([sec, v]) => { if (own(SECTIONS, sec) && (SECTIONS[sec].views || []).includes(v)) s.views[sec] = v; });
     s.titles = Object.assign({}, raw.titles || {});
-    s.themes = Object.assign({}, raw.themes || {});
+    s.themes = {};
+    Object.entries(raw.themes || {}).forEach(([d, th]) => { const c = own(DESIGN, d) && cleanTheme(th); if (c) s.themes[d] = c; });
     return s;
   }
   // One-time import of the basics from the previous canvas-based card.
@@ -103,13 +118,14 @@
     s.profile.cur.ascended = num(d.ascended) || '0'; s.profile.cur.seasonCandle = num(d.season) || '0';
     s.profile.h = { now: d.hNow || '', tall: d.hTall || '', short: d.hShort || '' };
     s.profile.note = String(d.bio || d.note || '').slice(0, 60);
-    if (d.avatar && String(d.avatar).startsWith('data:image')) s.profile.avatar = putAsset(d.avatar);
+    if (d.avatar && SAFE_IMG.test(d.avatar)) s.profile.avatar = putAsset(d.avatar);
     if (d.name) s.title = String(d.name).slice(0, 24);
     return s;
   }
 
   // assets: id → data URL (avatar, uploaded wallpaper, custom icons)
   const assets = store.get(KEY_ASSETS, {}) || {};
+  Object.keys(assets).forEach(k => { if (!ASSET_ID.test(k) || !SAFE_IMG.test(assets[k])) delete assets[k]; });
   let lib = (store.get(KEY_LIB, []) || []).filter(id => assets[id]);
   function putAsset(url) {
     const id = 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -153,12 +169,13 @@
   }
   let commitTimer = 0;
   function commit(now = true) {
-    clearTimeout(commitTimer);
+    clearTimeout(commitTimer); commitTimer = 0;
     if (now) { pushHistory(); save(); scheduleThumbs(); }
     else commitTimer = setTimeout(() => commit(true), 650);
   }
   function stepHistory(dir) {
     flushText();
+    if (commitTimer) commit(true);   // a slider change still waiting to be recorded
     const i = history.index + dir;
     if (i < 0 || i >= history.stack.length) return;
     history.index = i;
@@ -204,7 +221,7 @@
     if (it.k === 'g') { const g = D.PINS.find(x => x.id === it.id) || D.PINS[0]; return { label: g.zh, sub: t('徽章'), html: g.svg }; }
     if (it.k === 'l') { const l = D.LINKS.find(x => x.id === it.id) || D.LINKS[0]; return { label: l.name, sub: t('綁定平台'), html: l.svg }; }
     const url = assetURL(it.id);
-    return { label: t('自訂圖示'), sub: t('我的圖示'), html: url ? `<img src="${url}" alt="" draggable="false">` : '' };
+    return { label: t('自訂圖示'), sub: t('我的圖示'), html: url ? `<img src="${esc(url)}" alt="" draggable="false">` : '' };
   }
   const itemKey = it => it.k + ':' + (it.p || it.id);
   function isEmpty(sec, s) {
@@ -243,7 +260,7 @@
       const sum = list.reduce((a, it) => a + (fmtPrice(it.price) || 0), 0);
       if (hasPrices(s) && !s.totalHidden) total = `<div class="iap-total"><span>TOTAL</span><b>${esc(money(sum, s.currency))}</b></div>`;
     }
-    return `<div class="items" data-sec="${sec}" data-view="${view}">${btns}</div>${total}`;
+    return `<div class="items" data-sec="${sec}" data-view="${esc(view)}">${btns}</div>${total}`;
   }
 
   const hasPrices = s => s.items.iap.some(it => fmtPrice(it.price) !== null);
@@ -262,7 +279,7 @@
       return `<section class="${cls}" data-sec="profile">
         ${clean ? '' : `<span class="cp-tools ed"><button type="button" class="cp-btn" data-act="profile" aria-label="${t('編輯個人資料')}">${ICON.pen}</button></span>`}
         <div class="pf${showAv ? '' : ' no-avatar'}">
-          ${showAv ? `<div class="pf-avatar${av ? '' : ' is-empty'}" ${clean ? '' : `data-act="avatar" role="button" tabindex="0" aria-label="${av ? t('更換頭像') : t('上傳頭像')}"`}>${av ? `<img src="${av}" alt="">` : D.GLYPH.avatar}${!av && !clean ? `<span class="pf-avatar-hint ed">${t('點我加頭像')}</span>` : ''}</div>` : ''}
+          ${showAv ? `<div class="pf-avatar${av ? '' : ' is-empty'}" ${clean ? '' : `data-act="avatar" role="button" tabindex="0" aria-label="${av ? t('更換頭像') : t('上傳頭像')}"`}>${av ? `<img src="${esc(av)}" alt="">` : D.GLYPH.avatar}${!av && !clean ? `<span class="pf-avatar-hint ed">${t('點我加頭像')}</span>` : ''}</div>` : ''}
           <div class="pf-main">
             ${curs ? `<div class="pf-cur">${curs}</div>` : ''}
             ${hasH ? `<div class="pf-height" ${clean ? '' : `data-act="height" role="button" tabindex="0" aria-label="${t('修改身高')}"`}>${D.GLYPH.height}<b>${esc(h.now)}</b>${range ? `<span class="sep">|</span><small>${range}</small>` : ''}</div>` : ''}
@@ -335,10 +352,10 @@
       + `<div class="card-tex"></div><div class="card-deco"></div>`
       + (des.mast ? `<header class="card-mast">${des.mast()}</header>` : '')
       + `<div class="card-cols">${cols.map(([key, ids]) => `<div class="card-col" data-col="${key}">${ids.filter(id => !L.hidden[id]).map(id => panelHTML(id, s, clean)).join('')}</div>`).join('')}</div>`;
-    const t = card.querySelector('.mast-title');
-    if (t) {
-      t.textContent = s.title;
-      if (!clean) { t.setAttribute('contenteditable', 'true'); t.setAttribute('spellcheck', 'false'); t.dataset.ph = 'SKY PROFILE'; t.setAttribute('role', 'textbox'); t.setAttribute('aria-label', t('名片標題')); }
+    const mast = card.querySelector('.mast-title');
+    if (mast) {
+      mast.textContent = s.title;
+      if (!clean) { mast.setAttribute('contenteditable', 'true'); mast.setAttribute('spellcheck', 'false'); mast.dataset.ph = 'SKY PROFILE'; mast.setAttribute('role', 'textbox'); mast.setAttribute('aria-label', t('名片標題')); }
     }
   }
 
@@ -378,7 +395,7 @@
     $$(':scope > .card-cols, :scope > .card-mast', cardEl).forEach(el => contentRO.observe(el));
   }
   function updateMeta() {
-    const W = cardEl.offsetWidth, H = cardEl.offsetHeight;
+    const W = shellEl.offsetWidth, H = shellEl.offsetHeight;   // what the export captures
     $('#stage-size').textContent = `${W} × ${H}`;
     $('#out-size').textContent = `${W * 2} × ${H * 2} px`;
     const d = DESIGN[state.design];
@@ -424,6 +441,9 @@
     // an emptied profile note disappears from the card (and the export); drop just that row
     // instead of re-rendering, so a click already under way elsewhere on the card still lands
     if (b === 'note' && !state.profile.note.trim()) el.closest('.pf-note')?.remove();
+    const kept = { title: state.title, note: state.profile.note, linkNote: state.linkNote, info: state.info }[b]
+      ?? (b.startsWith('secTitle.') ? state.titles[b.slice(9)] : undefined);
+    if (typeof kept === 'string' && kept && el.isConnected && el.textContent.length > kept.length) el.textContent = kept;  // over the limit
     if (dirtyText) { dirtyText = false; commit(true); }
     renderCols();
   });
@@ -444,10 +464,10 @@
     document.execCommand('insertText', false, el.dataset.multiline === 'true' ? text : text.replace(/\s+/g, ' '));
   });
   cardEl.addEventListener('click', e => {
-    const t = e.target.closest('[data-act]');
-    if (!t || previewMode) return;
-    const act = t.dataset.act, sec = t.dataset.sec;
-    if (act === 'add') openPicker(sec, t);
+    const hit = e.target.closest('[data-act]');
+    if (!hit || previewMode) return;
+    const act = hit.dataset.act, sec = hit.dataset.sec;
+    if (act === 'add') openPicker(sec, hit);
     else if (act === 'view') {
       const views = SECTIONS[sec].views, v = state.views[sec] || 'grid';
       state.views[sec] = views[(views.indexOf(v) + 1) % views.length];
@@ -455,10 +475,10 @@
       toast(t('顯示方式：{v}', { v: VIEW_LABEL[state.views[sec]] }), 1200);
       $(`[data-act="view"][data-sec="${sec}"]`, cardEl)?.focus();
     }
-    else if (act === 'item') openPop(sec, +t.dataset.i);
-    else if (act === 'profile') openProfile(t);
-    else if (act === 'height') openProfile(t, 'height');
-    else if (act === 'avatar') { avatarOpener = t; $('#avatar-input').click(); }
+    else if (act === 'item') openPop(sec, +hit.dataset.i);
+    else if (act === 'profile') openProfile(hit);
+    else if (act === 'height') openProfile(hit, 'height');
+    else if (act === 'avatar') { avatarOpener = hit; $('#avatar-input').click(); }
     else if (act === 'total') { state.totalHidden = !state.totalHidden; commit(); renderMain(); $('[data-act="total"]', cardEl)?.focus(); }
     else if (act === 'link-note') {
       state.linkNoteOn = !state.linkNoteOn;
@@ -524,6 +544,8 @@
   let thumbTimer = 0;
   function scheduleThumbs() { clearTimeout(thumbTimer); thumbTimer = setTimeout(renderThumbs, 350); }
   function renderThumbs() {
+    clearTimeout(thumbTimer);
+    if (viewing) return;   // the style strip is hidden while looking at someone's card
     $$('.style-tile', strip).forEach(tile => {
       const card = $('.card', tile), inner = $('.thumb-inner', tile), box = $('.thumb', tile);
       renderCard(card, state, { design: tile.dataset.design, clean: true });
@@ -825,7 +847,6 @@
     if (sec === 'iap') return !!i.iap && D.CLOSET_CATS.includes(i.cat); // items sold in paid packs
     return (SEC_CATS[sec] || []).includes(i.cat);
   }
-  const usdLabel = i => (i.usd && i.usd !== '?' ? 'US$' + i.usd : (i.usd === '?' ? t('價格未知') : ''));
   function openPicker(sec, opener) {
     closePop();
     const meta = SECTIONS[sec];
@@ -876,7 +897,7 @@
   }
   function mineHTML() {
     const ids = lib.filter(id => assets[id]);
-    const btns = ids.map(id => `<span class="pick-wrap" style="position:relative">${pickBtn('u:' + id, `<img src="${assets[id]}" alt="">`, t('自訂圖示'))}<button type="button" class="pick-del" data-del="${id}" aria-label="${t('從圖庫刪除')}">×</button></span>`).join('');
+    const btns = ids.map(id => `<span class="pick-wrap">${pickBtn('u:' + id, `<img src="${esc(assets[id])}" alt="">`, t('自訂圖示'))}<button type="button" class="pick-del" data-del="${esc(id)}" aria-label="${t('從圖庫刪除')}">×</button></span>`).join('');
     return `<div class="picker-group"><p class="picker-group-head">${t('我的圖示')} <span class="mono">${ids.length}</span></p>${ids.length ? `<div class="picker-grid">${btns}</div>` : `<p class="picker-empty">${t('還沒有自己的圖示 — 按「上傳自己的圖示」加入截圖或圖片，會自動裁成正方形。')}</p>`}</div>`;
   }
   const iconImg = path => `<img src="${esc(D.iconURL(path))}" alt="" loading="lazy" decoding="async">`;
@@ -996,7 +1017,7 @@
         <span class="pk-sec">${t('節日活動')}</span>${I.event.map(s => idxBtn(s.key, esc(s.series.replace(/^Days of /, '')), s.packs)).join('')}
         ${I.other.length ? `<span class="pk-sec">${t('其他')}</span>${I.other.map(s => idxBtn(s.key, t('常駐與其他'), s.packs)).join('')}` : ''}
       </nav>
-      <div class="pk-main"><p class="picker-group-head">${title} <span class="mono">${packs.length}</span></p>
+      <div class="pk-main"><p class="picker-group-head">${esc(title)} <span class="mono">${packs.length}</span></p>
         ${packs.length ? [...blocks].map(([y, ps]) => `${blocks.size > 1 && y ? `<p class="pk-year">${esc(y)}</p>` : ''}<div class="pk-packs">${ps.map(tile).join('')}</div>`).join('')
           : `<p class="picker-empty">${t('沒有符合的禮包。')}</p>`}
         <p class="pk-legend"><span><i class="pk-flag" aria-hidden="true"></i>${t('灰點：只在遊戲內購清單或已下架，wiki 沒有對到')}</span></p>
@@ -1220,7 +1241,11 @@
   $('#pop-price').addEventListener('input', e => { const it = popItem(); if (!it) return; const v = e.target.value.replace(/[^\d.]/g, ''); if (v) it.price = v; else delete it.price; popChanged(); });
   $('#pop-currency').addEventListener('change', e => { state.currency = e.target.value; popChanged(true); });
   const setCount = n => { const it = popItem(); if (!it) return; it.n = clamp(n || 1, 1, 9999); $('#pop-count').value = it.n; popChanged(); };
-  $('#pop-count').addEventListener('input', e => setCount(parseInt(e.target.value.replace(/\D/g, ''), 10)));
+  $('#pop-count').addEventListener('input', e => {   // keep what is being typed; tidy the field on change
+    const it = popItem(), n = parseInt(e.target.value.replace(/\D/g, ''), 10);
+    if (it && n >= 1) { it.n = clamp(n, 1, 9999); popChanged(); }
+  });
+  $('#pop-count').addEventListener('change', e => setCount(parseInt(e.target.value.replace(/\D/g, ''), 10)));
   $('#pop-minus').addEventListener('click', () => setCount((popItem()?.n || 1) - 1));
   $('#pop-plus').addEventListener('click', () => setCount((popItem()?.n || 1) + 1));
   $('#pop-dead').addEventListener('change', e => { const it = popItem(); if (!it) return; if (e.target.checked) it.dead = true; else delete it.dead; popChanged(true); });
@@ -1342,7 +1367,7 @@
   });
   $('#pm-cur-all').addEventListener('click', () => {
     const any = Object.values(state.profile.curOn).some(Boolean);
-    state.profile.curOn = any ? {} : { ...CUR_DEFAULT_ON };
+    state.profile.curOn = any ? {} : Object.fromEntries(D.CURRENCIES.map(c => [c.id, true]));
     commit(); renderMain(); syncProfileUI();
   });
   $$('[data-h]').forEach(i => i.addEventListener('input', () => {
@@ -1385,9 +1410,12 @@
     exportPrefs.format = $('#ex-format').value; exportPrefs.scale = +$('#ex-scale').value;
     exportPrefs.quality = +$('#ex-quality').value; exportPrefs.transparent = $('#ex-transparent').checked;
     exportPrefs.name = $('#ex-name').value.trim() || 'sky-profile-{date}';
+    const typing = document.activeElement === $('#ex-name') ? $('#ex-name').value : null;
     store.set(KEY_EXPORT, exportPrefs); syncExportUI();
+    if (typing !== null) $('#ex-name').value = typing;   // don't rewrite the field under the cursor
   }
   ['#ex-format', '#ex-scale', '#ex-quality', '#ex-transparent', '#ex-name'].forEach(s => $(s).addEventListener('input', readExportUI));
+  $('#ex-name').addEventListener('blur', syncExportUI);
   $('#btn-export').addEventListener('click', e => { flushText(); closePop(); syncExportUI(); openModal(exportModal, e.currentTarget); });
   $('#ex-go').addEventListener('click', async () => { readExportUI(); closeModal(exportModal); await doExport(exportPrefs); });
   $('#btn-download').addEventListener('click', () => doExport({ format: 'png', scale: 2, transparent: true, name: exportPrefs.name }));
@@ -1645,7 +1673,7 @@
     const s = normalize(d && d.state);
     if (!s) return false;
     Object.keys(assets).forEach(k => delete assets[k]);
-    Object.entries((d && d.assets) || {}).forEach(([k, v]) => { if (/^a[0-9a-z]{6,}$/.test(k) && /^data:image\//.test(v)) assets[k] = v; });
+    Object.entries((d && d.assets) || {}).forEach(([k, v]) => { if (ASSET_ID.test(k) && SAFE_IMG.test(v)) assets[k] = v; });
     if (Array.isArray(d.lib)) lib = d.lib.filter(id => assets[id]);
     state = s;
     history.stack = []; history.index = -1;
@@ -1656,7 +1684,7 @@
   // keep the shared card being viewed as this device's card; the viewer's own icon library stays
   function adoptShared() {
     const mine = store.get(KEY_ASSETS, {}) || {}, myLib = (store.get(KEY_LIB, []) || []).filter(id => mine[id]);
-    myLib.forEach(id => { if (!assets[id]) assets[id] = mine[id]; });
+    myLib.forEach(id => { if (!assets[id] && ASSET_ID.test(id) && SAFE_IMG.test(mine[id])) assets[id] = mine[id]; });
     lib = myLib;
     flushText();
     if (!(store.set(KEY, state) && store.set(KEY_ASSETS, assets) && store.set(KEY_LIB, lib))) { toast(t('瀏覽器空間不足或封鎖儲存，重新整理後可能遺失內容')); return; }
@@ -1680,8 +1708,8 @@
   renderAll();
   pushHistory(); save();
   // Seasons and categories come from icons.csv; redraw once it is in so saved items show the right ones.
-  D.loadCatalog().then(() => { renderMain(); renderCols(); renderThumbs(); }).catch(() => {});
-  if (document.fonts) document.fonts.ready.then(() => { fitStage(); updateMeta(); renderThumbs(); });
-  addEventListener('load', () => { fitStage(); renderThumbs(); });
+  D.loadCatalog().then(() => { renderMain(); renderCols(); scheduleThumbs(); }).catch(() => {});
+  if (document.fonts) document.fonts.ready.then(() => { fitStage(); updateMeta(); scheduleThumbs(); });
+  addEventListener('load', () => { fitStage(); scheduleThumbs(); });
   window.addEventListener('pageshow', e => { if (e.persisted && !viewing) { state = normalize(store.get(KEY, null)) || state; renderAll(); } });
 })();

@@ -949,7 +949,7 @@
     if (wasPlaying && P.mode === 'listen') play();
   }));
   tp.seek.addEventListener('pointerdown', () => { P.seeking = true; });
-  ['pointerup', 'change'].forEach(t => tp.seek.addEventListener(t, () => { P.seeking = false; }));
+  ['pointerup', 'pointercancel', 'change', 'blur'].forEach(t => tp.seek.addEventListener(t, () => { P.seeking = false; }));
   tp.seek.addEventListener('input', () => {
     if (!P.song) return;
     const target = (Number(tp.seek.value) / 1000) * P.duration;

@@ -2,10 +2,11 @@
 // site's toon look. Returns null when the file is not there yet, so callers can
 // fall back to the procedural placeholder.
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { toon, addOutline } from './toon.js';
 
-const loader = new GLTFLoader();
+// the glTF loader (110 KB) is only fetched once a model is actually listed in the manifest
+let loaderPromise = null;
+const gltfLoader = () => (loaderPromise ||= import('three/addons/loaders/GLTFLoader.js').then(m => new m.GLTFLoader()));
 export const MODEL_BASE = new URL('../../models/', import.meta.url);
 
 // Which models actually loaded vs. fell back — handy for checking what's still missing.
@@ -25,7 +26,7 @@ export async function loadToonModel(name) {
   const url = new URL(`${name}.glb`, MODEL_BASE).href;
   try {
     if (!(await manifest()).has(name)) { modelStatus[name] = 'placeholder'; return null; }
-    const gltf = await loader.loadAsync(url);
+    const gltf = await (await gltfLoader()).loadAsync(url);
     // collect first: adding outline meshes while traversing would make traverse visit (and outline) them too
     const meshes = [];
     gltf.scene.traverse(o => { if (o.isMesh) meshes.push(o); });

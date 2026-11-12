@@ -57,6 +57,7 @@ service cloud.firestore {
       allow create, update: if signedInAs(uid)
         && request.resource.data.keys().hasOnly(['label', 'createdAt'])
         && request.resource.data.label is string && request.resource.data.label.size() < 200
+        && request.resource.data.label == request.auth.token.email   // shown to the admin who approves: can't be made up
         && request.resource.data.createdAt == request.time;
     }
 

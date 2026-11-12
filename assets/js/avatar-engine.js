@@ -1,14 +1,13 @@
 /* candle·kit — 3D Sky kid: the shared skeleton from assets/avatar/, outfit pieces rebound onto it by joint name,
- * the game's ramp / mask / dye colouring, clips, held props, and (when assets/js/avatar-rules.js is present) the
- * game's body-shape and attachment rules. Used by wardrobe.html and the QR character page.
+ * the game's ramp / mask / dye colouring, clips, the carried prop, and the game's body-shape and attachment rules
+ * (assets/js/avatar-rules.js). It has no renderer of its own: the height page's stage adds `kid.object` to its scene
+ * and calls `kid.update(dt)` every frame.
  *
- *   const kid = await createAvatar(canvas, { base: 'assets/avatar/', onStatus })
- *   await kid.wearLook({ pieces: {slot: outfit|null}, dyes: {slot: [primary, secondary]}, clip })
- *   await kid.wear(slot, outfit|null); kid.setDyes(slot, [p, s]); kid.play(clipId); kid.setBody({ height, scale })
- *   kid.index (index.json), kid.clips, kid.worn, kid.snapshot(bg) → PNG blob, kid.frame() re-centres the camera */
+ *   const kid = await createAvatar()                        // loads index.json, the skeleton and the rules
+ *   await kid.wearLook({ pieces: {slot: outfit|null}, dyes: {slot: [primary, secondary]}, clip, body: {height, scale} })
+ *   kid.object, kid.update(dt), kid.headTop(), kid.body, kid.index, kid.rules */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 export function hsvToRgb([h, s, v]) {
@@ -26,48 +25,27 @@ export const dyeCss = hsv => `rgb(${hsvToRgb(hsv).map(x => Math.round(255 * toSr
 const HEAD_TOP = 0.75;  // head bone → top of the skull, in head-bone units (measured on the bare kid: 14.86 vs 14.11)
 const colorOf = c => (Array.isArray(c) ? (c.length === 3 && c.some(x => x > 1) ? hsvColor(c) : new THREE.Color(...c)) : new THREE.Color(1, 1, 1));
 
-// createAvatar(canvas, opts): its own renderer, camera, orbit controls and render loop.
-// createAvatar(null, { host: true }): no renderer — `object` goes into the caller's scene and the caller calls
-// update(dt) every frame (the height page's stage does this).
-export async function createAvatar(canvas, opts = {}) {
+export async function createAvatar(opts = {}) {
   const BASE = opts.base || 'assets/avatar/';
-  const status = opts.onStatus || (() => {});
-  const hosted = !!opts.host;
-  let renderer = null, scene, camera = null, controls = null;
-  if (hosted) scene = new THREE.Group();
-  else {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    scene = new THREE.Scene();
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x8890a0, 1.6));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.8); sun.position.set(-10, 20, -15); scene.add(sun);
-    camera = new THREE.PerspectiveCamera(30, 1, 0.1, 500);
-    camera.position.set(0, 9, -46);  // the kid faces -Z (Sky convention): front view from -Z
-    controls = new OrbitControls(camera, canvas);
-    controls.target.set(0, 7.6, 0);
-    controls.enableDamping = true; controls.minDistance = 10; controls.maxDistance = 120; controls.enablePan = false;
-    controls.update();
-  }
+  const scene = new THREE.Group();
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   const load = url => new Promise((res, rej) => loader.load(url, res, undefined, rej));
 
   const IDX = await (await fetch(BASE + 'index.json', { cache: 'no-cache' })).json();
-  const [rg, rules] = await Promise.all([load(BASE + IDX.skeleton), opts.rules === false ? null : import('./avatar-rules.js').catch(() => null)]);
+  const [rg, rules] = await Promise.all([load(BASE + IDX.skeleton), import('./avatar-rules.js').catch(() => null)]);
   const rig = rg.scene;
   scene.add(rig);
   const mixer = new THREE.AnimationMixer(rig);
   // Clean clips before use: bone translations other than the hip's don't decode reliably yet (chest/shoulders
   // pushed several times their length), so bones keep their skeleton lengths and only rotate. Cape bones are
-  // optionally held at their modelled pose (the game drives them with cloth, not with these keys).
-  // capes skin to the Wing chains (front / side / back); a few to the cap bones
+  // held at their modelled pose (the game drives them with cloth, not with these keys): capes skin to the Wing
+  // chains (front / side / back), a few to the cap bones.
   const CAPE = /^([LMR]_cap[BF](Root|Tip)|[LMR]_Wing[BFS](Root|Tip)(AUX)?)$/;
-  const holdCape = opts.capeFromClips !== true;
   function cleanClip(c) {
     c.tracks = c.tracks.filter(tr => {
       const i = tr.name.lastIndexOf('.'), bone = tr.name.slice(0, i), prop = tr.name.slice(i + 1);
       if (prop === 'position' && bone !== 'M_hip') return false;
-      if (holdCape && CAPE.test(bone)) return false;
+      if (CAPE.test(bone)) return false;
       return true;
     });
     return c;
@@ -75,7 +53,7 @@ export async function createAvatar(canvas, opts = {}) {
   const clips = Object.fromEntries(rg.animations.map(c => [c.name, cleanClip(c)]));
   // In game cloth lets the cape hang out over the arms; at its modelled pose it reads narrow. Spread the side and
   // front chains outward a little (fitted to an in-game shot of the Robe: 15° sides, 6° front).
-  if (holdCape) {
+  {
     rig.updateMatrixWorld(true);
     const fwd = new THREE.Vector3(0, 0, 1), pq = new THREE.Quaternion();
     for (const [n, deg] of [['L_WingSRoot', -15], ['R_WingSRoot', 15], ['L_WingFRoot', -6], ['R_WingFRoot', 6]]) {
@@ -147,15 +125,12 @@ export async function createAvatar(canvas, opts = {}) {
   }
   function unwear(slot) {
     const w = worn[slot]; if (!w) return;
-    (w.obj.userData.attached || []).forEach(o => o.parent && o.parent.remove(o));
+    // each wear makes its own material and skeleton (geometry and textures are shared and stay cached)
+    const free = o => { if (o.material && o.material.dispose) o.material.dispose(); if (o.isSkinnedMesh && o.skeleton) o.skeleton.dispose(); };
+    (w.obj.userData.attached || []).forEach(o => { o.traverse(free); if (o.parent) o.parent.remove(o); });
+    w.obj.traverse(free);
     rig.remove(w.obj);
     delete worn[slot];
-  }
-  // pieces can hide other slots (a one-piece outfit covers the shoes, …)
-  function updateHidden() {
-    const hidden = new Set();
-    Object.values(worn).forEach(w => ((IDX.pieces[w.name] || {}).hides || []).forEach(s => hidden.add(s)));
-    Object.entries(worn).forEach(([s, w]) => { w.obj.visible = !hidden.has(s); (w.obj.userData.attached || []).forEach(o => { o.visible = !hidden.has(s); }); });
   }
   let rulesNotes = [];
   // assets/js/avatar-rules.js (read from the game code): offsets between slots, hat→hair clipping, the carried prop.
@@ -173,16 +148,15 @@ export async function createAvatar(canvas, opts = {}) {
   }
   async function wear(slot, name) {
     const token = (loadToken[slot] = (loadToken[slot] || 0) + 1);
-    if (!name) { unwear(slot); updateHidden(); applyRules(); return; }
+    if (!name) { unwear(slot); applyRules(); return; }
     const info = IDX.pieces[name];
     if (!info) { console.warn('not in index.json:', name); unwear(slot); applyRules(); return; }
-    if (!info.file) { unwear(slot); worn[slot] = { name, obj: new THREE.Group() }; rig.add(worn[slot].obj); updateHidden(); applyRules(); return; }  // "None" pieces
-    status('loading', name);
+    if (!info.file) { unwear(slot); worn[slot] = { name, obj: new THREE.Group() }; rig.add(worn[slot].obj); applyRules(); return; }  // "None" pieces
     let g;
     try {
       if (!gltfCache.has(name)) gltfCache.set(name, load(BASE + info.file));
       g = await gltfCache.get(name);
-    } catch (e) { console.warn(e); gltfCache.delete(name); status('error', name); return; }
+    } catch (e) { console.warn(e); gltfCache.delete(name); return; }
     if (loadToken[slot] !== token) return;  // another piece was picked meanwhile
     const root = new THREE.Group();
     const meshes = [];
@@ -217,10 +191,8 @@ export async function createAvatar(canvas, opts = {}) {
     rig.add(root);
     worn[slot] = { name, obj: root };
     applyDye(slot);
-    updateHidden();
     applyRules();
     if (slot === 'prop') play(clipWanted);
-    status('ready', name);
   }
   const clipLoads = new Map();
   function ensureClip(id) {  // idle_<Attitude> and hold poses live in their own small GLBs (index.json clips[].file)
@@ -264,33 +236,34 @@ export async function createAvatar(canvas, opts = {}) {
     groundY = Number.isFinite(toe) && hip > 5.5 * rootS && toe > 0.25 * rootS ? 0.07 * rootS - toe : 0;
     rig.position.y = groundY; rig.updateMatrixWorld(true);
   }
-  function setDyes(slot, v) { dyes[slot] = v; applyDye(slot); }
   function setBody(b) {
     body = { height: +b.height || 0, scale: +b.scale || 0 };
     if (rules && rules.applyBodyShape) rules.applyBodyShape(THREE, rig, body);
     groundAt = performance.now() + 50;
   }
+  // Resolves true when this look is the one now showing, false when a later wearLook() replaced it meanwhile.
+  let lookGen = 0;
   async function wearLook(look) {
+    const gen = ++lookGen;
     Object.keys(dyes).forEach(k => delete dyes[k]);
     Object.assign(dyes, look.dyes || {});
     const slots = new Set([...Object.keys(worn), ...Object.keys(look.pieces || {})]);
     await Promise.all([...slots].map(s => {
       const n = (look.pieces || {})[s] || null;
-      if (n && worn[s] && worn[s].name === n) { applyDye(s); return null; }
+      if (n && worn[s] && worn[s].name === n) { loadToken[s] = (loadToken[s] || 0) + 1; applyDye(s); return null; }  // also drops an older load still on its way
       return wear(s, n);
     }));
+    if (gen !== lookGen) return false;
     setBody(look.body || { height: 0, scale: 0 });
     await play(look.clip || 'idle');
-    if (!hosted && opts.autoFrame !== false) {  // after the pose and the rules have run for a couple of frames
-      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-      frame(opts.view || 'front');
-    }
+    return gen === lookGen;
   }
 
+  let frameRules = !!(rules && rules.updateAvatarFrame);   // switched off if it ever throws, rather than throwing every frame
   function update(dt) {
     if (rules && rules.restoreAvatarFrame) rules.restoreAvatarFrame(rig);
     mixer.update(Math.min(dt, 0.1));
-    if (rules && rules.updateAvatarFrame) { try { rules.updateAvatarFrame(THREE, rig); } catch (e) { console.warn('frame rules', e); rules.updateAvatarFrame = null; } }
+    if (frameRules) { try { rules.updateAvatarFrame(THREE, rig); } catch (e) { console.warn('frame rules', e); frameRules = false; } }
     if (groundAt && performance.now() >= groundAt) { groundAt = 0; measureGround(); }
   }
   // height of the top of the head (not the hat) above the feet, in the units of the rig's parent
@@ -302,60 +275,5 @@ export async function createAvatar(canvas, opts = {}) {
     const s = h.getWorldScale(v2).y / rig.parent.getWorldScale(v1).y;
     return y + HEAD_TOP * s;
   }
-  if (!hosted) {
-    const resize = () => {
-      const r = canvas.getBoundingClientRect();
-      renderer.setSize(r.width, r.height, false);
-      camera.aspect = r.width / Math.max(1, r.height);
-      camera.updateProjectionMatrix();
-    };
-    new ResizeObserver(resize).observe(canvas);
-    resize();
-    const clock = new THREE.Clock();
-    renderer.setAnimationLoop(() => {
-      update(clock.getDelta());
-      controls.update();
-      renderer.render(scene, camera);
-    });
-  }
-  // camera that fits the kid as it is now (height changes how tall it is): front / side / back / head
-  const tmp = new THREE.Vector3();
-  function frame(view = 'front') {
-    if (hosted) return;
-    rig.updateMatrixWorld(true);
-    const head = rig.getObjectByName('M_head');
-    const headY = head ? head.getWorldPosition(tmp).y : 12;
-    let top = headY + 3.2;                            // hair / hats reach above the head bone: measure the posed meshes
-    const box = new THREE.Box3();
-    Object.entries(worn).forEach(([slot, w]) => { if (slot !== 'prop' && w.obj.visible) w.obj.traverse(o => { if (o.isSkinnedMesh) { o.computeBoundingBox(); box.union(o.boundingBox.clone().applyMatrix4(o.matrixWorld)); } }); });
-    if (!box.isEmpty() && box.max.y > top && box.max.y < headY + 15) top = box.max.y;
-    top += 1.5;  // the bone hooks (offsets, height stretch) aren't in computeBoundingBox: leave room
-    const fov = THREE.MathUtils.degToRad(camera.fov);
-    if (view === 'head') {
-      controls.target.set(0, headY + 0.5, 0);
-      const d = 4.5 / Math.tan(fov / 2);
-      camera.position.set(-d * 0.35, headY + 1.5, -d * 0.94);
-    } else {
-      // fit 0…top with room for the buttons drawn over the top and bottom of the stage
-      const half = top / 2 * 1.22, d = Math.max(half / Math.tan(fov / 2), half / Math.tan(fov / 2) / Math.min(1, camera.aspect));
-      const cy = top / 2 - top * 0.02;
-      controls.target.set(0, cy, 0);
-      const dir = { front: [0, -1], side: [1, 0], back: [0, 1], threeq: [-0.6, -0.8] }[view] || [0, -1];
-      const el = 0.3;                                   // look down ~17°, like the game's follow camera
-      camera.position.set(dir[0] * d, cy + d * el, dir[1] * d);
-    }
-    controls.update();
-  }
-  function snapshot(bg = ['#2a3331', '#111312']) {
-    const w = canvas.width, h = canvas.height, c = document.createElement('canvas');
-    c.width = w; c.height = h;
-    const g = c.getContext('2d');
-    const grad = g.createRadialGradient(w / 2, h * 0.35, 10, w / 2, h / 2, Math.max(w, h) * 0.7);
-    grad.addColorStop(0, bg[0]); grad.addColorStop(1, bg[1]);
-    g.fillStyle = grad; g.fillRect(0, 0, w, h);
-    g.drawImage(canvas, 0, 0);
-    return new Promise(res => c.toBlob(res, 'image/png'));
-  }
-  return { THREE, index: IDX, rig, clips, worn, dyes, camera, controls, scene, renderer, rules, wear, wearLook, play, setDyes, setBody,
-    snapshot, frame, update, headTop, object: scene, get body() { return body; }, get notes() { return rulesNotes; } };
+  return { index: IDX, rules, object: scene, wearLook, update, headTop, get body() { return body; }, get notes() { return rulesNotes; } };
 }

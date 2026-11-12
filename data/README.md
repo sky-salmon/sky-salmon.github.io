@@ -33,8 +33,10 @@ python scripts/build_catalog.py      # validates the three files, regenerates as
 `build_catalog.py` also fills empty `zh_hans` season names with OpenCC; the admin page keeps the last converted name
 and falls back to the Traditional text when the Traditional name changes.
 
-New seasons and new items need an icon rebuild in `sky-fish-mod`, because the icons come from the game files (it
-reads this folder from `../sky-cotl/data`, or from `$SKY_DATA`):
+New items arrive with a game update: admin.html → 遊戲更新 reads a new `Sky.apks` in the browser and commits the
+changed icons, models and `assets/icons/icons.csv` (it tells changed files apart with `assets/content-hashes.json`,
+which it also updates). The same can be done by hand in `sky-fish-mod` (it reads this folder from `../sky-cotl/data`,
+or from `$SKY_DATA`):
 
 ```bash
 python tools/sky_icon_extract.py game/<version>/apk/Sky.apks -o out/site_icons --flat

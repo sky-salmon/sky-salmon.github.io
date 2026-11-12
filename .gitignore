@@ -1,2 +1,3 @@
 .cache/
 *-debug.log
+__pycache__/

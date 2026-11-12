@@ -84,7 +84,7 @@
 
   document.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
-    if (b.dataset.cat) { ui.cat = b.dataset.cat; ui.item = null; renderGrid(); select(null); $('#wd-grid').scrollTop = 0; return; }
+    if (b.dataset.cat) { ui.cat = b.dataset.cat; ui.item = null; renderGrid(); select(null); return; }
     if (b.dataset.item) { select(ui.item === b.dataset.item ? null : b.dataset.item, { scroll: matchMedia('(max-width: 900px)').matches }); return; }
     if (b.dataset.season) { ui.season = b.dataset.season; $('#wd-season').value = ui.season; ui.q = ''; $('#wd-q').value = ''; renderGrid(); return; }
     if (b.hasAttribute('data-close')) select(null);
@@ -95,12 +95,19 @@
   $('#wd-sort').addEventListener('change', e => { ui.sort = e.target.value; renderGrid(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && ui.item) select(null); });
 
+  // the detail panel sticks just under the filter bar, whose height changes with the tabs wrapping
+  const bar = document.querySelector('.wd-bar');
+  if (bar && window.ResizeObserver) new ResizeObserver(() => document.documentElement.style.setProperty('--wd-bar-h', bar.offsetHeight + 'px')).observe(bar);
+
   D.loadCatalog().then(catalog => {
-    ALL = catalog.filter(i => CATS.includes(i.cat));
+    // season pendants are their own group for the card editor ("pass"); in the closet they are necklaces
+    ALL = catalog.map(i => (i.cat === 'pass' ? Object.assign({}, i, { cat: 'neck' }) : i)).filter(i => CATS.includes(i.cat));
     renderSeasons();
     const m = location.hash.match(/item=([^&]+)/);
     if (m) {
-      const name = decodeURIComponent(m[1]), hit = ALL.find(i => i.name === name);
+      let name = '';
+      try { name = decodeURIComponent(m[1]); } catch { /* a mangled link: just show the catalogue */ }
+      const hit = ALL.find(i => i.name === name);
       if (hit) { ui.cat = hit.cat; ui.item = hit.path; }
     } else if (/look=/.test(location.hash)) {
       const bn = $('#wd-banner');
