@@ -8,10 +8,7 @@
  *   tex/…png     ramp / mask textures shared by many outfits
  * A look is { pieces: {slot: outfit}, dyes: {slot: [primary, secondary]}, clip }. It lives in localStorage and in the
  * link (#look=…), so sharing needs no account and no server. */
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { createAvatar, hsvToRgb } from './avatar-engine.js';
 
 const t = window.I18N ? window.I18N.t : (s, v) => (v ? s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
 const { toast, store } = window.Site;
@@ -39,174 +36,12 @@ let look = { pieces: {}, dyes: {}, clip: 'idle' };
 let shared = false;      // showing a look that came in a link
 const ui = { slot: 'cape', q: '', season: 'all' };
 
-// ── 3D ───────────────────────────────────────────────────────────────────────
+// ── 3D (assets/js/avatar-engine.js) ─────────────────────────────────────────
 const canvas = $('#wd-canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-const scene = new THREE.Scene();
-scene.add(new THREE.HemisphereLight(0xffffff, 0x8890a0, 1.6));
-const sun = new THREE.DirectionalLight(0xffffff, 1.8); sun.position.set(-10, 20, -15); scene.add(sun);
-const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 500);
-camera.position.set(0, 9, -46);  // the kid faces -Z (Sky convention): front view from -Z
-const controls = new OrbitControls(camera, canvas);
-controls.target.set(0, 7.6, 0);
-controls.enableDamping = true; controls.minDistance = 14; controls.maxDistance = 90; controls.enablePan = false;
-controls.update();
-const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-const load = url => new Promise((res, rej) => loader.load(url, res, undefined, rej));
-let rig = null, mixer = null, clips = {}, action = null;
-const worn = {};          // slot → { name, obj }
-const gltfCache = new Map();
-const texCache = new Map();
-
-function hsvToRgb([h, s, v]) {
-  s /= 100; v /= 100;
-  const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
-  return [f(5), f(3), f(1)];
-}
-const hsvColor = h => new THREE.Color().setRGB(...hsvToRgb(h), THREE.SRGBColorSpace);
-const colorOf = c => (Array.isArray(c) ? (c.length === 3 && c.some(x => x > 1) ? hsvColor(c) : new THREE.Color(...c)) : new THREE.Color(1, 1, 1));
-function texture(name, srgb) {
-  const def = name && IDX.textures && IDX.textures[name];
-  if (!def) return Promise.resolve(null);
-  const key = name + (srgb ? '|s' : '');
-  if (!texCache.has(key)) texCache.set(key, new Promise(res => new THREE.TextureLoader().load(BASE + def.file, tx => {
-    tx.flipY = false;                                   // glTF UV convention
-    if (def.disableMips) { tx.magFilter = THREE.LinearFilter; tx.minFilter = THREE.LinearFilter; tx.generateMipmaps = false; }  // ramps: the game disables mips
-    tx.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-    res(tx);
-  }, undefined, () => res(null))));
-  return texCache.get(key);
-}
-// The game's Avatar.fs, reduced: rgb = ramp(uv0) · mix(colour0, 1, mask.b), then toward colour1 by mask.r (mask at uv1).
-async function skyMaterial(sh, fallback) {
-  sh = sh || {};
-  const [ramp, mask] = await Promise.all([texture(sh.ramp, true), texture(sh.mask, false)]);
-  const u = {
-    maskTex: { value: mask }, useMask: { value: mask ? 1 : 0 },
-    colour0: { value: colorOf(sh.color0) }, colour1: { value: colorOf(sh.color1) }, useColour1: { value: sh.color1 ? 1 : 0 }
-  };
-  const m = new THREE.MeshStandardMaterial({ map: ramp || (fallback && fallback.map) || null, vertexColors: !ramp && !!(fallback && fallback.vertexColors),
-    color: ramp || (fallback && fallback.map) ? 0xffffff : (fallback ? fallback.color : 0xdddddd), roughness: 0.85, side: THREE.DoubleSide });
-  m.onBeforeCompile = s => {
-    Object.assign(s.uniforms, u);
-    s.vertexShader = s.vertexShader
-      .replace('#include <uv_pars_vertex>', '#include <uv_pars_vertex>\n#ifndef USE_UV1\nattribute vec2 uv1;\n#endif\nvarying vec2 vMaskUv;')
-      .replace('#include <uv_vertex>', '#include <uv_vertex>\nvMaskUv = uv1;');
-    s.fragmentShader = s.fragmentShader
-      .replace('#include <map_pars_fragment>', '#include <map_pars_fragment>\nuniform sampler2D maskTex; uniform float useMask, useColour1; uniform vec3 colour0, colour1; varying vec2 vMaskUv;')
-      .replace('#include <map_fragment>', `#include <map_fragment>
-        vec4 mk = useMask > 0.5 ? texture2D(maskTex, vMaskUv) : vec4(0.0);
-        diffuseColor.rgb *= mix(colour0, vec3(1.0), mk.b);
-        diffuseColor.rgb = mix(diffuseColor.rgb, colour1, mk.r * useColour1);`);
-  };
-  m.userData.u = u;
-  m.userData.sh = sh;
-  return m;
-}
-function applyDye(slot) {
-  const w = worn[slot]; if (!w) return;
-  const sh = (IDX.pieces[w.name] || {}).shader || {}, [p, s] = look.dyes[slot] || [];
-  const dye = id => IDX.dyes.find(d => d.id === id);
-  w.obj.traverse(o => {
-    if (!o.material || !o.material.userData.u) return;
-    const u = o.material.userData.u;
-    u.colour0.value = p != null && dye(p) ? hsvColor(dye(p).hsv) : colorOf(sh.color0);
-    if (s != null && dye(s)) { u.colour1.value = hsvColor(dye(s).hsv); u.useColour1.value = 1; }
-    else { u.colour1.value = colorOf(sh.color1); u.useColour1.value = sh.color1 ? 1 : 0; }
-  });
-}
-
-const loadToken = {};
-async function wear(slot, name) {
-  const token = (loadToken[slot] = (loadToken[slot] || 0) + 1);
-  if (!name) { unwear(slot); updateHidden(); return; }
-  const info = IDX.pieces[name];
-  if (!info) return;
-  if (!info.file) { unwear(slot); worn[slot] = { name, obj: new THREE.Group() }; updateHidden(); return; }  // "None" pieces
-  status(t('載入 {name}…', { name: labelOf(name) }));
-  let g;
-  try {
-    if (!gltfCache.has(name)) gltfCache.set(name, load(BASE + info.file));
-    g = await gltfCache.get(name);
-  } catch (e) { console.warn(e); gltfCache.delete(name); status(t('{name} 載入失敗', { name: labelOf(name) })); return; }
-  if (loadToken[slot] !== token) return;  // another piece was picked meanwhile
-  const root = new THREE.Group();
-  const meshes = [];
-  g.scene.updateMatrixWorld(true);
-  g.scene.traverse(o => { if (o.isMesh) meshes.push(o); });
-  for (const src of meshes) {
-    const mat = await skyMaterial(info.shader, src.material);
-    if (loadToken[slot] !== token) return;
-    let obj;
-    if (src.isSkinnedMesh) {  // rebind the piece's skin to the shared rig's bones, matched by joint name
-      obj = new THREE.SkinnedMesh(src.geometry, mat);
-      src.matrixWorld.decompose(obj.position, obj.quaternion, obj.scale);  // keeps the dequantisation transform
-      root.add(obj);
-      obj.updateMatrixWorld(true);
-      const bones = src.skeleton.bones.map(b => rig.getObjectByName(b.name) || rig.getObjectByName('M_root'));
-      obj.bind(new THREE.Skeleton(bones, src.skeleton.boneInverses), obj.matrixWorld);
-    } else {
-      obj = new THREE.Group();
-      const m = new THREE.Mesh(src.geometry, mat);
-      src.matrixWorld.decompose(m.position, m.quaternion, m.scale);
-      obj.add(m);
-      const p = info.prop || {};
-      obj.position.fromArray(p.position || [0, 0, 0]);
-      if (p.rotation) (p.rotation.length === 4 ? obj.quaternion.fromArray(p.rotation) : obj.rotation.fromArray(p.rotation));
-      if (Array.isArray(p.scale)) obj.scale.fromArray(p.scale); else if (p.scale != null) obj.scale.setScalar(p.scale);
-      (rig.getObjectByName(p.bone || 'L_hand') || rig).add(obj);
-      root.userData.attached = (root.userData.attached || []).concat(obj);
-    }
-    obj.frustumCulled = false;
-  }
-  unwear(slot);
-  rig.add(root);
-  worn[slot] = { name, obj: root };
-  applyDye(slot);
-  updateHidden();
-  if (slot === 'prop') play(look.clip);
-  status('');
-}
-function unwear(slot) {
-  const w = worn[slot]; if (!w) return;
-  (w.obj.userData.attached || []).forEach(o => o.parent && o.parent.remove(o));
-  rig.remove(w.obj);
-  delete worn[slot];
-}
-// pieces can hide other slots (a one-piece outfit covers the feet, …)
-function updateHidden() {
-  const hidden = new Set();
-  Object.values(worn).forEach(w => ((IDX.pieces[w.name] || {}).hides || []).forEach(s => hidden.add(s)));
-  Object.entries(worn).forEach(([s, w]) => { w.obj.visible = !hidden.has(s); (w.obj.userData.attached || []).forEach(o => { o.visible = !hidden.has(s); }); });
-}
-function play(id) {
-  // a held prop brings its hold pose unless an emote is chosen
-  const prop = worn.prop && IDX.pieces[worn.prop.name];
-  const clipId = (id === 'idle' && prop && prop.prop) ? (prop.prop.holdClip && clips[prop.prop.holdClip] ? prop.prop.holdClip : 'idleStand') : id;
-  const clip = clips[clipId] || clips.idle || Object.values(clips)[0];
-  if (!clip || !mixer) return;
-  if (action) action.fadeOut(0.25);
-  action = mixer.clipAction(clip);
-  const def = IDX.clips.find(c => c.id === clip.name);
-  action.reset().setLoop(def && def.loop === false ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
-  action.clampWhenFinished = true;
-  action.fadeIn(0.25).play();
-}
-function resize() {
-  const r = canvas.getBoundingClientRect();
-  renderer.setSize(r.width, r.height, false);
-  camera.aspect = r.width / Math.max(1, r.height);
-  camera.updateProjectionMatrix();
-}
-new ResizeObserver(resize).observe(canvas);
-const clock = new THREE.Clock();
-renderer.setAnimationLoop(() => {
-  if (mixer) mixer.update(Math.min(clock.getDelta(), 0.1));
-  controls.update();
-  renderer.render(scene, camera);
-});
+let kid = null, clips = {};
+const wear = (slot, name) => kid.wear(slot, name);
+const applyDye = slot => kid.setDyes(slot, look.dyes[slot] || []);
+const play = id => kid.play(id);
 
 // ── look: storage + link ─────────────────────────────────────────────────────
 const b64 = s => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -237,9 +72,7 @@ async function applyLook(l) {
   look = { pieces: Object.assign({}, l.pieces), dyes: Object.assign({}, l.dyes || {}), clip: clips[l.clip] ? l.clip : 'idle' };
   Object.keys(look.pieces).forEach(s => { const p = IDX.pieces[look.pieces[s]]; if (!p || !p.file) look.pieces[s] = null; });  // the game's "None" pieces
   REQUIRED.forEach(s => { if (!look.pieces[s] && IDX.defaults && IDX.defaults[s] && (IDX.pieces[IDX.defaults[s]] || {}).file) look.pieces[s] = IDX.defaults[s]; });
-  const slots = new Set([...Object.keys(worn), ...Object.keys(look.pieces)]);
-  await Promise.all([...slots].map(s => (look.pieces[s] ? (worn[s] && worn[s].name === look.pieces[s] ? (applyDye(s), null) : wear(s, look.pieces[s])) : wear(s, null))));
-  play(look.clip);
+  await kid.wearLook(look);
   renderAnims(); renderGrid(); renderDetail();
 }
 
@@ -367,20 +200,12 @@ async function copyLink() {
   try { await navigator.clipboard.writeText(v); toast(t('已複製造型連結')); }
   catch { $('#wd-link').select(); toast(t('請長按連結手動複製')); }
 }
-function shot() {
-  const w = canvas.width, h = canvas.height, c = document.createElement('canvas');
-  c.width = w; c.height = h;
-  const g = c.getContext('2d');
-  const grad = g.createRadialGradient(w / 2, h * 0.35, 10, w / 2, h / 2, Math.max(w, h) * 0.7);
-  grad.addColorStop(0, '#2a3331'); grad.addColorStop(1, '#111312');
-  g.fillStyle = grad; g.fillRect(0, 0, w, h);
-  g.drawImage(canvas, 0, 0);
-  c.toBlob(bl => {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(bl); a.download = 'sky-look.png';
-    document.body.append(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  }, 'image/png');
+async function shot() {
+  const bl = await kid.snapshot();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(bl); a.download = 'sky-look.png';
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 async function openShared(code) {
   let l;
@@ -395,13 +220,12 @@ async function openShared(code) {
 // ── start ────────────────────────────────────────────────────────────────────
 (async () => {
   try {
-    IDX = await (await fetch(BASE + 'index.json', { cache: 'no-cache' })).json();
-    const [rg, catalog] = await Promise.all([load(BASE + IDX.skeleton), D.loadCatalog().catch(() => [])]);
+    const [k, catalog] = await Promise.all([
+      createAvatar(canvas, { base: BASE, onStatus: (st, name) => status(st === 'loading' ? t('載入 {name}…', { name: labelOf(name) }) : st === 'error' ? t('{name} 載入失敗', { name: labelOf(name) }) : '') }),
+      D.loadCatalog().catch(() => [])
+    ]);
+    kid = k; IDX = kid.index; clips = kid.clips;
     catalog.forEach(i => { if (!CAT.has(i.name)) CAT.set(i.name, i); });
-    rig = rg.scene;
-    scene.add(rig);
-    mixer = new THREE.AnimationMixer(rig);
-    clips = Object.fromEntries(rg.animations.map(c => [c.name, c]));
     renderSeasons();
     const m = location.hash.match(/look=([\w-]+)/);
     if (m) await openShared(m[1]);
