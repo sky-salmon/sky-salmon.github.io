@@ -7,6 +7,7 @@ import { loadToonModel, wrapGltf, findNodes, modelStatus } from './gltf.js';
 import { skyKid, skyBench, skyCandles, skyFox, skyShelf, skyShelfFrame, skyButterflies, skyGround } from './sky.js';
 import { savedLook, KEY_LOOK, KEY_INPUT } from '../saved-look.js';
 import { smoothstep, clamp01 } from './util.js';
+import { createPacer, antialias, setStyle } from './pace.js';
 
 // canvas-drawn labels need the webfonts first (don't wait forever if they're blocked)
 if (document.fonts) {
@@ -25,12 +26,12 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: antialias(), alpha: true, powerPreference: 'high-performance' });
 } catch (e) {
   document.body.classList.add('no-webgl');
   throw e;
 }
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+const pacer = createPacer(renderer, { reducedMotion, onPixelRatio: () => resize() });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
@@ -258,17 +259,17 @@ const anchorWorld = new THREE.Vector3(), anchorNdc = new THREE.Vector3();
 
 function updateOverlays() {
   const heroO = 1 - smoothstep(0.05, 0.45, k);
-  hero.style.opacity = heroO;
-  hero.style.transform = `translateY(${(1 - heroO) * -30}px)`;
-  hero.style.visibility = heroO < 0.01 ? 'hidden' : 'visible';
+  setStyle(hero, 'opacity', heroO.toFixed(3));
+  setStyle(hero, 'transform', `translateY(${((1 - heroO) * -30).toFixed(1)}px)`);
+  setStyle(hero, 'visibility', heroO < 0.01 ? 'hidden' : 'visible');
 
   const hintO = 1 - smoothstep(0.12, 0.3, Math.abs(k - 1));
-  hint.style.opacity = hintO;
-  hint.style.visibility = hintO < 0.01 ? 'hidden' : 'visible';
+  setStyle(hint, 'opacity', hintO.toFixed(3));
+  setStyle(hint, 'visibility', hintO < 0.01 ? 'hidden' : 'visible');
 
   const folioO = smoothstep(2.55, 2.95, k);
-  folio.style.opacity = folioO;
-  folio.style.transform = `translate(-50%, -50%) scale(${0.94 + folioO * 0.06})`;
+  setStyle(folio, 'opacity', folioO.toFixed(3));
+  setStyle(folio, 'transform', `translate(-50%, -50%) scale(${(0.94 + folioO * 0.06).toFixed(4)})`);
   folio.classList.toggle('is-open', folioO > 0.6);
 
   backBtn.classList.toggle('is-visible', k > 0.25);
@@ -280,11 +281,11 @@ function updateOverlays() {
   anchorNdc.copy(anchorWorld).project(camera);
   const bubbleO = 1 - smoothstep(0.4, 0.85, k);
   if (anchorNdc.z < 1 && bubbleO > 0.01) {
-    bubble.style.visibility = 'visible';
-    bubble.style.opacity = bubbleO;
-    bubble.style.transform = `translate(${(anchorNdc.x * 0.5 + 0.5) * window.innerWidth}px, ${(-anchorNdc.y * 0.5 + 0.5) * window.innerHeight}px) translate(-50%, -100%)`;
+    setStyle(bubble, 'visibility', 'visible');
+    setStyle(bubble, 'opacity', bubbleO.toFixed(3));
+    setStyle(bubble, 'transform', `translate(${((anchorNdc.x * 0.5 + 0.5) * window.innerWidth).toFixed(1)}px, ${((-anchorNdc.y * 0.5 + 0.5) * window.innerHeight).toFixed(1)}px) translate(-50%, -100%)`);
   } else {
-    bubble.style.visibility = 'hidden';
+    setStyle(bubble, 'visibility', 'hidden');
   }
 }
 
@@ -358,15 +359,20 @@ readScroll();
 k = progressToK(scrollP);
 cameraAt(k, camPos, camTgt);
 
-const clock = new THREE.Clock();
 let elapsed = 0;
-function frame() {
-  const dt = Math.min(clock.getDelta(), 0.05);
+function frame(now) {
+  requestAnimationFrame(frame);
+  // full rate while the camera, the pointer or a hovered sticker is still easing; ~30 fps for the idle ambience
+  const targetK = progressToK(scrollP);
+  const active = Math.abs(targetK - k) > 1e-4 || Math.abs(pointer.x - pointer.sx) > 1e-3 || Math.abs(pointer.y - pointer.sy) > 1e-3
+    || camPos.distanceToSquared(wantPos) > 1e-6 || camTgt.distanceToSquared(wantTgt) > 1e-6
+    || shelf.icons.some(icon => Math.abs(icon.scale.x - (icon === hovered ? 1.12 : 1)) > 1e-3);
+  const dt = pacer.tick(now, active);
+  if (!dt) return;
   elapsed += reducedMotion ? 0 : dt;
   windUniforms.uTime.value = elapsed;
 
   // ease scroll progress and pointer for a soft, weighty camera
-  const targetK = progressToK(scrollP);
   k += (targetK - k) * (1 - Math.exp(-dt * 5));
   pointer.sx += (pointer.x - pointer.sx) * (1 - Math.exp(-dt * 3));
   pointer.sy += (pointer.y - pointer.sy) * (1 - Math.exp(-dt * 3));
@@ -389,8 +395,7 @@ function frame() {
 
   updateOverlays();
   renderer.render(scene, camera);
-  window.__island = { ready: true, k, scrollP };
-  requestAnimationFrame(frame);
+  window.__island = { ready: true, k, scrollP, pixelRatio: pacer.pixelRatio };
 }
 requestAnimationFrame(frame);
 document.body.classList.add('is-ready');
