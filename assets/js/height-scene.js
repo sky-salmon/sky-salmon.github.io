@@ -7,6 +7,7 @@ import { part, toon, addOutline, outlineUniforms } from './island/toon.js';
 import { findNodes } from './island/gltf.js';
 import { makeFlame } from './island/models.js';
 import { skyLantern, skyCrab, skyCandles, skyRocks } from './island/sky.js';
+import { createPacer, antialias, setAttr, setStyle } from './island/pace.js';
 import { canvasTexture, rng } from './island/util.js';
 
 const BASE_H = 2.2;                       // authored character height (units)
@@ -137,8 +138,8 @@ function svgEl(name, attrs = {}, parent) {
 
 // ── mount ───────────────────────────────────────────────────────────────
 export async function mountStage({ container, canvas, svg, tag, tagValue, note, safeRect, reducedMotion }) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: antialias(), alpha: true, powerPreference: 'high-performance' });
+  const pacer = createPacer(renderer, { reducedMotion, onPixelRatio: () => resize() });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setClearColor(0x000000, 0);
 
@@ -274,7 +275,7 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
   const pv = new THREE.Vector3();
   const project = (x, y, z) => { pv.set(x, y, z).project(camera); return [(pv.x + 1) * 0.5 * W, (1 - pv.y) * 0.5 * H]; };
   const pt = p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
-  const setLine = (el, a, b) => { el.setAttribute('x1', a[0].toFixed(1)); el.setAttribute('y1', a[1].toFixed(1)); el.setAttribute('x2', b[0].toFixed(1)); el.setAttribute('y2', b[1].toFixed(1)); };
+  const setLine = (el, a, b) => { setAttr(el, 'x1', a[0].toFixed(1)); setAttr(el, 'y1', a[1].toFixed(1)); setAttr(el, 'x2', b[0].toFixed(1)); setAttr(el, 'y2', b[1].toFixed(1)); };
 
   const STICK_HALF = 0.075, FACE_Z = 0.026;
   function updateOverlay(headY) {
@@ -288,31 +289,31 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
     const cur = left(headY), curR = right(headY);
     for (const lb of labels) {
       const p = right(lb.y);
-      lb.el.setAttribute('x', (p[0] + 6).toFixed(1));
-      lb.el.setAttribute('y', p[1].toFixed(1));
-      lb.el.style.opacity = Math.abs(p[1] - cur[1]) < 16 ? 0 : 1;
+      setAttr(lb.el, 'x', (p[0] + 6).toFixed(1));
+      setAttr(lb.el, 'y', p[1].toFixed(1));
+      setStyle(lb.el, 'opacity', String(Math.abs(p[1] - cur[1]) < 16 ? 0 : 1));
     }
     const yT = kid ? kid.base * kidGrow(2) : charH * SCALE_TALL, yS = kid ? kid.base * kidGrow(-2) : charH * SCALE_SHORT;
     const lT = left(yT), rT = right(yT), lS = left(yS), rS = right(yS);
-    bandPoly.setAttribute('points', [lS, rS, rT, lT].map(pt).join(' '));
+    setAttr(bandPoly, 'points', [lS, rS, rT, lT].map(pt).join(' '));
     setLine(bandTop, [lT[0] - 5, lT[1]], rT);
     setLine(bandBot, [lS[0] - 5, lS[1]], rS);
-    bandTopTxt.setAttribute('x', (lT[0] - 9).toFixed(1)); bandTopTxt.setAttribute('y', lT[1].toFixed(1));
-    bandBotTxt.setAttribute('x', (lS[0] - 9).toFixed(1)); bandBotTxt.setAttribute('y', lS[1].toFixed(1));
-    bandTopTxt.style.opacity = Math.abs(lT[1] - cur[1]) < 12 ? 0 : 1;
-    bandBotTxt.style.opacity = Math.abs(lS[1] - cur[1]) < 12 ? 0 : 1;
+    setAttr(bandTopTxt, 'x', (lT[0] - 9).toFixed(1)); setAttr(bandTopTxt, 'y', lT[1].toFixed(1));
+    setAttr(bandBotTxt, 'x', (lS[0] - 9).toFixed(1)); setAttr(bandBotTxt, 'y', lS[1].toFixed(1));
+    setStyle(bandTopTxt, 'opacity', String(Math.abs(lT[1] - cur[1]) < 12 ? 0 : 1));
+    setStyle(bandBotTxt, 'opacity', String(Math.abs(lS[1] - cur[1]) < 12 ? 0 : 1));
 
     // leader from the top of the character's head to the stick
     const cx = charRoot.position.x, cz = charRoot.position.z;
     const head = project(cx, headY, cz);
     setLine(leader, head, cur);
-    headDot.setAttribute('cx', head[0].toFixed(1)); headDot.setAttribute('cy', head[1].toFixed(1));
-    leadDot.setAttribute('cx', cur[0].toFixed(1)); leadDot.setAttribute('cy', cur[1].toFixed(1));
-    tag.style.translate = `${(curR[0] + 9).toFixed(1)}px ${cur[1].toFixed(1)}px`;
+    setAttr(headDot, 'cx', head[0].toFixed(1)); setAttr(headDot, 'cy', head[1].toFixed(1));
+    setAttr(leadDot, 'cx', cur[0].toFixed(1)); setAttr(leadDot, 'cy', cur[1].toFixed(1));
+    setStyle(tag, 'translate', `${(curR[0] + 9).toFixed(1)}px ${cur[1].toFixed(1)}px`);
 
     if (note) {
       const n = project(pillarRoot.position.x + 0.62, pillarTop * 0.86, pillarRoot.position.z);
-      note.style.translate = `${n[0].toFixed(1)}px ${n[1].toFixed(1)}px`;
+      setStyle(note, 'translate', `${n[0].toFixed(1)}px ${n[1].toFixed(1)}px`);
     }
   }
 
@@ -409,12 +410,15 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
   let visible = true;
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(container);
 
-  const clock = new THREE.Clock();
   let elapsed = 0, frames = 0;
-  function frame() {
+  function frame(now) {
     requestAnimationFrame(frame);
-    const dt = Math.min(clock.getDelta(), 0.05);
     if (!visible && !renderNow) return;
+    // full rate while the height spring or the parallax is still moving; ~30 fps for the idle ambience
+    const active = renderNow || Math.abs(spring.target - spring.x) > 1e-4 || Math.abs(spring.v) > 1e-3
+      || Math.abs(pointer.x - pointer.sx) > 1e-3 || Math.abs(pointer.y - pointer.sy) > 1e-3;
+    const dt = pacer.tick(now, active);
+    if (!dt) return;
     renderNow = false;
     if (!reducedMotion) elapsed += dt;
 
@@ -462,7 +466,7 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
     updateOverlay(kid ? kid.top * spring.x * (1 + stretch) : charH * spring.x * (1 + stretch) + bob);
     renderer.render(scene, camera);
     frames++;
-    window.__heightStage = { ready: true, frames, scale: spring.x, target: spring.target, hasValue, dist };
+    window.__heightStage = { ready: true, frames, scale: spring.x, target: spring.target, hasValue, dist, pixelRatio: pacer.pixelRatio };
   }
   requestAnimationFrame(frame);
 
