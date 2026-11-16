@@ -1,4 +1,4 @@
-/* candle·kit — 3D Sky kid: the shared skeleton from assets/avatar/, outfit pieces rebound onto it by joint name,
+/* sky-salmon — 3D Sky kid: the shared skeleton from assets/avatar/, outfit pieces rebound onto it by joint name,
  * the game's ramp / mask / dye colouring, clips, the carried prop, and the game's body-shape and attachment rules
  * (assets/js/avatar-rules.js). It has no renderer of its own: the height page's stage adds `kid.object` to its scene
  * and calls `kid.update(dt)` every frame.

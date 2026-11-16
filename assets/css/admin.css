@@ -1,4 +1,4 @@
-/* candle·kit admin (admin.html). Layout: tool shell — tab bar + change counter on top; list on the left, editor panel on the right (bottom sheet on phones).
+/* sky-salmon admin (admin.html). Layout: tool shell — tab bar + change counter on top; list on the left, editor panel on the right (bottom sheet on phones).
    Single dark look on purpose: the game icons are white line art and the site's editor is dark. */
 :root {
   --bg: #101211; --panel: #171a19; --panel-2: #1d2120; --row: rgba(255,255,255,.035); --row-hover: rgba(255,255,255,.07);

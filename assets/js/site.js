@@ -1,4 +1,4 @@
-/* candle·kit — shared chrome (header, mobile menu, footer) and small helpers.
+/* sky-salmon — shared chrome (header, mobile menu, footer) and small helpers.
  * Usage: <body data-page="card"> … <script src="assets/js/site.js"></script> (before page scripts). */
 (function () {
   'use strict';
@@ -56,7 +56,7 @@
     const header = document.createElement('header');
     header.className = 'topbar';
     header.innerHTML = `<div class="wrap">
-      <a class="brand" href="${pageHref('index.html')}" aria-label="${t('candle·kit 首頁')}">${MARK}<span>candle·kit</span></a>
+      <a class="brand" href="${pageHref('index.html')}" aria-label="${t('sky-salmon 首頁')}">${MARK}<span>sky-salmon</span></a>
       <nav class="nav" aria-label="${t('主要導覽')}">${links()}</nav>
       <button class="nav-toggle" type="button" aria-label="${t('開啟選單')}" aria-expanded="false" aria-controls="mobile-menu">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
@@ -78,7 +78,7 @@
     footer.className = 'site-footer';
     footer.innerHTML = `<div class="wrap">
       <div class="hand">Made with ♡ for every child of the light</div>
-      <div>candle·kit · ${t('粉絲自製工具，與 thatgamecompany 無關')} · <a href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a></div>
+      <div>sky-salmon · ${t('粉絲自製工具，與 thatgamecompany 無關')} · <a href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a></div>
     </div>`;
     document.body.append(footer);
 

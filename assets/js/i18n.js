@@ -1,4 +1,4 @@
-/* candle·kit — i18n for the card editor.
+/* sky-salmon — i18n for the card editor.
  * Keys are the Traditional Chinese source strings (zh-Hant is the source language and needs no dictionary).
  * Dictionaries come from assets/js/i18n-dict.js, built by scripts/i18n_build.py from i18n/en.json (+ OpenCC zh-Hans).
  * - t(key, vars): translate; {name} placeholders are filled from vars in every language.
