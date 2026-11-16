@@ -290,7 +290,7 @@ export function applyPieceRules(THREE, rig, worn, index) {
 
   // prop: carried on the back unless the page chose a held pose (prop.held / holdClip)
   const prop = entries.find(x => x.slot === 'prop');
-  if (prop && prop.w.obj && prop.e.prop) {
+  if (prop && prop.w.obj && prop.e.prop && prop.e.prop.mode !== 'held') {   // a held prop stays where the engine put it
     const bone = st.bones[prop.e.prop.bone] || st.bones.M_WingBRoot;
     const tr = carriedPropTransform(THREE, A);
     if (prop.w.obj.parent !== bone) bone.add(prop.w.obj);
