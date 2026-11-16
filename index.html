@@ -23,6 +23,11 @@
       <li><a href="https://www.instagram.com/im._.salmon/" target="_blank" rel="noopener">Instagram <span>@im._.salmon</span></a></li>
       <li><a href="https://www.threads.com/@im._.salmon" target="_blank" rel="noopener">Threads <span>@im._.salmon</span></a></li>
     </ul>
+    <figure class="home-video">
+      <video id="home-video" src="assets/video/home.mp4" poster="assets/img/home-video.jpg" width="1280" height="802"
+             autoplay muted loop playsinline preload="auto" aria-label="遊戲裡的魚：戴著巫師帽，蹲在搗蛋節的磚塔牆角"></video>
+      <figcaption>在光遇裡的我</figcaption>
+    </figure>
   </header>
 
   <section class="home-section" aria-labelledby="works-title">
@@ -44,6 +49,13 @@
   </section>
 
 </main>
+<script>
+  // reduced motion: keep the first frame still and let the visitor start the clip
+  (() => {
+    const v = document.getElementById('home-video');
+    if (v && matchMedia('(prefers-reduced-motion: reduce)').matches) { v.removeAttribute('autoplay'); v.pause(); v.controls = true; }
+  })();
+</script>
 <script src="assets/js/site.js"></script>
 </body>
 </html>

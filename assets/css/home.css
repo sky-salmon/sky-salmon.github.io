@@ -5,6 +5,10 @@
 .home-links a { display: inline-flex; gap: 6px; padding: 7px 14px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 14px; font-weight: 600; text-decoration: none; }
 .home-links a:hover { border-color: var(--accent); color: var(--accent); }
 .home-links span { font-weight: 400; color: var(--ink-soft); }
+/* the author's own clip from the game: a still frame shows until it plays, and it plays silent on a loop */
+.home-video { margin: 28px 0 0; }
+.home-video video { display: block; width: 100%; height: auto; aspect-ratio: 1280 / 802; object-fit: cover; border-radius: 18px; background: var(--surface-3); border: 1px solid var(--line); }
+.home-video figcaption { margin-top: 6px; font-family: var(--font-hand); font-size: 19px; font-weight: 600; color: var(--ink-soft); }
 .home-section { margin-top: 48px; }
 .home-h2 { margin: 0 0 14px; font-family: var(--font-serif-tc); font-weight: 400; font-size: 26px; line-height: 1.3; }
 .home-section p { margin: 0 0 10px; color: var(--ink-soft); max-width: 42em; }
