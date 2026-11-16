@@ -5,14 +5,18 @@
   // i18n (assets/js/i18n.js); pages without it keep the Traditional Chinese source text
   const t = window.I18N ? window.I18N.t : (s, v) => (v ? s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
 
-  // the GitHub repository this copy of the site is published from (<owner>.github.io/<repo>/), so links follow a move
+  // the GitHub repository this copy of the site is published from, so links follow a move: <owner>.github.io/<repo>/
+  // for a project site, <owner>.github.io/ for the account's own site (repository <owner>.github.io). The site's root
+  // is two folders above this script (assets/js/site.js), whatever page is open.
   const REPO_URL = (() => {
-    const h = location.hostname.match(/^([^.]+)\.github\.io$/i), seg = location.pathname.split('/').filter(Boolean)[0];
-    if (!h) return 'https://github.com/sky-salmon/im._.salmon';
-    return `https://github.com/${h[1]}/` + (seg && !/\.html?$/.test(seg) ? seg : `${h[1]}.github.io`);
+    const h = location.hostname.match(/^([^.]+)\.github\.io$/i);
+    if (!h) return 'https://github.com/sky-salmon/sky-salmon.github.io';
+    const here = document.currentScript ? document.currentScript.src : location.href;
+    const seg = new URL('../../', here).pathname.split('/').filter(Boolean)[0];
+    return `https://github.com/${h[1]}/` + (seg || `${h[1]}.github.io`);
   })();
   document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('a[href="https://github.com/sky-salmon/im._.salmon"]').forEach(a => { a.href = REPO_URL; });
+    document.querySelectorAll('a[href="https://github.com/sky-salmon/sky-salmon.github.io"]').forEach(a => { a.href = REPO_URL; });
   });
   // Addresses without ".html": GitHub Pages serves /card from card.html. Local servers (python -m http.server) don't,
   // so keep the file names there.

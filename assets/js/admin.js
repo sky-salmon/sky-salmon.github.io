@@ -10,13 +10,16 @@
 (function () {
   'use strict';
   const BRANCH = 'main', API = 'https://api.github.com';
-  // the repository this site is published from: <owner>.github.io/<repo>/. The address wins, so the site keeps
-  // saving to itself after a move; config/github's repo is only used where the address can't tell (custom domain,
-  // local copy).
+  // the repository this site is published from: <owner>.github.io/<repo>/ for a project site, <owner>.github.io/ for
+  // the account's own site (repository <owner>.github.io); the site's root is two folders above this script. The
+  // address wins, so the site keeps saving to itself after a move; config/github's repo is only used where the
+  // address can't tell (custom domain, local copy).
+  const SCRIPT_URL = document.currentScript ? document.currentScript.src : location.href;
   function repoFromLocation() {
-    const h = location.hostname.match(/^([^.]+)\.github\.io$/i), seg = location.pathname.split('/').filter(Boolean)[0];
+    const h = location.hostname.match(/^([^.]+)\.github\.io$/i);
     if (!h) return '';  // custom domain or local copy: the repository comes from config/github or the sign-in form
-    return seg && !/\.html?$/.test(seg) ? `${h[1]}/${seg}` : `${h[1]}/${h[1]}.github.io`;
+    const seg = new URL('../../', SCRIPT_URL).pathname.split('/').filter(Boolean)[0];
+    return seg ? `${h[1]}/${seg}` : `${h[1]}/${h[1]}.github.io`;
   }
   let REPO = repoFromLocation() || (() => { try { return localStorage.getItem('candle.admin.repo') || ''; } catch { return ''; } })();
   const TOKEN_KEY = 'candle.admin.token', DRAFT_KEY = 'candle.admin.draft.v1';
@@ -1076,7 +1079,7 @@
     try {
       if (!$('#repo-row').hidden) {
         const repo = $('#repo').value.trim();
-        if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('repo 格式是 帳號/名稱，例如 sky-salmon/im._.salmon');
+        if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('repo 格式是 帳號/名稱，例如 sky-salmon/sky-salmon.github.io');
         REPO = repo;
       }
       const login = await signIn(t);
