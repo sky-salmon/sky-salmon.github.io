@@ -11,15 +11,7 @@ export function rng(seed) {
   };
 }
 
-// Cheap smooth pseudo-noise in [-1, 1].
-export function noise3(x, y, z, seed = 0) {
-  return (
-    Math.sin(x * 1.7 + seed) * Math.cos(y * 2.3 + seed * 1.3) +
-    Math.sin(z * 1.9 + x * 0.7 + seed * 2.1) * 0.6 +
-    Math.sin((x + y + z) * 3.1 + seed) * 0.25
-  ) / 1.85;
-}
-
+// A canvas drawn once and used as a texture.
 export function canvasTexture(size, draw, h = size) {
   const c = document.createElement('canvas');
   c.width = size; c.height = h;
@@ -29,26 +21,3 @@ export function canvasTexture(size, draw, h = size) {
   tex.anisotropy = 4;
   return tex;
 }
-
-let blobTex = null;
-export function blobShadow(w, d, opacity = 0.32) {
-  blobTex ||= canvasTexture(128, (ctx, s) => {
-    const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
-    g.addColorStop(0, 'rgba(40,52,30,1)');
-    g.addColorStop(0.55, 'rgba(40,52,30,0.55)');
-    g.addColorStop(1, 'rgba(40,52,30,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, s, s);
-  });
-  const m = new THREE.Mesh(
-    new THREE.PlaneGeometry(w, d),
-    new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, opacity, depthWrite: false })
-  );
-  m.rotation.x = -Math.PI / 2;
-  m.position.y = 0.012;
-  m.renderOrder = 1;
-  m.raycast = () => {};
-  return m;
-}
-
-export const smoothstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-export const clamp01 = x => Math.min(1, Math.max(0, x));
