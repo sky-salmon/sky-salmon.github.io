@@ -10,7 +10,9 @@
 (function () {
   'use strict';
   const BRANCH = 'main', API = 'https://api.github.com';
-  // the repository this site is published from: <owner>.github.io/<repo>/ (config/github can override it)
+  // the repository this site is published from: <owner>.github.io/<repo>/. The address wins, so the site keeps
+  // saving to itself after a move; config/github's repo is only used where the address can't tell (custom domain,
+  // local copy).
   function repoFromLocation() {
     const h = location.hostname.match(/^([^.]+)\.github\.io$/i), seg = location.pathname.split('/').filter(Boolean)[0];
     if (!h) return '';  // custom domain or local copy: the repository comes from config/github or the sign-in form
@@ -933,7 +935,7 @@
         }
       } catch (e) { console.warn('legacy token', e); }
     }
-    if (cfg && cfg.repo) REPO = cfg.repo;
+    if (cfg && cfg.repo && !repoFromLocation()) REPO = cfg.repo;
     if (!cfg || !cfg.token) return showSetup('第一次使用：貼上 GitHub 權杖，確認要存檔的 repo。它們會存在只有管理員帳號讀得到的地方，之後任何管理員用 Google 登入就好。');
     fb.deleteDoc(fb.doc(fdb, 'requests', user.uid)).catch(() => {});  // its own access request, if it made one before
     try { open(await signIn(cfg.token)); }
@@ -1074,7 +1076,7 @@
     try {
       if (!$('#repo-row').hidden) {
         const repo = $('#repo').value.trim();
-        if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('repo 格式是 帳號/名稱，例如 chunhao0613/sky-cotl');
+        if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('repo 格式是 帳號/名稱，例如 sky-salmon/im._.salmon');
         REPO = repo;
       }
       const login = await signIn(t);

@@ -8,11 +8,11 @@
   // the GitHub repository this copy of the site is published from (<owner>.github.io/<repo>/), so links follow a move
   const REPO_URL = (() => {
     const h = location.hostname.match(/^([^.]+)\.github\.io$/i), seg = location.pathname.split('/').filter(Boolean)[0];
-    if (!h) return 'https://github.com/chunhao0613/sky-cotl';
+    if (!h) return 'https://github.com/sky-salmon/im._.salmon';
     return `https://github.com/${h[1]}/` + (seg && !/\.html?$/.test(seg) ? seg : `${h[1]}.github.io`);
   })();
   document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('a[href="https://github.com/chunhao0613/sky-cotl"]').forEach(a => { a.href = REPO_URL; });
+    document.querySelectorAll('a[href="https://github.com/sky-salmon/im._.salmon"]').forEach(a => { a.href = REPO_URL; });
   });
   // Addresses without ".html": GitHub Pages serves /card from card.html. Local servers (python -m http.server) don't,
   // so keep the file names there.
