@@ -1,10 +1,11 @@
-// Floating island: grassy top, faceted underside, wind-swept instanced grass,
-// flowers and pastel pebbles.
+// Floating island: grassy top, a rocky underside that cools into the haze below, wind-swept instanced grass and
+// flowers. Coloured like the game's Daylight Prairie.
 import * as THREE from 'three';
 import { toon, addOutline, facet } from './toon.js';
-import { rng, noise3, canvasTexture, blobShadow } from './util.js';
+import { rng, noise3, canvasTexture } from './util.js';
 
 export const ISLAND_RADIUS = 6;
+export const LAWN_EDGE = '#9fcb6e';
 
 export function makeIsland() {
   const R = ISLAND_RADIUS;
@@ -14,7 +15,7 @@ export function makeIsland() {
   const top = new THREE.CircleGeometry(R, 96);
   top.rotateX(-Math.PI / 2);
   const colors = [];
-  const cCenter = new THREE.Color('#dcef9f'), cEdge = new THREE.Color('#a9d277'), c = new THREE.Color();
+  const cCenter = new THREE.Color('#cfe596'), cEdge = new THREE.Color(LAWN_EDGE), c = new THREE.Color();
   const p = top.attributes.position;
   for (let i = 0; i < p.count; i++) {
     const r = Math.hypot(p.getX(i), p.getZ(i)) / R;
@@ -25,14 +26,15 @@ export function makeIsland() {
   const topMesh = new THREE.Mesh(top, toon('#ffffff', { vertexColors: true }));
   group.add(topMesh);
 
-  // rim band (lighter lip) — outlined so the island edge reads as a drawn line
+  // rim band: the turf's edge
   const rimGeo = new THREE.CylinderGeometry(R, R * 0.985, 0.42, 96, 1, false);
   rimGeo.translate(0, -0.21, 0);
-  const rim = new THREE.Mesh(rimGeo, toon('#93c461'));
+  const rim = new THREE.Mesh(rimGeo, toon('#8dbb5f'));
   addOutline(rim);
   group.add(rim);
 
-  // faceted underside: a bulging earth belly that tapers to a point; displacement fades out near the rim
+  // faceted underside: a bulging rock belly that tapers to a point, warm earth under the turf cooling to the
+  // lavender of the haze at its tip; displacement fades out near the rim
   const belly = [[0.0, -3.6], [0.16, -3.15], [0.36, -2.55], [0.57, -1.95], [0.76, -1.38], [0.9, -0.88], [0.985, -0.42]]
     .map(([r, y]) => new THREE.Vector2(r * R, y));
   const under = facet(new THREE.LatheGeometry(belly, 22));
@@ -40,7 +42,7 @@ export function makeIsland() {
   // displace per *unique* position so split faces stay welded
   const key = (x, y, z) => `${x.toFixed(3)},${y.toFixed(3)},${z.toFixed(3)}`;
   const moved = new Map();
-  const uc = [], cTop = new THREE.Color('#86b552'), cBottom = new THREE.Color('#5d8a3a'), tmp = new THREE.Color();
+  const uc = [], cTop = new THREE.Color('#c2ab86'), cBottom = new THREE.Color('#8f8cab'), tmp = new THREE.Color();
   for (let i = 0; i < up.count; i++) {
     const x = up.getX(i), y = up.getY(i), z = up.getZ(i);
     const k = key(x, y, z);
@@ -60,11 +62,6 @@ export function makeIsland() {
   const underMesh = new THREE.Mesh(under, toon('#ffffff', { vertexColors: true }));
   addOutline(underMesh);
   group.add(underMesh);
-
-  // soft shadow far below, like a diorama on a table
-  const ground = blobShadow(R * 2.6, R * 1.5, 0.16);
-  ground.position.set(-0.8, -5.2, 1.5);
-  group.add(ground);
 
   return group;
 }
@@ -91,12 +88,14 @@ export const windUniforms = { uTime: { value: 0 } };
 export function makeGrass(count, avoid = [], heightAt = () => 0) {
   const material = new THREE.ShaderMaterial({
     uniforms: {
+      ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog),
       ...windUniforms,
-      uBase: { value: new THREE.Color('#2c6e24') },
-      uMid: { value: new THREE.Color('#3f8a2c') },
-      uTip: { value: new THREE.Color('#86c24f') }
+      uBase: { value: new THREE.Color('#4c8a3c') },
+      uMid: { value: new THREE.Color('#79b24f') },
+      uTip: { value: new THREE.Color('#d6e78c') }
     },
     vertexShader: /* glsl */`
+      #include <fog_pars_vertex>
       uniform float uTime;
       attribute float h;
       varying float vH;
@@ -111,9 +110,12 @@ export function makeGrass(count, avoid = [], heightAt = () => 0) {
         world.x += w * 0.13;
         world.z += w * 0.07;
         vTint = instanceColor;
-        gl_Position = projectionMatrix * viewMatrix * world;
+        vec4 mvPosition = viewMatrix * world;
+        gl_Position = projectionMatrix * mvPosition;
+        #include <fog_vertex>
       }`,
     fragmentShader: /* glsl */`
+      #include <fog_pars_fragment>
       uniform vec3 uBase; uniform vec3 uMid; uniform vec3 uTip;
       varying float vH;
       varying vec3 vTint;
@@ -121,8 +123,10 @@ export function makeGrass(count, avoid = [], heightAt = () => 0) {
         vec3 c = vH < 0.45 ? mix(uBase, uMid, vH / 0.45) : mix(uMid, uTip, (vH - 0.45) / 0.55);
         gl_FragColor = vec4(c * vTint, 1.0);
         #include <colorspace_fragment>
+        #include <fog_fragment>
       }`,
-    side: THREE.DoubleSide
+    side: THREE.DoubleSide,
+    fog: true
   });
 
   const mesh = new THREE.InstancedMesh(bladeGeometry(), material, count);

@@ -1,8 +1,8 @@
-// Procedural toon props the game has no model for (candle flame, book, sun, rocks), built from primitives,
-// and the stickers the bookshelf menu hangs on its slots. The kid, bench, candles, fox, shelf and butterflies
+// Procedural props the game has no model for (candle flame, book, rocks, the glowing marker), built from
+// primitives, and the round glowing icons the bookshelf menu hangs on its slots. The kid, bench, candles, fox, shelf and butterflies
 // are the game's own (sky.js).
 import * as THREE from 'three';
-import { part, toon, addOutline } from './toon.js';
+import { part, addOutline } from './toon.js';
 import { canvasTexture, blobShadow, rng } from './util.js';
 
 // ── candle with flame, glow and sparks ───────────────────────────────────
@@ -83,41 +83,52 @@ const ICON_DRAW = {
   music(ctx) { ctx.beginPath(); ctx.moveTo(-30, -36); ctx.quadraticCurveTo(-40, 20, 0, 36); ctx.quadraticCurveTo(40, 20, 30, -36); ctx.moveTo(-36, -36); ctx.lineTo(36, -36); ctx.stroke(); ctx.lineWidth = 5; for (const x of [-16, -6, 4, 14]) { ctx.beginPath(); ctx.moveTo(x, -36); ctx.lineTo(x * 0.6, 22); ctx.stroke(); } },
   events(ctx) { ctx.strokeRect(-38, -30, 76, 66); ctx.beginPath(); ctx.moveTo(-38, -12); ctx.lineTo(38, -12); ctx.moveTo(-20, -40); ctx.lineTo(-20, -22); ctx.moveTo(20, -40); ctx.lineTo(20, -22); ctx.stroke(); ctx.beginPath(); for (let i = 0; i < 8; i++) { const r = i % 2 ? 6 : 15, a = -Math.PI / 2 + i * Math.PI / 4; ctx.lineTo(Math.cos(a) * r, 12 + Math.sin(a) * r); } ctx.closePath(); ctx.fill(); },
   gallery(ctx) { ctx.strokeRect(-40, -26, 80, 58); ctx.beginPath(); ctx.arc(0, 4, 16, 0, 7); ctx.stroke(); ctx.fillRect(-18, -36, 22, 10); ctx.beginPath(); ctx.arc(26, -14, 4, 0, 7); ctx.fill(); },
-  about(ctx) { ctx.beginPath(); ctx.moveTo(0, 32); ctx.bezierCurveTo(-46, 4, -26, -38, 0, -14); ctx.bezierCurveTo(26, -38, 46, 4, 0, 32); ctx.fill(); }
+  wardrobe(ctx) {   // a cape on a hanger
+    ctx.beginPath(); ctx.moveTo(0, -24); ctx.lineTo(0, -30); ctx.arc(7, -30, 7, Math.PI, Math.PI * 1.9); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, -24); ctx.lineTo(-38, -6); ctx.lineTo(38, -6); ctx.closePath(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-28, -2); ctx.quadraticCurveTo(-40, 24, -36, 40); ctx.quadraticCurveTo(0, 30, 36, 40); ctx.quadraticCurveTo(40, 24, 28, -2); ctx.closePath(); ctx.fill();
+  }
 };
 
+// The game's own interface draws its icons as fine white lines in a round, dusky glass button with a faint halo.
 function stickerTexture(kind) {
   return canvasTexture(256, (ctx, s) => {
-    const r = (x, y, w, h, rad) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, rad); };
-    r(10, 10, s - 20, s - 20, 46); ctx.fillStyle = '#fbf7ef'; ctx.fill();
-    ctx.setLineDash([14, 10]); ctx.lineWidth = 6; ctx.strokeStyle = '#2a231f'; ctx.stroke(); ctx.setLineDash([]);
-    r(34, 34, s - 68, s - 68, 34); ctx.fillStyle = '#231e1b'; ctx.fill();
-    ctx.translate(s / 2, s / 2); ctx.scale(1.15, 1.15);
-    ctx.strokeStyle = ctx.fillStyle = '#fbf3e4'; ctx.lineWidth = 8; ctx.lineCap = ctx.lineJoin = 'round';
+    const c = s / 2;
+    const halo = ctx.createRadialGradient(c, c, 88, c, c, c);
+    halo.addColorStop(0, 'rgba(255,246,222,0.55)'); halo.addColorStop(1, 'rgba(255,246,222,0)');
+    ctx.fillStyle = halo; ctx.fillRect(0, 0, s, s);
+    const glass = ctx.createRadialGradient(c, c - 30, 10, c, c, 98);
+    glass.addColorStop(0, 'rgba(70,86,128,0.82)'); glass.addColorStop(1, 'rgba(30,40,72,0.88)');
+    ctx.beginPath(); ctx.arc(c, c, 98, 0, Math.PI * 2); ctx.fillStyle = glass; ctx.fill();
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,248,230,0.92)'; ctx.stroke();
+    ctx.translate(c, c); ctx.scale(1.02, 1.02);
+    ctx.strokeStyle = ctx.fillStyle = '#fffaf0'; ctx.lineWidth = 6.5; ctx.lineCap = ctx.lineJoin = 'round';
+    ctx.shadowColor = 'rgba(255,236,190,0.9)'; ctx.shadowBlur = 12;
     ICON_DRAW[kind](ctx);
   });
 }
 
 function labelTexture(text) {
   return canvasTexture(512, (ctx, w, h) => {
-    ctx.fillStyle = '#2a231f';
     ctx.font = '400 58px "NaniFont", "Chiron GoRound TC", "Noto Sans TC", sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(24,34,64,0.75)'; ctx.shadowBlur = 14;
+    ctx.fillStyle = '#fffaf0';
     ctx.fillText(text, w / 2, h / 2 + 2);
   }, 112);
 }
 
 export const SHELF_ITEMS = [
   { kind: 'card', label: '名片產生器', href: 'card.html' },
+  { kind: 'wardrobe', label: '衣櫃圖鑑', href: 'wardrobe.html' },
   { kind: 'height', label: '身高計算', href: 'height.html' },
+  { kind: 'events', label: '活動雷達', href: 'events.html' },
   { kind: 'music', label: '樂譜練習', href: 'music.html' },
-  { kind: 'events', label: '活動倒數', href: 'events.html' },
-  { kind: 'gallery', label: '光影相簿', href: 'gallery.html' },
-  { kind: 'about', label: '關於這裡', href: '#about' }
+  { kind: 'gallery', label: '光影相簿', href: 'gallery.html' }
 ];
 
-// Put sticker icons + labels on the shelf at its slot_N / label_N
-// empties. Returns the clickable icons and the speech-bubble anchor.
+// Hang the round icons + labels on the shelf at its slot_N / label_N empties. Returns the clickable icons and the
+// speech-bubble anchor.
 export function decorateShelf(root) {
   root.updateMatrixWorld(true);
   const find = name => { let n = null; root.traverse(o => { if (o.name === name) n = o; }); return n; };
@@ -175,14 +186,7 @@ export function makeBook() {
   hinge.add(band);
   g.add(blobShadow(1.5, 1.1, 0.35));
 
-  // four-point star marker
-  const s = new THREE.Shape();
-  for (let i = 0; i < 8; i++) {
-    const r = i % 2 ? 0.07 : 0.2, a = i * Math.PI / 4;
-    i ? s.lineTo(Math.cos(a) * r, Math.sin(a) * r) : s.moveTo(r, 0);
-  }
-  const star = part(new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: false }), '#f6cf6e', { emissive: '#7a5a10' });
-  star.geometry.translate(0, 0, -0.02);
+  const star = makeStarMarker();
   g.add(star);
 
   let openAmount = 0;
@@ -193,21 +197,37 @@ export function makeBook() {
       hinge.rotation.z = openAmount * Math.PI * 0.98;
       star.position.set(0, 0.75 + Math.sin(t * 2) * 0.08 + openAmount * 0.6, 0);
       star.scale.setScalar(Math.max(0.001, 1 - openAmount));
-      star.rotation.y = t * 1.2;
+      star.userData.twinkle(t);
     }
   };
 }
 
-// The sparkle marker alone, for floating above an authored book.glb.
+// The marker the game floats over things you can touch: a small four-pointed light in a soft halo.
+// userData.twinkle(t) turns and pulses it.
 export function makeStarMarker() {
-  const s = new THREE.Shape();
-  for (let i = 0; i < 8; i++) {
-    const r = i % 2 ? 0.07 : 0.2, a = i * Math.PI / 4;
-    i ? s.lineTo(Math.cos(a) * r, Math.sin(a) * r) : s.moveTo(r, 0);
-  }
-  const star = part(new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: false }), '#f6cf6e', { emissive: '#7a5a10' });
-  star.geometry.translate(0, 0, -0.02);
-  return star;
+  const starTex = canvasTexture(128, (ctx, s) => {
+    const c = s / 2;
+    ctx.translate(c, c);
+    const core = ctx.createRadialGradient(0, 0, 0, 0, 0, c);
+    core.addColorStop(0, 'rgba(255,255,248,1)'); core.addColorStop(0.18, 'rgba(255,240,200,0.9)'); core.addColorStop(1, 'rgba(255,220,150,0)');
+    ctx.fillStyle = core;
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) { const r = i % 2 ? c * 0.12 : c * 0.98, a = i * Math.PI / 4; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+    ctx.closePath(); ctx.fill();
+  });
+  const g = new THREE.Group();
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.75, fog: false }));
+  halo.scale.setScalar(1.0);
+  const star = new THREE.Sprite(new THREE.SpriteMaterial({ map: starTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
+  star.scale.setScalar(0.55);
+  g.add(halo, star);
+  g.userData.twinkle = t => {
+    star.material.rotation = Math.sin(t * 0.8) * 0.25;
+    const k = 1 + Math.sin(t * 2.6) * 0.08;
+    star.scale.setScalar(0.55 * k);
+    halo.material.opacity = 0.6 + Math.sin(t * 2.6) * 0.15;
+  };
+  return g;
 }
 
 // ── floating faceted rocks ───────────────────────────────────────────────
@@ -231,54 +251,6 @@ export function makeRocks(spots, authored = null) {
         r.position.y = r.userData.base + Math.sin(t * 0.9 + i * 1.7) * 0.12;
         r.rotation.y += 0.004; r.rotation.x += 0.002;
       });
-    }
-  };
-}
-
-// ── hand-drawn sun with twinkling stars ──────────────────────────────────
-export function makeSun() {
-  const g = new THREE.Group();
-  const sunTex = canvasTexture(512, (ctx, s) => {
-    const c = s / 2;
-    const glow = ctx.createRadialGradient(c, c, 60, c, c, c);
-    glow.addColorStop(0, 'rgba(255,236,140,0.85)'); glow.addColorStop(1, 'rgba(255,236,140,0)');
-    ctx.fillStyle = glow; ctx.fillRect(0, 0, s, s);
-    const disc = ctx.createRadialGradient(c - 30, c - 30, 10, c, c, 120);
-    disc.addColorStop(0, '#fff7b8'); disc.addColorStop(1, '#fde467');
-    ctx.fillStyle = disc;
-    ctx.beginPath(); ctx.arc(c, c, 112, 0, Math.PI * 2); ctx.fill();
-    ctx.lineWidth = 9; ctx.strokeStyle = '#2a231f';
-    // slightly wobbly ink line
-    ctx.beginPath();
-    for (let i = 0; i <= 64; i++) {
-      const a = (i / 64) * Math.PI * 2, rr = 112 + Math.sin(a * 5) * 1.6;
-      i ? ctx.lineTo(c + Math.cos(a) * rr, c + Math.sin(a) * rr) : ctx.moveTo(c + rr, c);
-    }
-    ctx.stroke();
-  });
-  const sun = new THREE.Sprite(new THREE.SpriteMaterial({ map: sunTex, transparent: true, depthWrite: false }));
-  sun.scale.setScalar(2.6);
-  g.add(sun);
-
-  const starTex = canvasTexture(64, (ctx, s) => {
-    ctx.translate(s / 2, s / 2); ctx.fillStyle = '#fbd85a';
-    ctx.beginPath();
-    for (let i = 0; i < 8; i++) { const r = i % 2 ? 6 : 28, a = i * Math.PI / 4 - Math.PI / 2; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
-    ctx.closePath(); ctx.fill();
-  });
-  const stars = [];
-  for (let i = 0; i < 9; i++) {
-    const st = new THREE.Sprite(new THREE.SpriteMaterial({ map: starTex, transparent: true, depthWrite: false }));
-    const a = (i / 9) * Math.PI * 2;
-    st.position.set(Math.cos(a) * 1.15, Math.sin(a) * 1.15, 0.01);
-    st.userData.phase = i * 0.7;
-    g.add(st); stars.push(st);
-  }
-  return {
-    object: g,
-    update(t) {
-      stars.forEach(st => st.scale.setScalar(0.22 + Math.sin(t * 2.2 + st.userData.phase) * 0.07));
-      g.rotation.z = Math.sin(t * 0.3) * 0.05;
     }
   };
 }

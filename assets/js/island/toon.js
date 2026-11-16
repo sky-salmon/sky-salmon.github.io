@@ -1,14 +1,31 @@
-// Toon look: stepped lighting + screen-space-constant ink outlines (inverted hull).
+// Two looks share these helpers:
+// - 'toon' (the height page): stepped lighting + screen-space-constant ink outlines (inverted hull);
+// - 'soft' (the home island, in the game's own manner): smooth wrapped light with lifted, cool shadows and no
+//   outlines. A page picks one with setLook() before it builds anything.
 import * as THREE from 'three';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+
+let soft = false;
+export function setLook(name) { soft = name === 'soft'; }
 
 let gradientMap = null;
 export function getGradientMap() {
   if (gradientMap) return gradientMap;
-  // four soft tones — keeps the pastel, illustrated feel rather than harsh cel bands
-  const data = new Uint8Array([150, 195, 232, 255]);
+  let data;
+  if (soft) {
+    // MeshToonMaterial looks this up at dot(N, L) * 0.5 + 0.5 (a half-Lambert wrap): a smooth ramp whose dark end
+    // stays well lifted, so a shaded side reads as soft daylight rather than a cel band
+    data = new Uint8Array(64);
+    for (let i = 0; i < data.length; i++) {
+      const x = i / (data.length - 1), k = x * x * (3 - 2 * x);
+      data[i] = Math.round(255 * (0.42 + 0.58 * k));
+    }
+  } else {
+    // four soft tones — keeps the pastel, illustrated feel rather than harsh cel bands
+    data = new Uint8Array([150, 195, 232, 255]);
+  }
   gradientMap = new THREE.DataTexture(data, data.length, 1, THREE.RedFormat);
-  gradientMap.minFilter = gradientMap.magFilter = THREE.NearestFilter;
+  gradientMap.minFilter = gradientMap.magFilter = soft ? THREE.LinearFilter : THREE.NearestFilter;
   gradientMap.generateMipmaps = false;
   gradientMap.needsUpdate = true;
   return gradientMap;
@@ -66,6 +83,7 @@ function outlineGeometry(geometry) {
 }
 
 export function addOutline(mesh) {
+  if (soft) return null;
   const o = new THREE.Mesh(outlineGeometry(mesh.geometry), outlineMaterial);
   o.raycast = () => {};
   o.name = 'outline';
@@ -80,7 +98,7 @@ export function facet(geometry) {
   return g;
 }
 
-// Convenience: toon mesh with outline.
+// Convenience: toon mesh with outline (none in the soft look).
 export function part(geometry, color, { outline = true, flat = false, ...matOpts } = {}) {
   if (flat) geometry = facet(geometry);
   const mesh = new THREE.Mesh(geometry, toon(color, matOpts));

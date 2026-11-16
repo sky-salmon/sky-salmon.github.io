@@ -187,7 +187,7 @@ export function skyShelfFrame() {
 // The game has no grass model (its engine grows the blades), so the blades stay ours; the lawn's low mounds are
 // the game's soil patch and the pebbles its small rock cluster. `avoid` = ellipses {x, z, rx, rz} to keep clear.
 // heightAt(x, z) tells the grass and flowers how far a mound lifts the ground there.
-const PEBBLE_TINTS = ['#f7c6c7', '#bfe0f2', '#fbe3a1', '#d9cdf5', '#f5f1e8'];
+const PEBBLE_TINTS = ['#efe7d8', '#e2dccf', '#f4eee2', '#d9d3c8', '#ebe2d0'];   // pale stone, as in the game
 
 export async function skyGround(radius, avoid = []) {
   const [mound, rocks] = await Promise.all([geometry('SoilPatch'), geometry('SkyRockCluster')]);
@@ -205,14 +205,14 @@ export async function skyGround(radius, avoid = []) {
 
   // the patch is a lens 1 unit in radius and 0.22 high
   const MOUND_R = 1.35, MOUND_Y = 0.85, SINK = 0.012, PATCH_H = 0.22;
-  const moundSpots = spots(8, MOUND_R, radius - MOUND_R - 0.25), edge = new THREE.Color('#a9d277'), hills = [];
+  const moundSpots = spots(8, MOUND_R, radius - MOUND_R - 0.25), edge = new THREE.Color('#9fcb6e'), hills = [];
   const mounds = new THREE.InstancedMesh(mound, toon('#ffffff'), moundSpots.length);
   moundSpots.forEach(([x, z], i) => {
     const k = MOUND_R * (0.7 + rand() * 0.3), kz = k * (0.8 + rand() * 0.2), turn = rand() * Math.PI * 2;
     m.compose(v.set(x, -SINK, z), q.setFromAxisAngle(up, turn), s.set(k, MOUND_Y, kz));
     mounds.setMatrixAt(i, m);
     hills.push({ x, z, cos: Math.cos(turn), sin: Math.sin(turn), k, kz });
-    // the lawn's own green out here (terrain.js), so a mound reads as a soft rise rather than a patch
+    // the lawn's own edge green (terrain.js LAWN_EDGE), so a mound reads as a soft rise rather than a patch
     mounds.setColorAt(i, c.copy(edge).multiplyScalar(0.97 + rand() * 0.04));
   });
   mounds.raycast = () => {};

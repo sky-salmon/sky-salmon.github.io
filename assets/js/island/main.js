@@ -1,8 +1,10 @@
 // Floating-island home: scene assembly, render loop and scroll-driven camera.
+// Drawn in the game's own manner (soft light, a sky and a cloud sea, motes of light), not the height page's ink.
 import * as THREE from 'three';
-import { outlineUniforms } from './toon.js';
+import { setLook } from './toon.js';
 import { makeIsland, makeGrass, makeFlowers, windUniforms, ISLAND_RADIUS } from './terrain.js';
-import { makeFlame, decorateShelf, makeBook, makeStarMarker, makeRocks, makeSun } from './models.js';
+import { makeFlame, decorateShelf, makeBook, makeStarMarker, makeRocks } from './models.js';
+import { SKY, makeSkyDome, makeCloudSea, makeMotes, cloudUniforms, moteUniforms } from './atmos.js';
 import { loadToonModel, wrapGltf, findNodes, modelStatus } from './gltf.js';
 import { skyKid, skyBench, skyCandles, skyFox, skyShelf, skyShelfFrame, skyButterflies, skyGround } from './sky.js';
 import { savedLook, KEY_LOOK, KEY_INPUT } from '../saved-look.js';
@@ -13,20 +15,20 @@ import { createPacer, antialias, setStyle } from './pace.js';
 if (document.fonts) {
   await Promise.race([
     Promise.all([
-      document.fonts.load('400 58px "NaniFont"', '名片產生器身高計算樂譜練習活動倒數光影相簿關於這裡'),
-      document.fonts.load('600 26px "Caveat"', 'Toolbox')
+      document.fonts.load('400 58px "NaniFont"', '名片產生器衣櫃圖鑑身高計算活動雷達樂譜練習光影相簿')
     ]).catch(() => {}),
     new Promise(r => setTimeout(r, 2500))
   ]);
 }
 
+setLook('soft');
 const canvas = document.getElementById('scene');
 const isSmall = () => window.innerWidth / window.innerHeight < 0.8;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: antialias(), alpha: true, powerPreference: 'high-performance' });
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: antialias(), powerPreference: 'high-performance' });
 } catch (e) {
   document.body.classList.add('no-webgl');
   throw e;
@@ -35,16 +37,21 @@ const pacer = createPacer(renderer, { reducedMotion, onPixelRatio: () => resize(
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 200);
+const camera = new THREE.PerspectiveCamera(30, 1, 0.2, 700);
+scene.fog = new THREE.Fog(SKY.horizon, SKY.fogNear, SKY.fogFar);
 
-// lighting: bright, warm, low contrast — the toon ramp does the stylisation
-scene.add(new THREE.HemisphereLight('#fff8ec', '#b9cf9a', 1.5));
-const sunLight = new THREE.DirectionalLight('#fff0d6', 2.4);
+// daylight: a warm sun, cool sky light from above, a little green bounced up from the lawn
+scene.add(new THREE.HemisphereLight('#eef3ff', '#c9d8a2', 1.45));
+const sunLight = new THREE.DirectionalLight('#fff0d6', 2.3);
 sunLight.position.set(-6, 10, 7);
 scene.add(sunLight);
-const fill = new THREE.DirectionalLight('#dfe9ff', 0.6);
+const fill = new THREE.DirectionalLight('#d6e4ff', 0.6);
 fill.position.set(8, 4, -6);
 scene.add(fill);
+
+// the sky, the cloud sea far below and the motes are cheap and show at once; the models load into them
+const dome = makeSkyDome();
+scene.add(dome.object, makeCloudSea({ small: isSmall(), islandRadius: ISLAND_RADIUS }).object);
 
 // ── assemble the island ─────────────────────────────────────────────────
 const world = new THREE.Group();
@@ -187,7 +194,7 @@ if (bookM.isGlb) {   // authored book: scrub its `open` clip and float a sparkle
   bookM.update = (t, dt) => {
     star.position.set(0, 0.75 + Math.sin(t * 2) * 0.08 + amount * 0.6, 0);
     star.scale.setScalar(Math.max(0.001, 1 - amount));
-    star.rotation.y = t * 1.2;
+    star.userData.twinkle(t);
     base(t, dt);
   };
 }
@@ -196,7 +203,7 @@ place(bookM, LAYOUT.book);
 const ROCK_SPOTS = [[1.75, 2.6, -1.3, 0.16], [1.35, 1.95, -0.9, 0.11], [5.4, 3.1, -2.6, 0.13], [-4.6, 1.6, -1.8, 0.12]];
 place(makeRocks(ROCK_SPOTS, rocksGltf ? findNodes(rocksGltf.scene, 'rock_') : null));
 window.__models = modelStatus;
-const sun = place(makeSun(), { x: -3.2, y: 4.5, z: -4.0 });
+world.add(makeMotes(isSmall() ? 45 : 70, ISLAND_RADIUS + 2).object);
 if (fliesM) place(fliesM);
 
 // ── camera keyframes ────────────────────────────────────────────────────
@@ -347,10 +354,8 @@ function resize() {
   camera.aspect = w / h;
   camera.fov = isSmall() ? 40 : 30;
   camera.updateProjectionMatrix();
-  const dpr = renderer.getPixelRatio();
-  outlineUniforms.uResolution.value.set(w * dpr, h * dpr);
-  outlineUniforms.uThickness.value = (isSmall() ? 1.4 : 1.75) * dpr;
-  sun.object.position.x = isSmall() ? -2.4 : -3.2;
+  // a mote's size in pixels = world size × this ÷ distance
+  moteUniforms.uScale.value = h * renderer.getPixelRatio() / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
   KEYS = keyframes();
 }
 window.addEventListener('resize', resize);
@@ -370,7 +375,7 @@ function frame(now) {
   const dt = pacer.tick(now, active);
   if (!dt) return;
   elapsed += reducedMotion ? 0 : dt;
-  windUniforms.uTime.value = elapsed;
+  windUniforms.uTime.value = cloudUniforms.uTime.value = moteUniforms.uTime.value = elapsed;
 
   // ease scroll progress and pointer for a soft, weighty camera
   k += (targetK - k) * (1 - Math.exp(-dt * 5));
@@ -385,6 +390,7 @@ function frame(now) {
   camTgt.lerp(wantTgt, 1 - Math.exp(-dt * 6));
   camera.position.copy(camPos);
   camera.lookAt(camTgt);
+  dome.follow(camera);
 
   const modelDt = reducedMotion ? 0 : dt;
   for (const m of animated) m.update(elapsed, modelDt);
