@@ -1,4 +1,4 @@
-/* candle·kit — 名片產生器 (Sky Profile card editor).
+/* sky-salmon — 名片產生器 (Sky Profile card editor).
  * The card is plain DOM edited in place (contenteditable + click targets) and rasterised with
  * html2canvas on export. State lives in localStorage; images (avatar, wallpaper, custom icons)
  * are kept in a separate asset store so undo snapshots stay small. */

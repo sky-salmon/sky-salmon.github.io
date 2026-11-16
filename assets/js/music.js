@@ -472,7 +472,7 @@
 
   function toCommunity(song) {
     return {
-      name: song.name, author: song.author || '', transcribedBy: 'candle·kit', bpm: song.bpm || 120,
+      name: song.name, author: song.author || '', transcribedBy: 'sky-salmon', bpm: song.bpm || 120,
       bitsPerPage: 16, pitchLevel: 0, isComposed: true,
       songNotes: song.notes.map(([t, k]) => ({ time: t, key: '1Key' + k }))
     };

@@ -1,4 +1,4 @@
-/* candle·kit — static data for the card editor: item catalogue (assets/icons), season names,
+/* sky-salmon — static data for the card editor: item catalogue (assets/icons), season names,
  * small SVG glyphs, colour/gradient/font presets and procedurally drawn wallpapers & textures.
  * Every SVG here carries explicit colours so html2canvas can rasterise it on its own. */
 (function () {

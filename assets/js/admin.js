@@ -1,4 +1,4 @@
-/* candle·kit — catalogue admin (admin.html).
+/* sky-salmon — catalogue admin (admin.html).
  * Edits data/seasons.json, data/items.json and data/packs.json and commits them straight to GitHub.
  *
  * Access: Google sign-in (Firebase). Admin accounts are listed in Firestore config/admins (plus rootAdmins() in
@@ -950,7 +950,7 @@
   }
   function tokenLink() {
     const owner = REPO.split('/')[0];
-    $('#token-link').href = 'https://github.com/settings/personal-access-tokens/new?name=candle-kit%20admin&description=' +
+    $('#token-link').href = 'https://github.com/settings/personal-access-tokens/new?name=sky-salmon%20admin&description=' +
       encodeURIComponent(REPO + ' 目錄管理頁') + '&target_name=' + encodeURIComponent(owner) + '&expires_in=366&contents=write';
     $('#token-repo').textContent = REPO.split('/')[1];
   }
