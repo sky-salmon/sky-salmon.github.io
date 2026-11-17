@@ -171,6 +171,7 @@ export async function createAvatar(opts = {}) {
     for (const src of meshes) {
       const mat = await skyMaterial(info.shader, src.material);
       if (loadToken[slot] !== token) return;
+      mat.userData.slot = slot;   // for a page that treats the pieces differently (the home stage's lighting)
       let obj;
       if (src.isSkinnedMesh) {  // rebind the piece's skin to the shared rig's bones, matched by joint name
         obj = new THREE.SkinnedMesh(src.geometry, mat);
