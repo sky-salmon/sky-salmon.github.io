@@ -369,10 +369,18 @@
     fitStage();
     updateMeta();
   }
+  const stageCol = frameEl.closest('.stage-col'), wideMQ = matchMedia('(min-width: 961px)');
+  const PIN_TOP = 76, MIN_FIT = 0.62;
   function fitStage() {
     const avail = frameEl.clientWidth - parseFloat(getComputedStyle(frameEl).paddingLeft) * 2;
     const w = shellEl.offsetWidth, h = shellEl.offsetHeight;
-    const k = Math.min(1, avail / w);
+    let k = Math.min(1, avail / w), pin = false;
+    if (wideMQ.matches && !viewing && stageCol) {
+      const chrome = stageCol.offsetHeight - scaleEl.offsetHeight;   // everything in the column but the card
+      const kH = (innerHeight - PIN_TOP - 14 - chrome) / h;
+      if (Math.min(k, kH) >= MIN_FIT) { k = Math.min(k, kH); pin = true; }
+    }
+    if (stageCol) stageCol.classList.toggle('is-pinned', pin);
     shellEl.style.transform = k < 1 ? `scale(${k})` : '';
     scaleEl.style.width = w * k + 'px';
     scaleEl.style.height = h * k + 'px';
@@ -386,6 +394,7 @@
     if (Number.isFinite(h) && Math.abs(h - Math.round(h)) > .001) card.style.minHeight = Math.max(Math.ceil(h), state.size.h || 0) + 'px';
   }
   new ResizeObserver(() => fitStage()).observe(frameEl);
+  addEventListener('resize', () => fitStage());
   new ResizeObserver(() => { fitStage(); updateMeta(); }).observe(cardEl);
   // The card's own box can't report shrinking content (its min-height holds it), so watch the
   // content — fonts arriving late or typed text — and re-snap from there.
@@ -565,6 +574,7 @@
     });
     if (focus) tab.focus();
     store.set(KEY_TAB, tab.id);
+    if (tab.id === 'tab-style') scheduleThumbs();   // the thumbnails measure their box, which a hidden tab doesn't have
   }
   tabs.forEach((t, i) => {
     t.addEventListener('click', () => selectTab(t));
@@ -599,7 +609,7 @@
     const hidden = !!state.layout.hidden[id], meta = SECTIONS[id], name = state.titles[id] || meta.title;
     return `<li class="sec-row${hidden ? ' is-hidden' : ''}" data-sec="${id}">
       <button type="button" class="row-btn eye-btn" data-act="eye" aria-pressed="${!hidden}" aria-label="${hidden ? t('顯示') : t('隱藏')} ${esc(name)}">${hidden ? EYE_OFF : EYE}</button>
-      <span class="name">${esc(name)}${isEmpty(id, state) && !hidden ? `<span class="empty-tag">${t('（空）')}</span>` : ''}</span>
+      <span class="name">${esc(name)}${meta.zh && meta.zh !== name ? `<small class="zh-tag">${esc(meta.zh)}</small>` : ''}${isEmpty(id, state) && !hidden ? `<span class="empty-tag">${t('（空）')}</span>` : ''}</span>
       <button type="button" class="row-btn handle" aria-label="${t('拖曳或用方向鍵移動：{name}', { name: esc(name) })}" aria-roledescription="${t('可拖曳')}">${GRIP}</button>
     </li>`;
   }
