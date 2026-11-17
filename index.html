@@ -25,7 +25,6 @@
       <figcaption class="hero-note">這是一條魚</figcaption>
     </div>
     <div class="hero-light" aria-hidden="true"></div>
-    <canvas class="hero-motes" id="hero-motes" aria-hidden="true"></canvas>
   </figure>
   <button class="hero-pause" id="hero-pause" type="button" aria-label="暫停影片" data-state="playing">
     <svg class="i-pause" viewBox="0 0 14 14" aria-hidden="true"><rect x="2.5" y="2" width="3" height="10" rx="1" fill="currentColor"/><rect x="8.5" y="2" width="3" height="10" rx="1" fill="currentColor"/></svg>
@@ -41,102 +40,59 @@
         <li><a href="https://www.threads.com/@im._.salmon" target="_blank" rel="noopener">Threads <span>@im._.salmon</span></a></li>
       </ul>
     </div>
-    <!-- the seven pieces worn in the clip, read from the author's outfit QR -->
-    <div class="outfit">
-      <span class="outfit-k">影片裡這一套</span>
-      <ul class="outfit-list">
-        <li><a href="wardrobe.html" aria-label="斗篷，搗蛋節"><img src="assets/img/home/i-cape.png" alt="" width="96" height="96"><span class="tip">斗篷 · 搗蛋節</span></a></li>
-        <li><a href="wardrobe.html" aria-label="髮型，搗蛋節的巫師帽"><img src="assets/img/home/i-hair.png" alt="" width="96" height="96"><span class="tip">髮型 · 搗蛋節</span></a></li>
-        <li><a href="wardrobe.html" aria-label="項鍊，姆明季"><img src="assets/img/home/i-neck.png" alt="" width="96" height="96"><span class="tip">項鍊 · 姆明季</span></a></li>
-        <li><a href="wardrobe.html" aria-label="角，魔法季"><img src="assets/img/home/i-horn.png" alt="" width="96" height="96"><span class="tip">角 · 魔法季</span></a></li>
-        <li><a href="wardrobe.html" aria-label="服裝，預言季"><img src="assets/img/home/i-outfit.png" alt="" width="96" height="96"><span class="tip">服裝 · 預言季</span></a></li>
-        <li><a href="wardrobe.html" aria-label="鞋子"><img src="assets/img/home/i-shoes.png" alt="" width="96" height="96"><span class="tip">鞋子</span></a></li>
-        <li><a href="wardrobe.html" aria-label="道具，搗蛋節"><img src="assets/img/home/i-prop.png" alt="" width="96" height="96"><span class="tip">道具 · 搗蛋節</span></a></li>
-      </ul>
-    </div>
   </div>
 </div>
 
 <main class="wrap home">
 
   <section class="home-section" aria-labelledby="works-title">
-    <div class="sec-head">
-      <h2 class="home-h2" id="works-title">我做的東西</h2>
-      <p class="sec-sub">每一格都能直接玩；點標題打開完整的工具。</p>
-    </div>
+    <h2 class="home-h2" id="works-title">我做的東西</h2>
+    <div class="tools">
 
-    <div class="bento">
-
-      <!-- live: the two-hour cycle of the recurring events, in game time (PT) -->
-      <article class="tile tile-events" aria-labelledby="t-events">
-        <header class="tile-head">
-          <h3 id="t-events"><a href="events.html">活動雷達<span class="go" aria-hidden="true">→</span></a></h3>
-          <p>間歇泉、奶奶的晚餐、聖島海龜與每日重置。</p>
-        </header>
-        <div class="radar">
-          <div class="dial">
-            <svg class="dial-svg" id="dial" viewBox="0 0 240 240" role="img" aria-label="兩小時一輪的活動時鐘"></svg>
-            <div class="dial-mid" aria-live="polite">
-              <span class="dial-k" id="dial-k">下一場</span>
-              <strong class="dial-name" id="dial-name">—</strong>
-              <span class="dial-cd" id="dial-cd">--:--</span>
+      <article class="tool" aria-labelledby="t-card">
+        <div class="tool-viz viz-card" id="card-stage">
+          <div class="mini-card" id="mini-card">
+            <div class="mc-top">
+              <svg class="mc-mark" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="13" r="11" fill="#f6d68f" opacity=".45"/><path d="M18 4c3.2 4.6 5.2 7.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0C12.8 11.6 14.8 8.6 18 4z" fill="#f0a24a" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18 10.5c1.3 1.9 2 3.1 2 4.2a2 2 0 0 1-4 0c0-1.1.7-2.3 2-4.2z" fill="#fff4cf"/><rect x="13.5" y="20" width="9" height="12" rx="2.5" fill="#fffdf8" stroke="currentColor" stroke-width="1.6"/></svg>
             </div>
+            <strong class="mc-name">魚</strong>
+            <span class="mc-en">salmon</span>
+            <span class="mc-handle">@im._.salmon</span>
+            <span class="mc-glare" aria-hidden="true"></span>
           </div>
-          <div class="radar-side">
-            <ul class="ev-list" id="ev-list">
-              <li data-id="geyser" style="--c:#d8a54c"><i></i><span class="ev-n">聖島間歇泉</span><span class="ev-t">--:--</span><span class="ev-s"></span></li>
-              <li data-id="grandma" style="--c:#d0604f"><i></i><span class="ev-n">奶奶的晚餐</span><span class="ev-t">--:--</span><span class="ev-s"></span></li>
-              <li data-id="turtle" style="--c:#8fb07a"><i></i><span class="ev-n">聖島海龜</span><span class="ev-t">--:--</span><span class="ev-s"></span></li>
-            </ul>
-            <div class="reset">
-              <div class="reset-row"><span>每日重置</span><span class="reset-cd" id="reset-cd">--:--:--</span></div>
-              <div class="reset-bar"><i id="reset-bar"></i></div>
-              <p class="reset-note">時間換算成你的時區；遊戲時間是太平洋時間 <span id="pt-now">--:--</span>。</p>
-            </div>
-          </div>
+        </div>
+        <div class="tool-text">
+          <h3 id="t-card"><a href="card.html">名片產生器<span class="go" aria-hidden="true">→</span></a></h3>
+          <p>一個自我介紹卡片。</p>
         </div>
       </article>
 
-      <!-- play: fifteen keys, C4 to C6, like the in-game instruments -->
-      <article class="tile tile-music" aria-labelledby="t-music">
-        <header class="tile-head">
-          <h3 id="t-music"><a href="music.html">樂譜練習<span class="go" aria-hidden="true">→</span></a></h3>
-          <p>樂器模擬。</p>
-        </header>
-        <div class="harp" id="harp" tabindex="0" aria-label="迷你琴，15 個鍵，C4 到 C6；選取後可以用鍵盤 Y U I O P、H J K L ;、N M , . / 彈奏">
-          <button type="button" class="key is-c" data-i="0" aria-label="C4"></button>
-          <button type="button" class="key" data-i="1" aria-label="D4"></button>
-          <button type="button" class="key" data-i="2" aria-label="E4"></button>
-          <button type="button" class="key" data-i="3" aria-label="F4"></button>
-          <button type="button" class="key" data-i="4" aria-label="G4"></button>
-          <button type="button" class="key" data-i="5" aria-label="A4"></button>
-          <button type="button" class="key" data-i="6" aria-label="B4"></button>
-          <button type="button" class="key is-c" data-i="7" aria-label="C5"></button>
-          <button type="button" class="key" data-i="8" aria-label="D5"></button>
-          <button type="button" class="key" data-i="9" aria-label="E5"></button>
-          <button type="button" class="key" data-i="10" aria-label="F5"></button>
-          <button type="button" class="key" data-i="11" aria-label="G5"></button>
-          <button type="button" class="key" data-i="12" aria-label="A5"></button>
-          <button type="button" class="key" data-i="13" aria-label="B5"></button>
-          <button type="button" class="key is-c" data-i="14" aria-label="C6"></button>
+      <article class="tool" aria-labelledby="t-wardrobe">
+        <div class="tool-viz viz-wardrobe">
+          <div class="hist-head" aria-live="polite"><strong id="hist-n">1,644</strong><span id="hist-k">件</span></div>
+          <ul class="hist" id="hist">
+            <li style="--n:564" data-k="道具" tabindex="0"><i></i><img src="assets/img/home/i-prop.png" alt="道具 564 件" width="96" height="96"></li>
+            <li style="--n:212" data-k="斗篷" tabindex="0"><i></i><img src="assets/img/home/i-cape.png" alt="斗篷 212 件" width="96" height="96"></li>
+            <li style="--n:206" data-k="髮型" tabindex="0"><i></i><img src="assets/img/home/i-hair.png" alt="髮型 206 件" width="96" height="96"></li>
+            <li style="--n:157" data-k="服裝" tabindex="0"><i></i><img src="assets/img/home/i-outfit.png" alt="服裝 157 件" width="96" height="96"></li>
+            <li style="--n:131" data-k="面具" tabindex="0"><i></i><img src="assets/img/home/i-mask.png" alt="面具 131 件" width="96" height="96"></li>
+            <li style="--n:107" data-k="頭飾" tabindex="0"><i></i><img src="assets/img/home/i-head.png" alt="頭飾 107 件" width="96" height="96"></li>
+            <li style="--n:92" data-k="項鍊" tabindex="0"><i></i><img src="assets/img/home/i-neck.png" alt="項鍊 92 件" width="96" height="96"></li>
+            <li style="--n:54" data-k="魔法" tabindex="0"><i></i><img src="assets/img/home/i-spell.png" alt="魔法 54 件" width="96" height="96"></li>
+            <li style="--n:42" data-k="角" tabindex="0"><i></i><img src="assets/img/home/i-horn.png" alt="角 42 件" width="96" height="96"></li>
+            <li style="--n:40" data-k="鞋子" tabindex="0"><i></i><img src="assets/img/home/i-shoes.png" alt="鞋子 40 件" width="96" height="96"></li>
+            <li style="--n:39" data-k="臉飾" tabindex="0"><i></i><img src="assets/img/home/i-face.png" alt="臉飾 39 件" width="96" height="96"></li>
+          </ul>
         </div>
-        <div class="tile-foot">
-          <button type="button" class="chip" id="harp-demo">
-            <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2.2v9.6a.6.6 0 0 0 .9.5l7.6-4.8a.6.6 0 0 0 0-1L4.4 1.7a.6.6 0 0 0-.9.5z" fill="currentColor"/></svg>
-            <span>彈一段小星星</span>
-          </button>
-          <span class="kbd-hint">鍵盤 Y–P · H–; · N–/</span>
+        <div class="tool-text">
+          <h3 id="t-wardrobe"><a href="wardrobe.html">衣櫃圖鑑<span class="go" aria-hidden="true">→</span></a></h3>
+          <p>瀏覽每一件斗篷、面具、髮型等等，查看所屬季節、畢業禮與禮包價格。</p>
         </div>
       </article>
 
-      <!-- try: the height page's own formula, on two sliders -->
-      <article class="tile tile-height" aria-labelledby="t-height">
-        <header class="tile-head">
-          <h3 id="t-height"><a href="height.html">身高計算<span class="go" aria-hidden="true">→</span></a></h3>
-          <p>上傳服裝 QR，讀出身高與體型，還原你的角色與穿搭。</p>
-        </header>
-        <div class="hgt">
-          <svg class="hgt-fig" id="hgt-fig" viewBox="16 22 118 176" aria-hidden="true">
+      <article class="tool" aria-labelledby="t-height">
+        <div class="tool-viz viz-height">
+          <svg class="hgt-fig" viewBox="16 22 118 176" aria-hidden="true">
             <defs>
               <g id="kid-shape">
                 <rect x="-7.5" y="-17" width="5.5" height="17" rx="2.5"/>
@@ -149,91 +105,76 @@
               </g>
             </defs>
             <line class="hgt-ground" x1="16" y1="192" x2="134" y2="192"/>
-            <line class="hgt-guide" id="guide-ghost" x1="16" x2="134" y1="84" y2="84"/>
-            <line class="hgt-guide is-kid" id="guide-kid" x1="16" x2="134" y1="84" y2="84"/>
-            <g class="kid kid-ghost" id="kid-ghost" transform="translate(75 192)"><use href="#kid-shape"/></g>
+            <g class="kid kid-ghost" transform="translate(75 192)"><use href="#kid-shape"/></g>
             <g class="kid" id="kid" transform="translate(75 192)"><use href="#kid-shape"/></g>
           </svg>
           <div class="hgt-ctrl">
-            <div class="field">
-              <label for="h-height">身高 height</label><output id="o-height" for="h-height">0.00</output>
-              <input type="range" id="h-height" min="-2" max="2" step="0.01" value="0">
-            </div>
-            <div class="field">
-              <label for="h-scale">體型 scale</label><output id="o-scale" for="h-scale">0.00</output>
-              <input type="range" id="h-scale" min="-0.2" max="0.2" step="0.01" value="0">
-            </div>
-            <div class="hgt-out">
-              <span class="hgt-k">估算值</span>
-              <strong id="h-val">7.60</strong>
-              <div class="hgt-bar" aria-hidden="true"><i id="h-mark"></i></div>
-              <span class="hgt-range"><span>最高 <b id="h-tall">1.60</b></span><span>最矮 <b id="h-short">13.60</b></span></span>
+            <strong class="hgt-val" id="h-val">7.60</strong>
+            <span class="hgt-k">數字越小越高</span>
+            <input type="range" id="h-height" min="-2" max="2" step="0.01" value="0" aria-label="身高 height">
+          </div>
+        </div>
+        <div class="tool-text">
+          <h3 id="t-height"><a href="height.html">身高計算<span class="go" aria-hidden="true">→</span></a></h3>
+          <p>上傳服裝 QR，讀出身高與體型，還原你的角色與穿搭。</p>
+        </div>
+      </article>
+
+      <article class="tool" aria-labelledby="t-events">
+        <div class="tool-viz viz-events">
+          <div class="dial">
+            <svg class="dial-svg" id="dial" viewBox="0 0 240 240" role="img" aria-label="兩小時一輪的活動時鐘"></svg>
+            <div class="dial-mid" aria-live="polite">
+              <span class="dial-k" id="dial-k">下一場</span>
+              <strong class="dial-name" id="dial-name">—</strong>
+              <span class="dial-cd" id="dial-cd">--:--</span>
             </div>
           </div>
         </div>
-        <p class="tile-note">社群流傳的估算：數字越小越高。</p>
-      </article>
-
-      <!-- data: how many pieces the catalogue holds, by kind -->
-      <article class="tile tile-wardrobe" aria-labelledby="t-wardrobe">
-        <header class="tile-head">
-          <h3 id="t-wardrobe"><a href="wardrobe.html">衣櫃圖鑑<span class="go" aria-hidden="true">→</span></a></h3>
-          <p>瀏覽每一件斗篷、面具、髮型等等，查看所屬季節、畢業禮與禮包價格。</p>
-        </header>
-        <div class="tally"><strong>1,644</strong><span>件，分成 11 類</span></div>
-        <ul class="bars">
-          <li style="--n:564"><img src="assets/img/home/i-prop.png" alt="" width="96" height="96"><span class="bar-k">道具</span><span class="bar"><i></i></span><span class="bar-n">564</span></li>
-          <li style="--n:212"><img src="assets/img/home/i-cape.png" alt="" width="96" height="96"><span class="bar-k">斗篷</span><span class="bar"><i></i></span><span class="bar-n">212</span></li>
-          <li style="--n:206"><img src="assets/img/home/i-hair.png" alt="" width="96" height="96"><span class="bar-k">髮型</span><span class="bar"><i></i></span><span class="bar-n">206</span></li>
-          <li style="--n:157"><img src="assets/img/home/i-outfit.png" alt="" width="96" height="96"><span class="bar-k">服裝</span><span class="bar"><i></i></span><span class="bar-n">157</span></li>
-          <li style="--n:131"><img src="assets/img/home/i-mask.png" alt="" width="96" height="96"><span class="bar-k">面具</span><span class="bar"><i></i></span><span class="bar-n">131</span></li>
-          <li style="--n:107"><img src="assets/img/home/i-head.png" alt="" width="96" height="96"><span class="bar-k">頭飾</span><span class="bar"><i></i></span><span class="bar-n">107</span></li>
-          <li style="--n:92"><img src="assets/img/home/i-neck.png" alt="" width="96" height="96"><span class="bar-k">項鍊</span><span class="bar"><i></i></span><span class="bar-n">92</span></li>
-          <li style="--n:54"><img src="assets/img/home/i-spell.png" alt="" width="96" height="96"><span class="bar-k">魔法</span><span class="bar"><i></i></span><span class="bar-n">54</span></li>
-          <li style="--n:42"><img src="assets/img/home/i-horn.png" alt="" width="96" height="96"><span class="bar-k">角</span><span class="bar"><i></i></span><span class="bar-n">42</span></li>
-          <li style="--n:40"><img src="assets/img/home/i-shoes.png" alt="" width="96" height="96"><span class="bar-k">鞋子</span><span class="bar"><i></i></span><span class="bar-n">40</span></li>
-          <li style="--n:39"><img src="assets/img/home/i-face.png" alt="" width="96" height="96"><span class="bar-k">臉飾</span><span class="bar"><i></i></span><span class="bar-n">39</span></li>
-        </ul>
-      </article>
-
-      <!-- tilt: a small preview of a card -->
-      <article class="tile tile-card" aria-labelledby="t-card">
-        <header class="tile-head">
-          <h3 id="t-card"><a href="card.html">名片產生器<span class="go" aria-hidden="true">→</span></a></h3>
-          <p>一個自我介紹卡片。</p>
-        </header>
-        <div class="card-stage" id="card-stage">
-          <div class="mini-card" id="mini-card">
-            <div class="mc-top">
-              <svg class="mc-mark" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="13" r="11" fill="#f6d68f" opacity=".45"/><path d="M18 4c3.2 4.6 5.2 7.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0C12.8 11.6 14.8 8.6 18 4z" fill="#f0a24a" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18 10.5c1.3 1.9 2 3.1 2 4.2a2 2 0 0 1-4 0c0-1.1.7-2.3 2-4.2z" fill="#fff4cf"/><rect x="13.5" y="20" width="9" height="12" rx="2.5" fill="#fffdf8" stroke="currentColor" stroke-width="1.6"/></svg>
-              <span class="mc-k">光之子</span>
-            </div>
-            <strong class="mc-name">魚</strong>
-            <span class="mc-en">salmon</span>
-            <span class="mc-handle">@im._.salmon</span>
-            <span class="mc-glare" aria-hidden="true"></span>
-          </div>
+        <div class="tool-text">
+          <h3 id="t-events"><a href="events.html">活動雷達<span class="go" aria-hidden="true">→</span></a></h3>
+          <p>間歇泉、奶奶的晚餐、聖島海龜與每日重置。</p>
         </div>
-        <p class="tile-note">移動滑鼠或手指，卡片會跟著轉。</p>
       </article>
 
-      <!-- arrange: three prints from the clip on a light table -->
-      <article class="tile tile-gallery" aria-labelledby="t-gallery">
-        <div class="gal-side">
-          <header class="tile-head">
-            <h3 id="t-gallery"><a href="gallery.html">光影相簿<span class="go" aria-hidden="true">→</span></a></h3>
-            <p>就是相簿。</p>
-          </header>
-          <p class="tile-note">拖曳照片，排成你喜歡的樣子；選取一張後也能用方向鍵移動。相簿裡的照片只留在你的裝置上。</p>
-          <button type="button" class="chip" id="snaps-shuffle">
-            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 4h3l5 6h3M1.5 10h3l5-6h3M11 2.5 12.5 4 11 5.5M11 8.5l1.5 1.5-1.5 1.5"/></svg>
-            <span>重新擺放</span>
+      <article class="tool" aria-labelledby="t-music">
+        <div class="tool-viz viz-music">
+          <div class="harp" id="harp" tabindex="0" aria-label="迷你琴，15 個鍵，C4 到 C6；選取後可以用鍵盤 Y U I O P、H J K L ;、N M , . / 彈奏">
+            <button type="button" class="key is-c" data-i="0" aria-label="C4"></button>
+            <button type="button" class="key" data-i="1" aria-label="D4"></button>
+            <button type="button" class="key" data-i="2" aria-label="E4"></button>
+            <button type="button" class="key" data-i="3" aria-label="F4"></button>
+            <button type="button" class="key" data-i="4" aria-label="G4"></button>
+            <button type="button" class="key" data-i="5" aria-label="A4"></button>
+            <button type="button" class="key" data-i="6" aria-label="B4"></button>
+            <button type="button" class="key is-c" data-i="7" aria-label="C5"></button>
+            <button type="button" class="key" data-i="8" aria-label="D5"></button>
+            <button type="button" class="key" data-i="9" aria-label="E5"></button>
+            <button type="button" class="key" data-i="10" aria-label="F5"></button>
+            <button type="button" class="key" data-i="11" aria-label="G5"></button>
+            <button type="button" class="key" data-i="12" aria-label="A5"></button>
+            <button type="button" class="key" data-i="13" aria-label="B5"></button>
+            <button type="button" class="key is-c" data-i="14" aria-label="C6"></button>
+          </div>
+          <button type="button" class="viz-btn" id="harp-demo" aria-label="彈一段小星星">
+            <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2.2v9.6a.6.6 0 0 0 .9.5l7.6-4.8a.6.6 0 0 0 0-1L4.4 1.7a.6.6 0 0 0-.9.5z" fill="currentColor"/></svg>
           </button>
         </div>
-        <div class="light-table" id="snaps">
-          <figure class="snap" tabindex="0" aria-label="照片：巫師帽"><img src="assets/img/home/snap-kid.jpg" alt="戴巫師帽的光之子" width="360" height="360" draggable="false"><figcaption>巫師帽</figcaption></figure>
-          <figure class="snap" tabindex="0" aria-label="照片：磚塔"><img src="assets/img/home/snap-wall.jpg" alt="磚塔的牆" width="360" height="360" draggable="false"><figcaption>磚塔</figcaption></figure>
-          <figure class="snap" tabindex="0" aria-label="照片：遠方的尖塔"><img src="assets/img/home/snap-tower.jpg" alt="遠方的尖塔" width="360" height="360" draggable="false"><figcaption>遠方的尖塔</figcaption></figure>
+        <div class="tool-text">
+          <h3 id="t-music"><a href="music.html">樂譜練習<span class="go" aria-hidden="true">→</span></a></h3>
+          <p>樂器模擬。</p>
+        </div>
+      </article>
+
+      <article class="tool" aria-labelledby="t-gallery">
+        <div class="tool-viz light-table" id="snaps">
+          <figure class="snap" tabindex="0" aria-label="照片：巫師帽，可以拖曳"><img src="assets/img/home/snap-kid.jpg" alt="戴巫師帽的光之子" width="360" height="360" draggable="false"></figure>
+          <figure class="snap" tabindex="0" aria-label="照片：磚塔，可以拖曳"><img src="assets/img/home/snap-wall.jpg" alt="磚塔的牆" width="360" height="360" draggable="false"></figure>
+          <figure class="snap" tabindex="0" aria-label="照片：遠方的尖塔，可以拖曳"><img src="assets/img/home/snap-tower.jpg" alt="遠方的尖塔" width="360" height="360" draggable="false"></figure>
+        </div>
+        <div class="tool-text">
+          <h3 id="t-gallery"><a href="gallery.html">光影相簿<span class="go" aria-hidden="true">→</span></a></h3>
+          <p>就是相簿。</p>
         </div>
       </article>
 
