@@ -63,7 +63,8 @@ if (hero && media && clipStage) {
 
 /* ── the index and the stage ───────────────────────────────────────── */
 const stageEl = $('stage'), toolEls = [...document.querySelectorAll('.tool')];
-let stage = null, active = 'card';
+const narrow = matchMedia('(max-width: 920px)');   // the layout where the stage is pinned above the list
+let stage = null, active = 'card', hintOff = () => {};
 const onShow = {};   // tool → what to do when it opens (each tool below adds its own)
 
 function open(name, { scroll = false } = {}) {
@@ -73,8 +74,8 @@ function open(name, { scroll = false } = {}) {
     li.classList.toggle('is-open', on);
     li.querySelector('.tool-name').setAttribute('aria-expanded', String(on));
     panel.inert = !on;
-    // on a narrow screen the stage is pinned on top: bring the opened row up under it once the list has settled
-    if (on && scroll && stageEl && getComputedStyle(stageEl).position === 'sticky') setTimeout(() => {
+    // on a narrow screen the stage is pinned above the list: bring the opened row up under it once the list has settled
+    if (on && scroll && stageEl && narrow.matches) setTimeout(() => {
       const top = li.getBoundingClientRect().top, want = stageEl.getBoundingClientRect().bottom + 6;
       if (Math.abs(top - want) > 24) scrollBy({ top: top - want, behavior: reduce.matches ? 'auto' : 'smooth' });
     }, 520);
@@ -100,7 +101,7 @@ async function mount() {
     const { mountStage } = await import('./home-stage.js');
     stage = await mountStage({ canvas, container: stageEl, reducedMotion: reduce.matches, onProgress: p => veil && veil.style.setProperty('--p', Math.round(p * 100) + '%') });
     stage.shot(active);
-    stageEl.classList.add('is-ready');
+    stageEl.classList.add('is-ready'); hintOff();
     window.__home = { stage, open };
     if (onShow[active]) onShow[active]();
   } catch (e) { console.warn('[home] stage left out', e); still(); }
@@ -111,6 +112,7 @@ if (stageEl) {
   const near = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { near.disconnect(); if (document.readyState === 'complete') go(); else addEventListener('load', go, { once: true }); } }, { rootMargin: '600px' });
   near.observe(stageEl);
   stageEl.addEventListener('stage-grab', () => stageEl.classList.add('is-touched'));
+  hintOff = () => setTimeout(() => stageEl.classList.add('is-touched'), 9000);   // the hint leaves on its own after a while
 }
 
 /* ── card: the name card leans toward the pointer ──────────────────── */
@@ -216,7 +218,7 @@ if (ring) {
 
   const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hourCycle: 'h23', hour: 'numeric', minute: 'numeric', second: 'numeric' });
   const clock = sec => { sec = Math.floor(sec); return sec >= 3600 ? `${Math.floor(sec / 3600)}:${pad(Math.floor(sec / 60) % 60)}:${pad(sec % 60)}` : `${Math.floor(sec / 60)}:${pad(sec % 60)}`; };
-  const evK = $('ev-k'), evName = $('ev-name'), evCd = $('ev-cd');
+  const evK = $('ev-k'), evName = $('ev-name'), evCd = $('ev-cd'), evReset = $('ev-reset');
   const tick = () => {
     const p = {};
     for (const part of fmt.formatToParts(Date.now())) p[part.type] = Number(part.value);
@@ -229,6 +231,8 @@ if (ring) {
       if (!best || wait < best.wait) best = { ev, on, wait, left: on ? (ev.at + DUR - pos) * 60 : wait * 60 };
     });
     if (evK) { evK.textContent = best.on ? '進行中' : '下一場'; evName.textContent = best.ev.name; evName.style.color = best.ev.color; evCd.textContent = best.on ? `剩 ${clock(best.left)}` : clock(best.left); }
+    // the day turns over at midnight, game time
+    if (evReset) { const left = 86400 - ((p.hour % 24) * 3600 + p.minute * 60 + p.second); evReset.textContent = `${Math.floor(left / 3600)}:${pad(Math.floor(left / 60) % 60)}:${pad(left % 60)}`; }
   };
   tick();
   setTimeout(() => { tick(); setInterval(tick, 1000); }, 1000 - (Date.now() % 1000));
@@ -308,28 +312,32 @@ if (harp) {
 /* ── album: the kid strikes a pose, the stage flashes, a print lands in the list ── */
 const snapBtn = $('snap-btn'), prints = $('prints'), flash = $('stage-flash');
 if (snapBtn && prints) {
-  const POSES = ['cheer', 'bow', 'waveSmall', 'shy', 'point', 'clap', 'think'];
+  // poses that read well as a still, each with the moment (ms after it starts) it looks best
+  const POSES = [['waveSmall', 700], ['point', 800], ['shy', 450], ['clap', 620]];
   let n = 0, busy = false;
   snapBtn.addEventListener('click', () => {
     if (!stage || busy) return;
     busy = true;
-    const pose = POSES[n % POSES.length]; n++;
+    const [pose, at] = POSES[n % POSES.length]; n++;
     stage.pose(pose, true);
     setTimeout(() => {
       if (flash) { flash.classList.remove('is-on'); void flash.offsetWidth; flash.classList.add('is-on'); }
-      // the picture: the dusk sun, then the kid as the stage shows them
-      const shot = stage.snap(360, (ctx, s) => {
-        ctx.fillStyle = '#211f13'; ctx.fillRect(0, 0, s, s);
-        const g = ctx.createRadialGradient(s * 0.5, s * 0.4, 0, s * 0.5, s * 0.42, s * 0.3);
-        g.addColorStop(0, '#d3c598'); g.addColorStop(0.55, '#ada27a'); g.addColorStop(1, '#857c58');
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s * 0.5, s * 0.42, s * 0.3, 0, Math.PI * 2); ctx.fill();
+      // the picture: the sun, then a portrait of the kid as they stand
+      const shot = stage.snap(420, (ctx, s) => {
+        ctx.fillStyle = '#1f1d12'; ctx.fillRect(0, 0, s, s);
+        const halo = ctx.createRadialGradient(s * 0.5, s * 0.46, s * 0.3, s * 0.5, s * 0.46, s * 0.72);
+        halo.addColorStop(0, 'rgba(242,150,80,0.45)'); halo.addColorStop(1, 'rgba(242,150,80,0)');
+        ctx.fillStyle = halo; ctx.fillRect(0, 0, s, s);
+        const g = ctx.createRadialGradient(s * 0.5, s * 0.44, 0, s * 0.5, s * 0.46, s * 0.4);
+        g.addColorStop(0, '#ffedbb'); g.addColorStop(0.36, '#fbc77c'); g.addColorStop(0.7, '#ee9a52'); g.addColorStop(1, '#c5653a');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s * 0.5, s * 0.46, s * 0.4, 0, Math.PI * 2); ctx.fill();
       });
       const fig = document.createElement('figure'), img = new Image();
-      fig.className = 'print'; fig.style.margin = '0'; fig.style.setProperty('--r', (Math.random() * 10 - 5).toFixed(1) + 'deg');
-      img.alt = `第 ${n} 張：魚在舞台上`; img.src = shot.toDataURL('image/jpeg', 0.86);
+      fig.className = 'print'; fig.style.setProperty('--r', (Math.random() * 8 - 4).toFixed(1) + 'deg');
+      img.alt = `第 ${n} 張：魚在舞台上`; img.src = shot.toDataURL('image/jpeg', 0.88);
       fig.appendChild(img); prints.prepend(fig);
       while (prints.children.length > 3) prints.lastElementChild.remove();
       busy = false;
-    }, reduce.matches ? 60 : 720);
+    }, at);
   });
 }

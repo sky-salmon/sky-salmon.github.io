@@ -38,13 +38,14 @@
   </button>
   <div class="wrap hero-copy">
     <div class="hero-intro">
-      <span class="eyebrow">sky-salmon 的作者</span>
+      <p class="hero-by">sky-salmon 的作者</p>
       <h1 class="hero-title">我是魚<em>salmon</em></h1>
-      <p class="lead">一個喜歡光遇的工程師。</p>
-      <ul class="home-links">
-        <li><a href="https://www.instagram.com/im._.salmon/" target="_blank" rel="noopener">Instagram <span>@im._.salmon</span></a></li>
-        <li><a href="https://www.threads.com/@im._.salmon" target="_blank" rel="noopener">Threads <span>@im._.salmon</span></a></li>
-      </ul>
+      <p class="hero-lead">一個喜歡光遇的工程師。</p>
+      <p class="hero-social">
+        <span class="hero-handle">@im._.salmon</span>
+        <a href="https://www.instagram.com/im._.salmon/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.threads.com/@im._.salmon" target="_blank" rel="noopener">Threads</a>
+      </p>
     </div>
   </div>
 </div>
@@ -57,7 +58,7 @@
         <h2 class="made-title" id="made-title">我做的東西</h2>
         <ol class="tools" id="tools">
         <li class="tool is-open" data-tool="card">
-          <h3 class="tool-h"><button type="button" class="tool-name" id="b-card" aria-expanded="true" aria-controls="p-card"><span class="tool-star" aria-hidden="true"></span><span class="tool-label">名片產生器</span></button></h3>
+          <h3 class="tool-h"><button type="button" class="tool-name" id="b-card" aria-expanded="true" aria-controls="p-card"><span class="tool-flame" aria-hidden="true"></span><span class="tool-label">名片產生器</span></button></h3>
           <div class="tool-panel" id="p-card" role="region" aria-labelledby="b-card">
             <div class="tool-inner">
               <p class="tool-line">一個自我介紹卡片。</p>
@@ -66,7 +67,7 @@
           </div>
         </li>
         <li class="tool" data-tool="wardrobe">
-          <h3 class="tool-h"><button type="button" class="tool-name" id="b-wardrobe" aria-expanded="false" aria-controls="p-wardrobe"><span class="tool-star" aria-hidden="true"></span><span class="tool-label">衣櫃圖鑑</span></button></h3>
+          <h3 class="tool-h"><button type="button" class="tool-name" id="b-wardrobe" aria-expanded="false" aria-controls="p-wardrobe"><span class="tool-flame" aria-hidden="true"></span><span class="tool-label">衣櫃圖鑑</span></button></h3>
           <div class="tool-panel" id="p-wardrobe" role="region" aria-labelledby="b-wardrobe">
             <div class="tool-inner">
               <p class="tool-line">瀏覽每一件斗篷、面具、髮型等等，查看所屬季節、畢業禮與禮包價格。</p>
@@ -79,12 +80,12 @@
           </div>
         </li>
         <li class="tool" data-tool="height">
-          <h3 class="tool-h"><button type="button" class="tool-name" id="b-height" aria-expanded="false" aria-controls="p-height"><span class="tool-star" aria-hidden="true"></span><span class="tool-label">身高計算</span></button></h3>
+          <h3 class="tool-h"><button type="button" class="tool-name" id="b-height" aria-expanded="false" aria-controls="p-height"><span class="tool-flame" aria-hidden="true"></span><span class="tool-label">身高計算</span></button></h3>
           <div class="tool-panel" id="p-height" role="region" aria-labelledby="b-height">
             <div class="tool-inner">
               <p class="tool-line">上傳服裝 QR，讀出身高與體型，還原你的角色與穿搭。</p>
               <div class="tool-ctl ctl-height">
-                <div class="hgt-read"><strong id="h-val">1.98</strong><span>數字越小越高</span></div>
+                <div class="hgt-read"><span class="hgt-k">身高</span><strong id="h-val">1.98</strong><span class="hgt-note">數字越小越高</span></div>
                 <div class="hgt-slide">
                   <input type="range" id="h-height" min="-2" max="2" step="0.01" value="1.89" aria-label="身高">
                   <span class="hgt-fish" id="h-fish" aria-hidden="true">魚</span>
@@ -95,7 +96,7 @@
           </div>
         </li>
         <li class="tool" data-tool="events">
-          <h3 class="tool-h"><button type="button" class="tool-name" id="b-events" aria-expanded="false" aria-controls="p-events"><span class="tool-star" aria-hidden="true"></span><span class="tool-label">活動雷達</span></button></h3>
+          <h3 class="tool-h"><button type="button" class="tool-name" id="b-events" aria-expanded="false" aria-controls="p-events"><span class="tool-flame" aria-hidden="true"></span><span class="tool-label">活動雷達</span></button></h3>
           <div class="tool-panel" id="p-events" role="region" aria-labelledby="b-events">
             <div class="tool-inner">
               <p class="tool-line">間歇泉、奶奶的晚餐、聖島海龜與每日重置。</p>
@@ -103,13 +104,14 @@
                 <span class="ev-k" id="ev-k">下一場</span>
                 <strong class="ev-name" id="ev-name">—</strong>
                 <span class="ev-cd" id="ev-cd">--:--</span>
+                <span class="ev-reset">每日重置<b id="ev-reset">--:--:--</b></span>
               </div>
               <a class="tool-go" href="events.html">打開活動雷達<span aria-hidden="true">→</span></a>
             </div>
           </div>
         </li>
         <li class="tool" data-tool="music">
-          <h3 class="tool-h"><button type="button" class="tool-name" id="b-music" aria-expanded="false" aria-controls="p-music"><span class="tool-star" aria-hidden="true"></span><span class="tool-label">樂譜練習</span></button></h3>
+          <h3 class="tool-h"><button type="button" class="tool-name" id="b-music" aria-expanded="false" aria-controls="p-music"><span class="tool-flame" aria-hidden="true"></span><span class="tool-label">樂譜練習</span></button></h3>
           <div class="tool-panel" id="p-music" role="region" aria-labelledby="b-music">
             <div class="tool-inner">
               <p class="tool-line">樂器模擬。</p>
@@ -138,7 +140,7 @@
           </div>
         </li>
         <li class="tool" data-tool="album">
-          <h3 class="tool-h"><button type="button" class="tool-name" id="b-album" aria-expanded="false" aria-controls="p-album"><span class="tool-star" aria-hidden="true"></span><span class="tool-label">光影相簿</span></button></h3>
+          <h3 class="tool-h"><button type="button" class="tool-name" id="b-album" aria-expanded="false" aria-controls="p-album"><span class="tool-flame" aria-hidden="true"></span><span class="tool-label">光影相簿</span></button></h3>
           <div class="tool-panel" id="p-album" role="region" aria-labelledby="b-album">
             <div class="tool-inner">
               <p class="tool-line">就是相簿。</p>
@@ -153,8 +155,8 @@
         </ol>
       </div>
 
-      <!-- the stage: the author's own kid, live (assets/js/home-stage.js). Behind them a dusk sun whose rim is the
-           two-hour clock of the game's recurring events. -->
+      <!-- the stage: the author's own kid, live (assets/js/home-stage.js), in front of a setting sun. For 活動雷達 the
+           sun's rim becomes the two-hour clock of the game's recurring events. -->
       <div class="stage" id="stage" data-tool="card">
         <div class="stage-sky" aria-hidden="true">
           <div class="stage-disc"></div>
@@ -167,7 +169,7 @@
           <span class="sc-line">一個喜歡光遇的工程師。</span>
           <span class="sc-handle">@im._.salmon</span>
         </div>
-        <canvas class="stage-canvas" id="stage-canvas" role="img" aria-label="魚的光之子：戴巫師帽、披蝙蝠斗篷，站在三根蠟燭旁。可以拖曳轉動。"></canvas>
+        <canvas class="stage-canvas" id="stage-canvas" role="img" aria-label="魚的光之子：戴巫師帽、披蝙蝠斗篷，站在夕陽前。可以拖曳轉動。"></canvas>
         <img class="stage-still" id="stage-still" src="assets/img/home/snap-kid.jpg" alt="戴巫師帽的光之子" width="360" height="360" hidden>
         <svg class="stage-ruler" id="stage-ruler" aria-hidden="true"></svg>
         <div class="stage-flash" id="stage-flash" aria-hidden="true"></div>
@@ -179,11 +181,9 @@
 
   <section class="about wrap" id="about" aria-labelledby="about-title">
     <h2 class="about-title" id="about-title">關於這個網站</h2>
-    <div class="about-body">
-      <p class="about-lead">sky-salmon 是魚做的工具小站。</p>
-      <p class="about-text">身高計算讀取的截圖、相簿裡的照片，都只留在你的裝置上。</p>
-      <p class="about-note">這是粉絲自製網站，與 thatgamecompany 無關；遊戲中的模型、圖示與名稱屬於 thatgamecompany。</p>
-    </div>
+    <p class="about-lead">sky-salmon 是魚做的工具小站。</p>
+    <p class="about-text">身高計算讀取的截圖、相簿裡的照片，都只留在你的裝置上。</p>
+    <p class="about-note">這是粉絲自製網站，與 thatgamecompany 無關；遊戲中的模型、圖示與名稱屬於 thatgamecompany。</p>
   </section>
 
 </main>

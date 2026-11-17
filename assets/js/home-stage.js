@@ -1,20 +1,16 @@
 // sky-salmon — home: the author's own Sky kid, live.
-// One small stage: the kid (assets/js/avatar-engine.js, wearing the look read from the author's outfit QR), three of
-// the game's candles at their feet, a warm light in front and a cool one behind. The page drives it by name:
+// One small stage: the kid (assets/js/avatar-engine.js, wearing the look read from the author's outfit QR) at dusk, lit
+// from behind by the sun the page paints there and from the front by what is left of the sky. The page drives it by name:
 //   stage.shot('height')      camera, pose and turn for one of the tools
 //   stage.body(h)             the kid's height value (the game's own body rules stretch the rig)
-//   stage.pose('cheer')       play one clip now
+//   stage.pose('point')       play one clip now
 //   stage.wear(look)          change clothes
-//   stage.snap(size)          → a canvas holding a picture of the kid as they stand
-// The canvas is transparent; the page paints what is behind it.
+//   stage.snap(size, paint)   → a canvas holding a portrait of the kid as they stand
+// The canvas is transparent; the page paints the sun behind it.
 import * as THREE from 'three';
 import { createAvatar } from './avatar-engine.js';
-import { skyCandles } from './island/sky.js';
-import { makeFlame } from './island/models.js';
-import { findNodes } from './island/gltf.js';
 import { createPacer, antialias } from './island/pace.js';
 import { canvasTexture } from './island/util.js';
-import { outlineUniforms } from './island/toon.js';
 
 // 魚: the look in the author's outfit QR (pieces, dyes, and the body they set in the game)
 export const FISH = {
@@ -31,13 +27,15 @@ const FOV = 26;
 // One shot per tool: the clip the kid plays, how far they are turned (0 = facing the camera), and where the camera
 // sits (yaw / pitch around `look`, `dist` away). `x` slides the whole picture sideways, in view widths.
 export const SHOTS = {
-  card:     { clip: 'waveSmall', turn: -0.3, yaw: 0.02, pitch: 0.02, dist: 5.6, look: [0, 2.0, 0], x: 0.13 },
-  wardrobe: { clip: 'idle_Sassy', turn: -0.2, yaw: 0, pitch: 0.06, dist: 8.7, look: [0, 1.42, 0], spin: 0.35 },
-  height:   { clip: 'idleStand', turn: 0, yaw: 0, pitch: 0.0, dist: 9.4, look: [0, 1.52, 0], x: 0.06 },
-  events:   { clip: 'think', turn: -0.42, yaw: -0.04, pitch: 0.03, dist: 10.4, look: [0, 1.62, 0], x: -0.13 },
-  music:    { clip: 'clap', turn: -0.38, yaw: 0.14, pitch: 0.07, dist: 8.2, look: [0, 1.42, 0] },
-  album:    { clip: 'cheer', turn: -0.15, yaw: -0.06, pitch: 0.04, dist: 8.4, look: [0, 1.46, 0] }
+  card:     { clip: 'waveSmall', turn: -0.3, yaw: 0.02, pitch: 0.02, dist: 5.4, look: [0, 2.02, 0], x: 0.17 },
+  wardrobe: { clip: 'idle_Sassy', turn: -0.2, yaw: 0, pitch: 0.05, dist: 7.5, look: [0, 1.5, 0], spin: 0.35 },
+  height:   { clip: 'idleStand', turn: 0, yaw: 0, pitch: 0.0, dist: 8.3, look: [0, 1.56, 0], x: 0.07 },
+  events:   { clip: 'idle_Proud', turn: -0.36, yaw: -0.04, pitch: 0.03, dist: 9.4, look: [0, 1.6, 0], x: -0.12 },
+  music:    { clip: 'clap', turn: -0.38, yaw: 0.14, pitch: 0.06, dist: 7.4, look: [0, 1.5, 0] },
+  album:    { clip: 'waveSmall', turn: -0.15, yaw: -0.05, pitch: 0.04, dist: 7.5, look: [0, 1.52, 0] }
 };
+// the framing of a photograph: head and shoulders, the hat whole
+const PORTRAIT = { yaw: -0.04, pitch: 0.03, dist: 5.9, look: [0, 1.98, 0] };
 
 // The Bat cape is black with an orange-red band along its scalloped hem (in the game a colour-shifting shader draws
 // it). The band is found on the mesh itself: the open edges in the lower part of the cape are the hem.
@@ -92,45 +90,33 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 200);
 
-  // dusk: a dim olive sky, the candles' warmth from the front-left, a cool edge from behind (the brick stripe's teal)
-  scene.add(new THREE.HemisphereLight('#b9b08a', '#3a3524', 1.25));
-  const key = new THREE.DirectionalLight('#ffd3a0', 2.3);
-  key.position.set(-4.5, 5.5, 7);
-  scene.add(key);
-  const rim = new THREE.DirectionalLight('#8fd6dc', 2.4);
-  rim.position.set(5.5, 6, -7);
-  scene.add(rim);
-  const rim2 = new THREE.DirectionalLight('#ffe6c0', 1.1);
-  rim2.position.set(-6, 4, -6);
-  scene.add(rim2);
+  // dusk, with the sun behind the kid: little light from the front (so black cloth stays black), a strong warm edge
+  // from both sides behind, and a breath of cool sky from above-left so the face and scarf still read
+  scene.add(new THREE.HemisphereLight('#c8b9a0', '#231d14', 0.62));
+  const front = new THREE.DirectionalLight('#ffe2c2', 0.95);
+  front.position.set(-3.5, 4.5, 8);
+  scene.add(front);
+  const rimR = new THREE.DirectionalLight('#ffa860', 3.6);
+  rimR.position.set(5.5, 4.5, -6.5);
+  scene.add(rimR);
+  const rimL = new THREE.DirectionalLight('#ffc27a', 2.6);
+  rimL.position.set(-6, 5, -6);
+  scene.add(rimL);
+  const sky = new THREE.DirectionalLight('#a9c4d6', 0.5);
+  sky.position.set(-2, 9, 2);
+  scene.add(sky);
 
-  // the ground is only light: a warm pool and the kid's shadow
-  const pool = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 4.2),
-    new THREE.MeshBasicMaterial({ map: softDisc('rgba(255,176,96,0.3)', 'rgba(255,176,96,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
-  pool.rotation.x = -Math.PI / 2; pool.position.set(-0.5, 0.004, 0.45);
+  // the ground is only light: the sun's glow lying on it, and the kid's shadow falling toward the camera
+  const pool = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 2.6),
+    new THREE.MeshBasicMaterial({ map: softDisc('rgba(255,170,96,0.2)', 'rgba(255,170,96,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.004, -0.35);
   scene.add(pool);
-  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.3),
-    new THREE.MeshBasicMaterial({ map: softDisc('rgba(10,9,4,0.85)', 'rgba(10,9,4,0)'), transparent: true, depthWrite: false }));
-  shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.008; shadow.renderOrder = 1;
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 1.9),
+    new THREE.MeshBasicMaterial({ map: softDisc('rgba(10,8,4,0.8)', 'rgba(10,8,4,0)'), transparent: true, depthWrite: false }));
+  shadow.rotation.x = -Math.PI / 2; shadow.position.set(0, 0.008, 0.25); shadow.renderOrder = 1;
   scene.add(shadow);
 
   onProgress(0.15);
-  const animated = [];
-  const candles = new THREE.Group();
-  scene.add(candles);
-  skyCandles().then(m => {
-    m.object.scale.setScalar(1.25);
-    candles.add(m.object);
-    findNodes(m.object, 'flame_anchor').forEach((anchor, i) => {
-      const flame = makeFlame({ light: i === 0, sparks: false, glow: true, phase: i * 1.7 });
-      flame.object.scale.setScalar(anchor.userData.size || 1);
-      anchor.add(flame.object);
-      animated.push(flame);
-    });
-    dirty = true;
-  }).catch(e => console.warn('[home] candles left out', e));
-  candles.position.set(-1.25, 0, 0.75);
-
   // the kid
   const holder = new THREE.Group(), turner = new THREE.Group();
   holder.scale.setScalar(BASE_H / KID_UNITS);
@@ -162,16 +148,13 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
     camera.aspect = W / H;
     // a narrow stage steps back so the whole kid (hat and cape included) stays in the picture
     fit = Math.max(1, 0.78 / camera.aspect);
-    const dpr = renderer.getPixelRatio();
-    outlineUniforms.uResolution.value.set(W * dpr, H * dpr);
-    outlineUniforms.uThickness.value = 1.4 * dpr;
     dirty = true;
   }
   new ResizeObserver(resize).observe(container);
   resize();
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(container);
 
-  let elapsed = 0, frames = 0;
+  let frames = 0;
   const ease = (a, b, k) => a + (b - a) * k;
   function frame(now) {
     requestAnimationFrame(frame);
@@ -180,7 +163,6 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
     const dt = pacer.tick(now, moving);
     if (!dt) return;
     dirty = false;
-    if (!reducedMotion) elapsed += dt;
     const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 4.2);
     cur.yaw = ease(cur.yaw, goal.yaw, k); cur.pitch = ease(cur.pitch, goal.pitch, k); cur.dist = ease(cur.dist, goal.dist, k);
     cur.x = ease(cur.x, goal.x || 0, k); cur.look.lerp(goal.look, k);
@@ -190,7 +172,6 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
     cur.turn = ease(cur.turn, goal.turn, k);
     turner.rotation.y = cur.turn + spinT + drag;
     kid.update(reducedMotion ? 0 : dt);
-    for (const m of animated) m.update(elapsed, dt);
     place();
     renderer.render(scene, camera);
     frames++;
@@ -229,14 +210,19 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
     headTop() { return kid.headTop() * (BASE_H / KID_UNITS); },
     // where a point of the stage lands on the canvas, in CSS pixels
     project(x, y, z) { const v = new THREE.Vector3(x, y, z).project(camera); return [(v.x + 1) * 0.5 * W, (1 - v.y) * 0.5 * H]; },
-    // a square picture of the kid as they stand now, on the given background
+    // a square portrait of the kid as they stand now, on whatever `paint` draws first. The stage shows the portrait's
+    // framing for the one frame it takes; the next frame puts the tool's own shot back.
     snap(size = 480, paint = null) {
+      const keep = { yaw: cur.yaw, pitch: cur.pitch, dist: cur.dist, x: cur.x, look: cur.look.clone(), fit };
+      Object.assign(cur, { yaw: PORTRAIT.yaw, pitch: PORTRAIT.pitch, dist: PORTRAIT.dist, x: 0 }); cur.look.set(...PORTRAIT.look); fit = 1;
       place(); renderer.render(scene, camera);
       const out = document.createElement('canvas'); out.width = out.height = size;
       const ctx = out.getContext('2d');
       if (paint) paint(ctx, size);
       const s = Math.min(canvas.width, canvas.height), sx = (canvas.width - s) / 2, sy = (canvas.height - s) / 2;
       ctx.drawImage(canvas, sx, sy, s, s, 0, 0, size, size);
+      Object.assign(cur, { yaw: keep.yaw, pitch: keep.pitch, dist: keep.dist, x: keep.x }); cur.look.copy(keep.look); fit = keep.fit;
+      dirty = true;
       return out;
     },
     refresh() { dirty = true; }
