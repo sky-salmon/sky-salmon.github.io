@@ -37,23 +37,20 @@ export async function createAvatar(opts = {}) {
   const rig = rg.scene;
   scene.add(rig);
   const mixer = new THREE.AnimationMixer(rig);
-  // Clean clips before use: bone translations other than the hip's don't decode reliably yet (chest/shoulders
-  // pushed several times their length), so bones keep their skeleton lengths and only rotate. Cape bones are
-  // held at their modelled pose (the game drives them with cloth, not with these keys): capes skin to the Wing
-  // chains (front / side / back), a few to the cap bones.
+  // Clips play as exported: every bone's rotation and translation, the cape chains included. (Translations used to
+  // be dropped, and the hip re-grounded after each clip: both only covered a decoding bug in the exporter, which read
+  // a clip's translation box as (min, max) where the game stores (min, size). The cape's keys are what makes it lift
+  // with a waving arm or open for the umbrella.) opts.capeKeys === false holds the cape at its modelled pose instead.
   const CAPE = /^([LMR]_cap[BF](Root|Tip)|[LMR]_Wing[BFS](Root|Tip)(AUX)?)$/;
   function cleanClip(c) {
-    c.tracks = c.tracks.filter(tr => {
-      const i = tr.name.lastIndexOf('.'), bone = tr.name.slice(0, i), prop = tr.name.slice(i + 1);
-      if (prop === 'position' && bone !== 'M_hip') return false;
-      if (CAPE.test(bone)) return false;
-      return true;
-    });
+    if (opts.capeKeys === false) c.tracks = c.tracks.filter(tr => !CAPE.test(tr.name.slice(0, tr.name.lastIndexOf('.'))));
     return c;
   }
   const clips = Object.fromEntries(rg.animations.map(c => [c.name, cleanClip(c)]));
-  // In game cloth lets the cape hang out over the arms; at its modelled pose it reads narrow. Spread the side and
-  // front chains outward a little (fitted to an in-game shot of the Robe: 15° sides, 6° front).
+  // In game the cloth also lets the cape hang out over the arms; on the keys alone it reads narrow. Every frame the
+  // side and front chains turn outward a little on top of whatever the clip keyed (fitted to an in-game shot of the
+  // Robe: 15° sides, 6° front). The turn is about the body's forward axis, taken in each bone's parent frame.
+  const spread = [];
   {
     rig.updateMatrixWorld(true);
     const fwd = new THREE.Vector3(0, 0, 1), pq = new THREE.Quaternion();
@@ -61,10 +58,18 @@ export async function createAvatar(opts = {}) {
       const bn = rig.getObjectByName(n);
       if (!bn || !bn.parent) continue;
       bn.parent.getWorldQuaternion(pq);
-      const spin = new THREE.Quaternion().setFromAxisAngle(fwd, deg * Math.PI / 180);
-      bn.quaternion.premultiply(pq.clone().invert().multiply(spin).multiply(pq));
+      const spin = pq.clone().invert().multiply(new THREE.Quaternion().setFromAxisAngle(fwd, deg * Math.PI / 180)).multiply(pq);
+      spread.push({ bn, spin, base: bn.quaternion.clone(), last: null });
     }
   }
+  // Put back what applySpread wrote, so the mixer only ever sees (and, binding a new clip, saves) the plain pose.
+  function restoreSpread() {
+    for (const s of spread) if (s.last && s.bn.quaternion.equals(s.last)) s.bn.quaternion.copy(s.base);
+  }
+  function applySpread() {
+    for (const s of spread) { s.base.copy(s.bn.quaternion); s.bn.quaternion.premultiply(s.spin); s.last = s.bn.quaternion.clone(); }
+  }
+  applySpread();
   const worn = {};          // slot → { name, obj }
   const dyes = {};          // slot → [primary, secondary]
   const gltfCache = new Map(), texCache = new Map(), loadToken = {};
@@ -179,7 +184,8 @@ export async function createAvatar(opts = {}) {
         const m = new THREE.Mesh(src.geometry, mat);
         src.matrixWorld.decompose(m.position, m.quaternion, m.scale);
         obj.add(m);
-        const p = (info.prop && (rules || info.prop.mode !== 'back' ? info.prop : info.prop.held)) || {};
+        // in the hand when the page chose the held pose (or has no rules to work out the carried one), else on the back
+        const p = (info.prop && (info.prop.mode === 'held' || !rules ? info.prop.held || info.prop : info.prop)) || {};
         obj.position.fromArray(p.position || [0, 0, 0]);
         if (p.rotation) (p.rotation.length === 4 ? obj.quaternion.fromArray(p.rotation) : obj.rotation.fromArray(p.rotation));
         if (Array.isArray(p.scale)) obj.scale.fromArray(p.scale); else if (p.scale != null) obj.scale.setScalar(p.scale);
@@ -220,32 +226,22 @@ export async function createAvatar(opts = {}) {
     const def = IDX.clips.find(c => c.id === clip.name);
     const loop = then || (def && def.loop === false) ? THREE.LoopOnce : THREE.LoopRepeat;
     if (action && action.getClip() === clip) { if (restart) { action.setLoop(loop, Infinity); action.reset().play(); afterOnce = then; } return; }
-    if (action) action.fadeOut(0.25);
+    restoreSpread();
     if (rules && rules.restoreAvatarFrame) rules.restoreAvatarFrame(rig);  // the mixer must bind the plain pose
+    const first = !action;
+    if (action) action.fadeOut(0.25);
     action = mixer.clipAction(clip);
     afterOnce = then;
     action.reset().setLoop(loop, Infinity);
     action.clampWhenFinished = true;
-    action.fadeIn(0.25).play();
-    groundAt = performance.now() + 350;  // re-measure the feet once the fade is over
+    // the very first clip starts at full weight: fading in from the bind pose would flash the arms out (T-pose)
+    (first ? action : action.fadeIn(0.25)).play();
+    if (first) { mixer.update(0); applySpread(); }
   }
-  // Some clip packs keep the hip ~1 unit higher than the skeleton they were exported with, so standing poses
-  // float. After a clip settles, put the lower toe back on the ground (sitting / kneeling poses are left alone).
-  let groundAt = 0, groundY = 0;
   const v1 = new THREE.Vector3(), v2 = new THREE.Vector3();
-  function measureGround() {
-    rig.position.y = 0; rig.updateMatrixWorld(true);
-    // measured in the rig's parent space, so a hosted (scaled) rig grounds the same way
-    const y = n => { const b = rig.getObjectByName(n); return b ? rig.parent.worldToLocal(b.getWorldPosition(v1)).y : NaN; };
-    const toe = Math.min(y('L_toe'), y('R_toe')), hip = y('M_hip');
-    const rootS = ((rig.getObjectByName('M_root') || rig).getWorldScale(v1).y / rig.parent.getWorldScale(v2).y) || 1;
-    groundY = Number.isFinite(toe) && hip > 5.5 * rootS && toe > 0.25 * rootS ? 0.07 * rootS - toe : 0;
-    rig.position.y = groundY; rig.updateMatrixWorld(true);
-  }
   function setBody(b) {
     body = { height: +b.height || 0, scale: +b.scale || 0 };
     if (rules && rules.applyBodyShape) rules.applyBodyShape(THREE, rig, body);
-    groundAt = performance.now() + 50;
   }
   // Resolves true when this look is the one now showing, false when a later wearLook() replaced it meanwhile.
   let lookGen = 0;
@@ -267,10 +263,11 @@ export async function createAvatar(opts = {}) {
 
   let frameRules = !!(rules && rules.updateAvatarFrame);   // switched off if it ever throws, rather than throwing every frame
   function update(dt) {
+    restoreSpread();
     if (rules && rules.restoreAvatarFrame) rules.restoreAvatarFrame(rig);
     mixer.update(Math.min(dt, 0.1));
+    applySpread();
     if (frameRules) { try { rules.updateAvatarFrame(THREE, rig); } catch (e) { console.warn('frame rules', e); frameRules = false; } }
-    if (groundAt && performance.now() >= groundAt) { groundAt = 0; measureGround(); }
   }
   // height of the top of the head (not the hat) above the feet, in the units of the rig's parent
   function headTop() {

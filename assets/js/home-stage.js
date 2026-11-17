@@ -43,11 +43,12 @@ export const SHOTS = {
 // the framing of a photograph: head and shoulders, the hat whole
 const PORTRAIT = { yaw: -0.04, pitch: 0.03, dist: 5.9, look: [0, 1.98, 0] };
 // The author's clip, as a camera: where it stood and looked in the game's units when the kid squats at the origin,
-// turned CLIP.ry about their own head (the camera from the photo-scene branch's fit, the turn refitted to this
-// footage by laying the kid's outline over it). The footage is 1280×802, mirrored.
-// zoom and shift then lay that picture exactly over the kid in the footage: zoom about the middle of the stage,
-// shift in footage widths / heights, toward the visitor's right / down.
-const CLIP = { pos: [1.425, 3.5, -9.521], tgt: [-4.345, 6.466, -1.911], fov: 60, ry: 0.04, zoom: 1, shift: [-0.012, 0.012], pose: 'squatLazy', file: 'clips/squatLazy.glb' };
+// turned CLIP.ry (the camera from the photo-scene branch's fit, the turn refitted to this footage by laying the
+// kid's outline over it). The footage is 1280×802, mirrored.
+// `pivot` is the upright line (x, z in game units) that turn was made about. zoom and shift then lay that picture
+// exactly over the kid in the footage: zoom about the middle of the stage, shift in footage widths / heights, toward
+// the visitor's right / down.
+const CLIP = { pos: [1.425, 3.5, -9.521], tgt: [-4.345, 6.466, -1.911], pivot: [0.0479, -0.8356], fov: 60, ry: 0.04, zoom: 1.085, shift: [-0.0133, 0.0529], pose: 'squatLazy', file: 'clips/squatLazy.glb' };
 
 // The Bat cape is black with an orange-red band along its scalloped hem (in the game a colour-shifting shader draws
 // it). The band is found on the mesh itself: the open edges in the lower part of the cape are the hem.
@@ -184,14 +185,12 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
   onProgress(0.9);
 
   // ── the clip's camera, in this stage's space ───────────────────────────
-  // In the fitted scene the kid was turned CLIP.ry about their head; here the kid stays put and the camera moves
+  // In the fitted scene the kid was turned CLIP.ry about CLIP.pivot; here the kid stays put and the camera moves
   // round instead. Then game units → stage units, and the half-turn the holder gives the kid.
   const clipCam = { pos: new THREE.Vector3(), tgt: new THREE.Vector3(), q: new THREE.Quaternion() };
-  kid.update(0.001); kid.object.updateMatrixWorld(true);   // as the fit measured it: on the first frame of the clip
-  const headFit = kid.object.worldToLocal(bone('M_head').getWorldPosition(new THREE.Vector3()));   // the head, in game units
   function fitClip() {
-    const h = headFit, c = Math.cos(CLIP.ry), s = Math.sin(CLIP.ry);
-    const kx = h.x - (c * h.x + s * h.z), kz = h.z - (-s * h.x + c * h.z);   // where the fitted kid stood after its turn
+    const [hx, hz] = CLIP.pivot, c = Math.cos(CLIP.ry), s = Math.sin(CLIP.ry);
+    const kx = hx - (c * hx + s * hz), kz = hz - (-s * hx + c * hz);   // where the fitted kid stood after its turn
     const toStage = (p, out) => { const x = p[0] - kx, z = p[2] - kz; return out.set(-(c * x - s * z) * S, p[1] * S, -(s * x + c * z) * S); };
     toStage(CLIP.pos, clipCam.pos); toStage(CLIP.tgt, clipCam.tgt);
     clipCam.q.setFromRotationMatrix(new THREE.Matrix4().lookAt(clipCam.pos, clipCam.tgt, new THREE.Vector3(0, 1, 0)));
