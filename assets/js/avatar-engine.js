@@ -5,6 +5,7 @@
  *
  *   const kid = await createAvatar()                        // loads index.json, the skeleton and the rules
  *   await kid.wearLook({ pieces: {slot: outfit|null}, dyes: {slot: [primary, secondary]}, clip, body: {height, scale} })
+ *   kid.play(clip), kid.setBody({height, scale})          // change only the clip or the body shape
  *   kid.object, kid.update(dt), kid.headTop(), kid.body, kid.index, kid.rules */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -202,7 +203,7 @@ export async function createAvatar(opts = {}) {
     if (!clipLoads.has(def.file)) clipLoads.set(def.file, load(BASE + def.file).then(g => { g.animations.forEach(c => { clips[c.name] = cleanClip(c); }); }).catch(e => console.warn(e)));
     return clipLoads.get(def.file).then(() => clips[id] || null);
   }
-  async function play(id) {
+  async function play(id, restart = false) {   // restart: run a one-shot clip again from its first frame
     clipWanted = id || 'idle';
     // a prop held in the hands brings its hold pose (props carried on the back don't)
     const prop = worn.prop && IDX.pieces[worn.prop.name];
@@ -213,7 +214,7 @@ export async function createAvatar(opts = {}) {
     if ((clipWanted || 'idle') !== (id || 'idle')) return;
     const clip = clips[clipId] || clips.idle || Object.values(clips)[0];
     if (!clip) return;
-    if (action && action.getClip() === clip) return;
+    if (action && action.getClip() === clip) { if (restart) action.reset().play(); return; }
     if (action) action.fadeOut(0.25);
     if (rules && rules.restoreAvatarFrame) rules.restoreAvatarFrame(rig);  // the mixer must bind the plain pose
     action = mixer.clipAction(clip);
@@ -275,5 +276,5 @@ export async function createAvatar(opts = {}) {
     const s = h.getWorldScale(v2).y / rig.parent.getWorldScale(v1).y;
     return y + HEAD_TOP * s;
   }
-  return { index: IDX, rules, object: scene, wearLook, update, headTop, get body() { return body; }, get notes() { return rulesNotes; } };
+  return { index: IDX, rules, object: scene, wearLook, play, setBody, update, headTop, get body() { return body; }, get notes() { return rulesNotes; } };
 }
