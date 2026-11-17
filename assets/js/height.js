@@ -1,13 +1,14 @@
 // 身高計算 — reads an outfit QR screenshot on-device, finds the height/scale
 // parameters, applies the community estimate formula and drives the 3D stage.
 // The 3D stage is loaded lazily, so the calculator keeps working without WebGL/CDN.
-import { KEY_LOOK, KEY_INPUT } from './saved-look.js';   // the last look and values; the home island reads them too
 const { store, toast, loadImage, readFileAsDataURL, bindDropzone } = window.Site;
 const $ = id => document.getElementById(id);
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const narrowMQ = window.matchMedia('(max-width: 760px)');
 
 const KEY_LAST = 'candle.height.last';    // read by card.html
+const KEY_INPUT = 'candle.height.input';  // this page's own memory of the last values
+const KEY_LOOK = 'candle.height.look';    // the look from the last outfit QR
 
 // ── formula ─────────────────────────────────────────────────────────────
 // Community-shared estimate: smaller number = taller. The range only depends on scale.
@@ -408,8 +409,7 @@ new MutationObserver(() => requestAnimationFrame(updateMore)).observe(els.scroll
 // An outfit QR (sky.thatg.co/o=…) carries the whole look: every slot, its dyes, the stance and the body. The kid is
 // assembled from the game's own models (assets/js/avatar-engine.js) and replaces the stand-in on the stage.
 // Until a visitor has scanned their own QR, the stage shows the game's starting outfit: at a neutral build before any
-// result, at the typed height for a manual entry. The scanned look is kept in this browser (saved-look.js), and the
-// home island's kid wears it too.
+// result, at the typed height for a manual entry. The scanned look is kept in this browser (KEY_LOOK).
 const ORDER = ['outfit', 'cape', 'hair', 'hat', 'horn', 'mask', 'face', 'neck', 'shoes', 'prop'];
 const SLOT_ZH = { cape: '斗篷', mask: '面具', hair: '髮型', outfit: '服裝', hat: '髮飾', horn: '頭飾', neck: '項鍊', face: '面飾', shoes: '鞋子', prop: '道具' };
 const ATT_ZH = { Neutral: '一般', ColdWind: '怕冷', HandsOut: '張開雙手', Proud: '驕傲', Sneaky: '偷偷摸摸', Tough: '強悍', Solemn: '莊重',

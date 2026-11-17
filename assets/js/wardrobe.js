@@ -1,4 +1,4 @@
-/* candle·kit — wardrobe (wardrobe.html): a catalogue of every closet item, by slot and season.
+/* sky-salmon — wardrobe (wardrobe.html): a catalogue of every closet item, by slot and season.
  * Data: assets/icons/icons.csv with data/ (seasons, item corrections, paid packs) applied by card-data.js.
  * An item can be linked to directly with #item=<name>. Seeing your own kid dressed up lives on the height page
  * (upload the outfit QR there). */

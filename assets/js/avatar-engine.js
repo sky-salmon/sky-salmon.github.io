@@ -1,10 +1,11 @@
-/* candle·kit — 3D Sky kid: the shared skeleton from assets/avatar/, outfit pieces rebound onto it by joint name,
+/* sky-salmon — 3D Sky kid: the shared skeleton from assets/avatar/, outfit pieces rebound onto it by joint name,
  * the game's ramp / mask / dye colouring, clips, the carried prop, and the game's body-shape and attachment rules
  * (assets/js/avatar-rules.js). It has no renderer of its own: the height page's stage adds `kid.object` to its scene
  * and calls `kid.update(dt)` every frame.
  *
  *   const kid = await createAvatar()                        // loads index.json, the skeleton and the rules
  *   await kid.wearLook({ pieces: {slot: outfit|null}, dyes: {slot: [primary, secondary]}, clip, body: {height, scale} })
+ *   kid.play(clip, restart, then), kid.setBody({height, scale})   // change only the clip (once, then another) or the body shape
  *   kid.object, kid.update(dt), kid.headTop(), kid.body, kid.index, kid.rules */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -208,7 +209,10 @@ export async function createAvatar(opts = {}) {
     if (!clipLoads.has(def.file)) clipLoads.set(def.file, load(BASE + def.file).then(g => { g.animations.forEach(c => { clips[c.name] = cleanClip(c); }); }).catch(e => console.warn(e)));
     return clipLoads.get(def.file).then(() => clips[id] || null);
   }
-  async function play(id) {
+  // restart: run the clip again from its first frame. then: play this clip once, and that one when it ends.
+  let afterOnce = null;
+  mixer.addEventListener('finished', e => { if (afterOnce && e.action === action) { const next = afterOnce; afterOnce = null; play(next); } });
+  async function play(id, restart = false, then = null) {
     clipWanted = id || 'idle';
     // a prop held in the hands brings its hold pose (props carried on the back don't)
     const prop = worn.prop && IDX.pieces[worn.prop.name];
@@ -219,14 +223,16 @@ export async function createAvatar(opts = {}) {
     if ((clipWanted || 'idle') !== (id || 'idle')) return;
     const clip = clips[clipId] || clips.idle || Object.values(clips)[0];
     if (!clip) return;
-    if (action && action.getClip() === clip) return;
+    const def = IDX.clips.find(c => c.id === clip.name);
+    const loop = then || (def && def.loop === false) ? THREE.LoopOnce : THREE.LoopRepeat;
+    if (action && action.getClip() === clip) { if (restart) { action.setLoop(loop, Infinity); action.reset().play(); afterOnce = then; } return; }
     restoreSpread();
     if (rules && rules.restoreAvatarFrame) rules.restoreAvatarFrame(rig);  // the mixer must bind the plain pose
     const first = !action;
     if (action) action.fadeOut(0.25);
     action = mixer.clipAction(clip);
-    const def = IDX.clips.find(c => c.id === clip.name);
-    action.reset().setLoop(def && def.loop === false ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
+    afterOnce = then;
+    action.reset().setLoop(loop, Infinity);
     action.clampWhenFinished = true;
     // the very first clip starts at full weight: fading in from the bind pose would flash the arms out (T-pose)
     (first ? action : action.fadeIn(0.25)).play();
@@ -272,5 +278,5 @@ export async function createAvatar(opts = {}) {
     const s = h.getWorldScale(v2).y / rig.parent.getWorldScale(v1).y;
     return y + HEAD_TOP * s;
   }
-  return { index: IDX, rules, object: scene, wearLook, update, headTop, get body() { return body; }, get notes() { return rulesNotes; } };
+  return { index: IDX, rules, object: scene, wearLook, play, setBody, update, headTop, get body() { return body; }, get notes() { return rulesNotes; } };
 }

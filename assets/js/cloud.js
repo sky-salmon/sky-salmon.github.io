@@ -1,4 +1,4 @@
-/* candle·kit — cloud save and share links for the card editor (card.html), on Firebase.
+/* sky-salmon — cloud save and share links for the card editor (card.html), on Firebase.
  *
  * Load order: firebase-config.js, card.js, cloud.js. The Firebase SDK (vendor/firebase.js) is only fetched when this
  * device has signed in before, when someone opens the cloud or share dialog, or when a share link is opened, so the
