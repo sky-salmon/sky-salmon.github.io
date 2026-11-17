@@ -26,13 +26,14 @@ const FOV = 26;
 
 // One shot per tool: the clip the kid plays, how far they are turned (0 = facing the camera), and where the camera
 // sits (yaw / pitch around `look`, `dist` away). `x` slides the whole picture sideways, in view widths.
+// Full-body shots keep the hat's tip and the feet inside the part of the canvas that is not faded.
 export const SHOTS = {
-  card:     { clip: 'waveSmall', turn: -0.3, yaw: 0.02, pitch: 0.02, dist: 5.4, look: [0, 2.02, 0], x: 0.17 },
-  wardrobe: { clip: 'idle_Sassy', turn: -0.2, yaw: 0, pitch: 0.05, dist: 7.5, look: [0, 1.5, 0], spin: 0.35 },
-  height:   { clip: 'idleStand', turn: 0, yaw: 0, pitch: 0.0, dist: 8.3, look: [0, 1.56, 0], x: 0.07 },
-  events:   { clip: 'idle_Proud', turn: -0.36, yaw: -0.04, pitch: 0.03, dist: 9.4, look: [0, 1.6, 0], x: -0.12 },
-  music:    { clip: 'clap', turn: -0.38, yaw: 0.14, pitch: 0.06, dist: 7.4, look: [0, 1.5, 0] },
-  album:    { clip: 'waveSmall', turn: -0.15, yaw: -0.05, pitch: 0.04, dist: 7.5, look: [0, 1.52, 0] }
+  card:     { clip: 'waveSmall', turn: -0.3, yaw: 0.02, pitch: 0.02, dist: 5.4, look: [0, 2.06, 0], x: 0.17 },
+  wardrobe: { clip: 'idle_Sassy', turn: -0.2, yaw: 0, pitch: 0.04, dist: 7.9, look: [0, 1.27, 0], spin: 0.35 },
+  height:   { clip: 'idleStand', turn: 0, yaw: 0, pitch: 0.0, dist: 8.5, look: [0, 1.36, 0], x: 0.07 },
+  events:   { clip: 'idle_Proud', turn: -0.36, yaw: -0.04, pitch: 0.03, dist: 9.6, look: [0, 1.45, 0], x: -0.12 },
+  music:    { clip: 'clap', turn: -0.72, yaw: 0.42, pitch: 0.05, dist: 6.3, look: [0, 1.72, 0], x: 0.03 },
+  album:    { clip: 'waveSmall', turn: -0.12, yaw: -0.1, pitch: -0.13, dist: 6.9, look: [0, 1.62, 0] }
 };
 // the framing of a photograph: head and shoulders, the hat whole
 const PORTRAIT = { yaw: -0.04, pitch: 0.03, dist: 5.9, look: [0, 1.98, 0] };
@@ -92,14 +93,14 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
 
   // dusk, with the sun behind the kid: little light from the front (so black cloth stays black), a strong warm edge
   // from both sides behind, and a breath of cool sky from above-left so the face and scarf still read
-  scene.add(new THREE.HemisphereLight('#c8b9a0', '#231d14', 0.62));
-  const front = new THREE.DirectionalLight('#ffe2c2', 0.95);
+  scene.add(new THREE.HemisphereLight('#c8b9a0', '#231d14', 0.5));
+  const front = new THREE.DirectionalLight('#ffe2c2', 0.6);
   front.position.set(-3.5, 4.5, 8);
   scene.add(front);
-  const rimR = new THREE.DirectionalLight('#ffa860', 3.6);
+  const rimR = new THREE.DirectionalLight('#ffa860', 4.4);
   rimR.position.set(5.5, 4.5, -6.5);
   scene.add(rimR);
-  const rimL = new THREE.DirectionalLight('#ffc27a', 2.6);
+  const rimL = new THREE.DirectionalLight('#ffc27a', 3.2);
   rimL.position.set(-6, 5, -6);
   scene.add(rimL);
   const sky = new THREE.DirectionalLight('#a9c4d6', 0.5);
@@ -155,11 +156,33 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(container);
 
   let frames = 0;
+  // The kid's head leans toward a point the page gives (the visitor's pointer), a little, on top of whatever the clip
+  // does. The clip rewrites the head every frame; if it ever does not, the lean is taken off before it is put on again.
+  const head = kid.object.getObjectByName('M_head'), gaze = { x: 0, y: 0, tx: 0, ty: 0 };
+  const qW = new THREE.Quaternion(), qP = new THREE.Quaternion(), qE = new THREE.Quaternion(), eul = new THREE.Euler(0, 0, 0, 'YXZ');
+  const mine = new THREE.Quaternion(), plain = new THREE.Quaternion();
+  let leaned = false;
+  function lookAt(dt) {
+    if (!head) return;
+    if (leaned && head.quaternion.equals(mine)) head.quaternion.copy(plain);
+    const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 5);
+    gaze.x += (gaze.tx - gaze.x) * k; gaze.y += (gaze.ty - gaze.y) * k;
+    leaned = Math.abs(gaze.x) > 1e-3 || Math.abs(gaze.y) > 1e-3;
+    if (!leaned) return;
+    plain.copy(head.quaternion);
+    head.parent.updateWorldMatrix(true, false);
+    head.parent.getWorldQuaternion(qP);
+    qW.copy(qP).multiply(head.quaternion);
+    eul.set(gaze.y * 0.3, gaze.x * 0.55, 0);
+    qW.premultiply(qE.setFromEuler(eul));
+    head.quaternion.copy(qP.invert().multiply(qW));
+    mine.copy(head.quaternion);
+  }
   const ease = (a, b, k) => a + (b - a) * k;
   function frame(now) {
     requestAnimationFrame(frame);
     if (!visible && !dirty) return;
-    const moving = dirty || now < busyUntil || Math.abs(dragV) > 1e-3 || !!goal.spin || !!grab;
+    const moving = dirty || now < busyUntil || Math.abs(dragV) > 1e-3 || !!goal.spin || !!grab || Math.abs(gaze.tx - gaze.x) > 0.01 || Math.abs(gaze.ty - gaze.y) > 0.01;
     const dt = pacer.tick(now, moving);
     if (!dt) return;
     dirty = false;
@@ -172,6 +195,7 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
     cur.turn = ease(cur.turn, goal.turn, k);
     turner.rotation.y = cur.turn + spinT + drag;
     kid.update(reducedMotion ? 0 : dt);
+    lookAt(dt);
     place();
     renderer.render(scene, camera);
     frames++;
@@ -181,14 +205,18 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
   onProgress(1);
 
   // drag across the stage to turn the kid
-  canvas.addEventListener('pointerdown', e => { if (e.button > 0) return; grab = { x: e.clientX, d: drag, t: performance.now(), lx: e.clientX }; canvas.setPointerCapture(e.pointerId); dragV = 0; canvas.dispatchEvent(new CustomEvent('stage-grab', { bubbles: true })); });
+  canvas.addEventListener('pointerdown', e => { if (e.button > 0) return; grab = { x: e.clientX, d: drag, t: performance.now(), t0: performance.now(), lx: e.clientX }; canvas.setPointerCapture(e.pointerId); dragV = 0; });
   canvas.addEventListener('pointermove', e => {
     if (!grab) return;
     const now = performance.now(), dx = e.clientX - grab.lx;
+    if (!grab.moved && Math.abs(e.clientX - grab.x) > 6) { grab.moved = true; canvas.dispatchEvent(new CustomEvent('stage-grab', { bubbles: true })); }
     drag = grab.d + (e.clientX - grab.x) * 0.012;
     dragV = dx * 0.012 / Math.max(0.008, (now - grab.t) / 1000); grab.t = now; grab.lx = e.clientX; dirty = true;
   });
-  const release = () => { grab = null; };
+  const release = e => {
+    if (grab && Math.abs(e.clientX - grab.x) < 6 && performance.now() - grab.t0 < 400) canvas.dispatchEvent(new CustomEvent('stage-tap', { bubbles: true }));
+    grab = null;
+  };
   canvas.addEventListener('pointerup', release); canvas.addEventListener('pointercancel', release);
 
   return {
@@ -208,6 +236,10 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
     body(height, scale = look.body.scale) { kid.setBody({ height, scale }); dirty = true; },
     async wear(next) { look = next; const ok = await kid.wearLook({ ...next, clip: goal.clip }); if (ok && next.pieces.cape === FISH.pieces.cape) batCape(kid.object); dirty = true; return ok; },
     headTop() { return kid.headTop() * (BASE_H / KID_UNITS); },
+    // x, y in −1…1 across the stage: where the kid should look (0, 0 = straight ahead)
+    gaze(x, y) { gaze.tx = Math.max(-1, Math.min(1, x)); gaze.ty = Math.max(-1, Math.min(1, y)); dirty = true; },
+    // the kid's chest on the canvas, in CSS pixels
+    chest() { const c = kid.object.getObjectByName('M_chest') || head; const v = c.getWorldPosition(new THREE.Vector3()).project(camera); return [(v.x + 1) * 0.5 * W, (1 - v.y) * 0.5 * H]; },
     // where a point of the stage lands on the canvas, in CSS pixels
     project(x, y, z) { const v = new THREE.Vector3(x, y, z).project(camera); return [(v.x + 1) * 0.5 * W, (1 - v.y) * 0.5 * H]; },
     // a square portrait of the kid as they stand now, on whatever `paint` draws first. The stage shows the portrait's

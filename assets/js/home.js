@@ -3,7 +3,8 @@
  *             once the page scrolls
  *   index     the six tools as a list; opening one turns the stage to it
  *   stage     the author's own Sky kid: one camera shot and pose per tool, drag to turn
- *   per tool  card: a name card that tilts · wardrobe: change clothes · height: the height page's formula on the kid's
+ *             their head follows the pointer and a tap makes them call, as in the game
+ *   per tool  card: a name card that tilts · wardrobe: other capes · height: the height page's formula on the kid's
  *             real body · events: the two-hour clock, live, in game time · music: fifteen keys · album: take a picture
  * Every part checks that its elements exist, so a missing block never stops the rest. */
 const $ = id => document.getElementById(id);
@@ -115,6 +116,46 @@ if (stageEl) {
   hintOff = () => setTimeout(() => stageEl.classList.add('is-touched'), 9000);   // the hint leaves on its own after a while
 }
 
+/* ── life: the kid looks toward the pointer, and answers a tap with a call ── */
+if (stageEl) {
+  // the pointer anywhere in the section turns the head a little; leaving lets it go back
+  const made = $('made');
+  made.addEventListener('pointermove', e => {
+    if (!stage || e.pointerType === 'touch' || reduce.matches) return;
+    const r = stageEl.getBoundingClientRect();
+    stage.gaze((e.clientX - (r.left + r.width / 2)) / (r.width * 0.7), (e.clientY - (r.top + r.height * 0.36)) / (r.height * 0.7));
+  });
+  made.addEventListener('pointerleave', () => stage && stage.gaze(0, 0));
+  // the call: rings of light from the kid's chest and a short two-note voice
+  let ac = null;
+  const voice = () => {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      ac = ac || new AC(); if (ac.state === 'suspended') ac.resume();
+      const t = ac.currentTime, o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), lp = ac.createBiquadFilter();
+      o.type = 'sine'; o2.type = 'triangle';
+      o.frequency.setValueAtTime(620, t); o.frequency.exponentialRampToValueAtTime(930, t + 0.11); o.frequency.exponentialRampToValueAtTime(760, t + 0.3);
+      o2.frequency.setValueAtTime(1240, t); o2.frequency.exponentialRampToValueAtTime(1860, t + 0.11); o2.frequency.exponentialRampToValueAtTime(1520, t + 0.3);
+      lp.type = 'lowpass'; lp.frequency.value = 2600;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
+      const g2 = ac.createGain(); g2.gain.value = 0.18;
+      o.connect(lp); o2.connect(g2); g2.connect(lp); lp.connect(g); g.connect(ac.destination);
+      o.start(t); o2.start(t); o.stop(t + 0.45); o2.stop(t + 0.45);
+    } catch { /* no sound is fine */ }
+  };
+  stageEl.addEventListener('stage-tap', () => {
+    if (!stage) return;
+    const [x, y] = stage.chest();
+    for (let i = 0; i < (reduce.matches ? 1 : 3); i++) {
+      const ring = document.createElement('i');
+      ring.className = 'call-ring'; ring.style.left = x.toFixed(1) + 'px'; ring.style.top = y.toFixed(1) + 'px'; ring.style.animationDelay = (i * 0.12) + 's';
+      stageEl.appendChild(ring); setTimeout(() => ring.remove(), 1300 + i * 120);
+    }
+    voice();
+    stageEl.classList.add('is-touched');
+  });
+}
+
 /* ── card: the name card leans toward the pointer ──────────────────── */
 const nameCard = $('stage-card');
 if (stageEl && nameCard) {
@@ -126,30 +167,21 @@ if (stageEl && nameCard) {
   stageEl.addEventListener('pointerleave', () => { nameCard.style.setProperty('--ry', '0deg'); nameCard.style.setProperty('--rx', '0deg'); });
 }
 
-/* ── wardrobe: a few other things from the catalogue ───────────────── */
+/* ── wardrobe: the kid stays 魚; the cape changes ──────────────────── */
 const wearNext = $('wear-next'), wearBack = $('wear-back');
 if (wearNext && wearBack) {
-  const k = n => 'CharSkyKid_' + n;
-  // whole looks, so every piece that is not named falls back to nothing rather than to the author's own
-  const BARE = { outfit: null, cape: null, hair: null, mask: null, neck: null, shoes: null, horn: null, face: null, prop: null, hat: null };
-  const LOOKS = [
-    { outfit: k('Body_EvergreenRobe'), hair: k('Hair_AP06WizardHat_01'), mask: k('Mask_AP06WizardBeard'), cape: k('Wing_AP06Layered_01') },
-    { outfit: k('Body_AP10Overalls_01'), hair: k('Hair_TopTwoKnot'), mask: k('Mask_AP02Fox_01'), cape: k('Wing_AP10YellowCape_01') },
-    { outfit: k('Body_ClassicDress'), hair: k('Hair_AP03Victorian_01'), mask: k('Mask_AP03A'), cape: k('Wing_ClassicOne_TGCBlue') },
-    { outfit: k('Body_AP07Jumpsuits_01'), hair: k('Hair_AP07Jellyfish_01'), mask: k('Mask_AP02Deer_01'), cape: k('Wing_AP07Butterfly_01') },
-    { outfit: k('Body_APDancerPants_01'), hair: k('Hair_AP09MultiBuns_01'), mask: k('Mask_AP09Rabbit_01'), cape: k('Wing_AP09Phoenix_01') }
-  ];
+  const CAPES = ['Wing_AP10YellowCape_01', 'Wing_ClassicOne_TGCBlue', 'Wing_AP07Butterfly_01', 'Wing_AP09Phoenix_01', 'Wing_AP06Layered_01'].map(n => 'CharSkyKid_' + n);
   let at = -1, busy = false;
   const wear = async i => {
     if (!stage || busy) return;
     busy = true; wearNext.classList.add('is-playing');
     const { FISH } = await import('./home-stage.js');
     at = i;
-    await stage.wear(i < 0 ? FISH : { pieces: { ...BARE, ...LOOKS[i] }, dyes: {}, body: FISH.body });
+    await stage.wear(i < 0 ? FISH : { ...FISH, pieces: { ...FISH.pieces, cape: CAPES[i] } });
     busy = false; wearNext.classList.remove('is-playing');
     wearBack.hidden = at < 0;
   };
-  wearNext.addEventListener('click', () => wear(at + 1 >= LOOKS.length ? -1 : at + 1));
+  wearNext.addEventListener('click', () => wear(at + 1 >= CAPES.length ? -1 : at + 1));
   wearBack.addEventListener('click', () => wear(-1));
 }
 
@@ -168,7 +200,7 @@ if (hIn) {
     const X = -1.3, P = y => stage.project(X, y, 0);
     line(parts.axis, P(0), P(3));
     parts.ticks.forEach((t, i) => { const p = P(i * 0.25); line(t, p, [p[0] + (i % 4 === 0 ? 16 : 8), p[1]]); });
-    const top = stage.headTop(), a = P(top), b = stage.project(0, top, 0);
+    const top = stage.headTop(), a = P(top), b = stage.project(0.95, top, 0);
     line(parts.head, a, b); parts.dot.setAttribute('cx', a[0].toFixed(1)); parts.dot.setAttribute('cy', a[1].toFixed(1)); parts.dot.setAttribute('r', '3.5');
   };
   let until = 0, raf = 0;
@@ -210,7 +242,7 @@ if (ring) {
   // each window's name sits just outside its arc; the names show while 活動雷達 is open
   for (const ev of EVENTS) {
     const [x, y] = pt(ev.at + DUR / 2, R + 14), t = el('text', { x: x.toFixed(1), y: (y + 4).toFixed(1), class: 'ring-name', style: `--c:${ev.color}`, 'text-anchor': 'start' });
-    t.textContent = ev.short;
+    t.textContent = `${ev.short} :${pad(ev.at)}`;
   }
   const hand = el('g', { class: 'ring-hand' });
   el('line', { x1: C, y1: C - R + 16, x2: C, y2: C - R - 12 }, hand);
@@ -333,10 +365,10 @@ if (snapBtn && prints) {
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s * 0.5, s * 0.46, s * 0.4, 0, Math.PI * 2); ctx.fill();
       });
       const fig = document.createElement('figure'), img = new Image();
-      fig.className = 'print'; fig.style.setProperty('--r', (Math.random() * 8 - 4).toFixed(1) + 'deg');
+      fig.className = 'print'; fig.style.setProperty('--r', (Math.random() * 14 - 7).toFixed(1) + 'deg');
       img.alt = `第 ${n} 張：魚在舞台上`; img.src = shot.toDataURL('image/jpeg', 0.88);
-      fig.appendChild(img); prints.prepend(fig);
-      while (prints.children.length > 3) prints.lastElementChild.remove();
+      fig.appendChild(img); prints.append(fig);   // the newest lies on top
+      while (prints.children.length > 3) prints.firstElementChild.remove();
       busy = false;
     }, at);
   });
