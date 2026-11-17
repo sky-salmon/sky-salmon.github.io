@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-Hant" data-theme="ink">
+<html lang="zh-Hant" data-theme="dusk">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>衣櫃圖鑑 — sky-salmon</title>
 <meta name="description" content="Sky 光遇衣櫃圖鑑：依部位、季節瀏覽每一件斗篷、面具、髮型、服裝與道具，查看所屬季節、畢業禮與禮包價格。">
-<meta name="theme-color" content="#111312">
+<meta name="theme-color" content="#1f1d12">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Outfit:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
@@ -14,13 +14,13 @@
 <body data-page="wardrobe">
 <main class="wd">
   <header class="wd-head">
-    <span class="eyebrow">SKY-SALMON / WARDROBE</span>
-    <h1 class="title">衣櫃圖鑑 <em>Catalog</em></h1>
-    <p class="lead">依部位與季節瀏覽遊戲裡的每一件物品。想看自己的角色穿起來的樣子，到 <a href="height.html">身高</a> 頁上傳服裝 QR。</p>
+    <span class="eyebrow" data-rise>sky-salmon<b>02 / 06</b></span>
+    <h1 class="title" data-rise>衣櫃圖鑑 <em>Catalog</em></h1>
+    <p class="lead" data-rise>依部位與季節瀏覽遊戲裡的每一件物品。想看自己的角色穿起來的樣子，到 <a href="height.html">身高</a> 頁上傳服裝 QR。</p>
   </header>
   <p class="wd-banner" id="wd-banner" hidden></p>
 
-  <div class="wd-bar">
+  <div class="wd-bar" data-rise>
     <div class="wd-slots" role="tablist" aria-label="部位" id="wd-slots"></div>
     <div class="wd-filters">
       <label class="wd-search"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.4"/><path d="m12.6 12.6 4.4 4.4"/></svg>
@@ -36,7 +36,7 @@
     <p class="wd-count" id="wd-count" aria-live="polite"></p>
   </div>
 
-  <div class="wd-body">
+  <div class="wd-body" data-rise>
     <div class="wd-grid" id="wd-grid"><p class="wd-empty">載入中…</p></div>
     <aside class="wd-detail" id="wd-detail" aria-live="polite" hidden></aside>
   </div>

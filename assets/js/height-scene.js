@@ -1,5 +1,7 @@
-// 身高計算 — 3D "studio" stage: cream disc, lantern tower, the player's character,
-// a measuring stick (ticks drawn as an SVG overlay projected from 3D), a crab and candles.
+// 身高計算 — 3D stage at dusk, as on the home page: a dark stone turntable in front of a setting sun (the page paints
+// the sun behind the canvas, where this module says), lit from behind; the lantern tower, the player's character
+// (魚 until a visitor reads their own QR), a measuring stick (ticks drawn as an SVG overlay projected from 3D), a crab
+// and candles.
 // The props are the game's own models (island/sky.js: the lantern post, the crab, the candles, the pebbles); one that
 // fails to load is simply left out. The player's kid arrives through setKid.
 import * as THREE from 'three';
@@ -63,15 +65,15 @@ function glowSprite(scale, opacity = 0.8) {
   return sp;
 }
 
-// ── stage disc: a cream turntable with a faint dial printed on top ──────
+// ── stage disc: a dark stone turntable with a faint dial printed on top ──
 function makeStageDisc() {
   const g = new THREE.Group();
   const dial = canvasTexture(1024, (ctx, s) => {
     const c = s / 2, R = s / 2;
     const bg = ctx.createRadialGradient(c, c, 0, c, c, R);
-    bg.addColorStop(0, '#fffdf7'); bg.addColorStop(0.75, '#fbf6ec'); bg.addColorStop(1, '#f3eadb');
+    bg.addColorStop(0, '#8a7a5c'); bg.addColorStop(0.75, '#76684d'); bg.addColorStop(1, '#665a43');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, s, s);
-    ctx.strokeStyle = 'rgba(31,26,22,0.16)';
+    ctx.strokeStyle = 'rgba(255,236,200,0.22)';
     ctx.lineCap = 'round';
     for (let i = 0; i < 180; i++) {
       const a = (i / 180) * Math.PI * 2, long = i % 15 === 0, mid = i % 5 === 0;
@@ -82,16 +84,16 @@ function makeStageDisc() {
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(c, c, R * 0.968, 0, Math.PI * 2); ctx.stroke();
     ctx.setLineDash([4, 14]);
-    ctx.strokeStyle = 'rgba(31,26,22,0.1)';
+    ctx.strokeStyle = 'rgba(255,236,200,0.13)';
     for (const f of [0.36, 0.64]) { ctx.beginPath(); ctx.arc(c, c, R * f, 0, Math.PI * 2); ctx.stroke(); }
     ctx.setLineDash([]);
   });
   const geo = new THREE.CylinderGeometry(DISC_R, DISC_R, 0.2, 128, 1);
-  const disc = new THREE.Mesh(geo, [toon('#efe4d1'), toon('#ffffff', { map: dial, noCache: true }), toon('#e4d6bf')]);
+  const disc = new THREE.Mesh(geo, [toon('#5e5340'), toon('#ffffff', { map: dial, noCache: true }), toon('#4a4132')]);
   disc.position.y = -0.1;
   addOutline(disc);
   g.add(disc);
-  const plinth = part(new THREE.CylinderGeometry(DISC_R * 1.035, DISC_R * 1.0, 0.16, 128), '#e5d6bd');
+  const plinth = part(new THREE.CylinderGeometry(DISC_R * 1.035, DISC_R * 1.0, 0.16, 128), '#4f4534');
   plinth.position.y = -0.28;
   g.add(plinth);
   const ground = softShadow(DISC_R * 2.9, DISC_R * 2.5, 0.2);
@@ -137,7 +139,7 @@ function svgEl(name, attrs = {}, parent) {
 }
 
 // ── mount ───────────────────────────────────────────────────────────────
-export async function mountStage({ container, canvas, svg, tag, tagValue, note, safeRect, reducedMotion }) {
+export async function mountStage({ container, canvas, svg, tag, tagValue, note, kidNote, safeRect, reducedMotion }) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: antialias(), alpha: true, powerPreference: 'high-performance' });
   const pacer = createPacer(renderer, { reducedMotion, onPixelRatio: () => resize() });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -146,13 +148,18 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 200);
 
-  scene.add(new THREE.HemisphereLight('#fffaf0', '#e4d4ba', 1.6));
-  const key = new THREE.DirectionalLight('#fff0d8', 2.25);
-  key.position.set(-5, 9, 7);
+  // dusk, with the sun low behind the stage (as on the home page): a soft warm sky from above, a little light from
+  // the front so the props and the kid's colours still read, and a strong warm edge from both sides behind
+  scene.add(new THREE.HemisphereLight('#e6d2b0', '#3a3122', 0.95));
+  const key = new THREE.DirectionalLight('#ffe2c2', 1.05);
+  key.position.set(-5, 7, 8);
   scene.add(key);
-  const fill = new THREE.DirectionalLight('#e2ebff', 0.55);
-  fill.position.set(7, 3, -6);
-  scene.add(fill);
+  const rimR = new THREE.DirectionalLight('#ffa860', 3.6);
+  rimR.position.set(5.5, 4.5, -6.5);
+  scene.add(rimR);
+  const rimL = new THREE.DirectionalLight('#ffc27a', 2.6);
+  rimL.position.set(-6, 5, -6);
+  scene.add(rimL);
 
   const disc = makeStageDisc();
   scene.add(disc);
@@ -167,7 +174,7 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
     game('pillar', skyLantern),
     game('critter', skyCrab),
     game('candle', skyCandles),
-    game('pebbles', () => skyRocks(PEBBLES, ['#ddcfb8', '#e6dac6']))   // the cluster is flat: a shade darker than the disc
+    game('pebbles', () => skyRocks(PEBBLES, ['#5c5140', '#6a5e49']))   // the cluster is flat: a shade off the disc
   ]);
   if (pebblesM) disc.add(pebblesM.object);
   const animated = critterM ? [critterM] : [];
@@ -315,6 +322,8 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
       const n = project(pillarRoot.position.x + 0.62, pillarTop * 0.86, pillarRoot.position.z);
       setStyle(note, 'translate', `${n[0].toFixed(1)}px ${n[1].toFixed(1)}px`);
     }
+    // "這是魚" sits above and to the left of the kid's head, its arrow pointing down at it
+    if (kidNote) setStyle(kidNote, 'translate', `${head[0].toFixed(1)}px ${head[1].toFixed(1)}px`);
   }
 
   // ── camera framing ─────────────────────────────────────────────────────
@@ -385,6 +394,11 @@ export async function mountStage({ container, canvas, svg, tag, tagValue, note, 
     outlineUniforms.uResolution.value.set(w * dpr, h * dpr);
     outlineUniforms.uThickness.value = (safe.narrow ? 1.3 : 1.6) * dpr;
     container.classList.toggle('is-narrow', safe.narrow);
+    // where the page paints the sun: low behind the kid and the stick, as far back as the lantern is tall
+    const sunC = project(L.character[0] + 0.85, 1.55, -5.5), sunE = project(L.character[0] + 0.85 + 2.15, 1.55, -5.5);
+    container.style.setProperty('--sun-x', sunC[0].toFixed(1) + 'px');
+    container.style.setProperty('--sun-y', sunC[1].toFixed(1) + 'px');
+    container.style.setProperty('--sun-r', Math.abs(sunE[0] - sunC[0]).toFixed(1) + 'px');
     renderNow = true;
   }
 

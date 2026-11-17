@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="dusk">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>光影相簿 — sky-salmon</title>
 <meta name="description" content="把 Sky 光遇旅途中拍下的照片貼成一面拍立得牆。照片只存在你的瀏覽器裡，可以寫說明、排序、搜尋與下載。">
-<meta name="theme-color" content="#f4efe5">
+<meta name="theme-color" content="#1f1d12">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Chiron+GoRound+TC:wght@400..800&family=LXGW+WenKai+TC:wght@400;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Serif+TC:wght@600;700&family=Outfit:wght@400;500;600;800&display=swap" rel="stylesheet">
@@ -16,11 +16,11 @@
 
   <header class="page-head ga-head">
     <div class="ga-head-text">
-      <span class="eyebrow">SKY-SALMON / 光影相簿</span>
-      <h1 class="title">光影 <em>Album</em></h1>
-      <p class="lead">把旅途中拍下的光，一張張貼進這本相簿。寫一句說明、排個順序，想念的時候再翻出來看看。</p>
+      <span class="eyebrow" data-rise>sky-salmon<b>06 / 06</b></span>
+      <h1 class="title" data-rise>光影 <em>Album</em></h1>
+      <p class="lead" data-rise>把旅途中拍下的光，一張張貼進這本相簿。寫一句說明、排個順序，想念的時候再翻出來看看。</p>
     </div>
-    <aside class="ga-memo" aria-label="相簿狀態">
+    <aside class="ga-memo paper" aria-label="相簿狀態" data-rise>
       <span class="ga-memo-tape" aria-hidden="true"></span>
       <p class="ga-memo-hand hand">stays on this device ♡</p>
       <p class="ga-memo-text" id="memo-text">照片只存在這個瀏覽器裡，不會上傳到任何地方。</p>
@@ -30,7 +30,7 @@
 
   <p class="ga-banner" id="banner" role="alert" hidden></p>
 
-  <div class="dropzone ga-drop" id="drop" role="button" tabindex="0" aria-describedby="drop-hint">
+  <div class="dropzone ga-drop" id="drop" role="button" tabindex="0" aria-describedby="drop-hint" data-rise>
     <span class="ga-drop-art" aria-hidden="true">
       <svg viewBox="0 0 96 80">
         <g transform="rotate(-9 40 44)"><rect x="14" y="14" width="46" height="54" rx="2" fill="#fffdf8" stroke="#1f1a16" stroke-width="2"/><rect x="19" y="19" width="36" height="34" fill="#f3d9c4"/></g>
@@ -55,7 +55,7 @@
   </div>
   <p class="status ga-status" id="status" role="status" aria-live="polite"></p>
 
-  <section class="ga-board" id="board" aria-labelledby="board-title">
+  <section class="ga-board" id="board" aria-labelledby="board-title" data-rise>
     <div class="ga-toolbar">
       <h2 class="sr-only" id="board-title">照片牆</h2>
       <div class="seg ga-sort" role="radiogroup" aria-label="排序方式">
