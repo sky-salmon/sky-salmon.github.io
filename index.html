@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@500&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/home.css">
+<script>(function (d) { var w = d.clientWidth, h = d.clientHeight; if (h >= (w > 920 ? 590 : 520)) d.classList.add('scrolly'); if (w <= 920 && h < 700) d.classList.add('short'); })(document.documentElement)</script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
@@ -42,7 +43,7 @@
 <main class="home">
 
   <!-- One scene. The clip above stays pinned behind it and fades as the page scrolls, while the stage (right) fades
-       in over the same spot: the kid by the wall becomes the kid on the stage. -->
+       in over the same spot: the kid by the wall becomes the kid on the stage, who then acts each tool out in turn. -->
   <div class="scene wrap" id="scene">
     <div class="scene-text">
       <div class="hero-intro" id="intro">
@@ -56,116 +57,97 @@
         </p>
       </div>
 
+      <!-- What they made: six tools, one at a time. The section is a tall track; inside it one screen-high block stays
+           pinned beside the stage while the page scrolls through it, and each tool's name, line and thing to try slide in
+           as the stage turns to it (assets/js/home.js). Without scripts it is simply a list. -->
       <section class="made" id="made" aria-labelledby="made-title">
-        <h2 class="made-title" id="made-title">我做的東西</h2>
-        <ol class="tools" id="tools">
-        <li class="tool is-open" data-tool="card">
-          <div class="tool-head">
-            <h3 class="tool-h"><button type="button" class="tool-name" id="b-card" aria-expanded="true" aria-controls="p-card"><span class="tool-flame" aria-hidden="true"></span><span class="tool-label">名片產生器</span></button></h3>
-            <a class="tool-go" href="card.html" aria-label="打開名片產生器">打開<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-          </div>
-          <div class="tool-panel" id="p-card" role="region" aria-labelledby="b-card">
-            <div class="tool-inner">
-              <p class="tool-line">一個自我介紹卡片。</p>
+        <div class="made-pin" id="made-pin">
+          <h2 class="made-title" id="made-title">我做的東西</h2>
+          <nav class="rail" id="rail" aria-label="我做的東西">
+            <button type="button" class="rail-b" data-go="card" aria-label="名片產生器" aria-current="true"><i class="rail-flame" aria-hidden="true"></i><span>名片</span></button>
+            <button type="button" class="rail-b" data-go="wardrobe" aria-label="衣櫃圖鑑"><i class="rail-flame" aria-hidden="true"></i><span>衣櫃</span></button>
+            <button type="button" class="rail-b" data-go="height" aria-label="身高計算"><i class="rail-flame" aria-hidden="true"></i><span>身高</span></button>
+            <button type="button" class="rail-b" data-go="events" aria-label="活動雷達"><i class="rail-flame" aria-hidden="true"></i><span>活動</span></button>
+            <button type="button" class="rail-b" data-go="music" aria-label="樂譜練習"><i class="rail-flame" aria-hidden="true"></i><span>樂譜</span></button>
+            <button type="button" class="rail-b" data-go="album" aria-label="光影相簿"><i class="rail-flame" aria-hidden="true"></i><span>相簿</span></button>
+          </nav>
+          <ol class="tools" id="tools">
+          <li class="tool is-on" data-tool="card">
+            <h3 class="tool-name"><span class="tool-rise" data-part="name">名片產生器</span></h3>
+            <p class="tool-line" data-part>一個自我介紹卡片。</p>
+            <a class="tool-go" data-part href="card.html" aria-label="打開名片產生器">打開<span class="go-name">名片產生器</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+          </li>
+          <li class="tool" data-tool="wardrobe">
+            <h3 class="tool-name"><span class="tool-rise" data-part="name">衣櫃圖鑑</span></h3>
+            <p class="tool-line" data-part>瀏覽每一件斗篷、面具、髮型等等，查看所屬季節、畢業禮與禮包價格。</p>
+            <div class="tool-ctl ctl-wear" data-part role="group" aria-label="換件斗篷">
+              <button type="button" class="cape is-on" data-cape="" style="--k:0" aria-pressed="true" aria-label="魚自己的蝙蝠斗篷"><img src="assets/icons/01_斗篷_Cape/CharSkyKid_Wing_Bat.png" alt="" width="256" height="256" loading="lazy"><span class="cape-tag" aria-hidden="true">魚</span></button>
+              <button type="button" class="cape" data-cape="Wing_AP10YellowCape_01" style="--k:1" aria-pressed="false" aria-label="換上第 2 件斗篷"><img src="assets/icons/01_斗篷_Cape/CharSkyKid_Wing_AP10YellowCape_01.png" alt="" width="256" height="256" loading="lazy"></button>
+              <button type="button" class="cape" data-cape="Wing_ClassicOne_TGCBlue" style="--k:2" aria-pressed="false" aria-label="換上第 3 件斗篷"><img src="assets/icons/01_斗篷_Cape/CharSkyKid_Wing_ClassicOne_TGCBlue.png" alt="" width="256" height="256" loading="lazy"></button>
+              <button type="button" class="cape" data-cape="Wing_AP07Butterfly_01" style="--k:3" aria-pressed="false" aria-label="換上第 4 件斗篷"><img src="assets/icons/01_斗篷_Cape/CharSkyKid_Wing_AP07Butterfly_01.png" alt="" width="256" height="256" loading="lazy"></button>
+              <button type="button" class="cape" data-cape="Wing_AP09Phoenix_01" style="--k:4" aria-pressed="false" aria-label="換上第 5 件斗篷"><img src="assets/icons/01_斗篷_Cape/CharSkyKid_Wing_AP09Phoenix_01.png" alt="" width="256" height="256" loading="lazy"></button>
+              <button type="button" class="cape" data-cape="Wing_AP06Layered_01" style="--k:5" aria-pressed="false" aria-label="換上第 6 件斗篷"><img src="assets/icons/01_斗篷_Cape/CharSkyKid_Wing_AP06Layered_01.png" alt="" width="256" height="256" loading="lazy"></button>
             </div>
-          </div>
-        </li>
-        <li class="tool" data-tool="wardrobe">
-          <div class="tool-head">
-            <h3 class="tool-h"><button type="button" class="tool-name" id="b-wardrobe" aria-expanded="false" aria-controls="p-wardrobe"><span class="tool-flame" aria-hidden="true"></span><span class="tool-label">衣櫃圖鑑</span></button></h3>
-            <a class="tool-go" href="wardrobe.html" aria-label="打開衣櫃圖鑑">打開<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-          </div>
-          <div class="tool-panel" id="p-wardrobe" role="region" aria-labelledby="b-wardrobe">
-            <div class="tool-inner">
-              <p class="tool-line">瀏覽每一件斗篷、面具、髮型等等，查看所屬季節、畢業禮與禮包價格。</p>
-              <div class="tool-ctl">
-                <button type="button" class="pill" id="wear-next">換件斗篷</button>
-                <button type="button" class="pill is-quiet" id="wear-back" hidden>換回魚的</button>
+            <a class="tool-go" data-part href="wardrobe.html" aria-label="打開衣櫃圖鑑">打開<span class="go-name">衣櫃圖鑑</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+          </li>
+          <li class="tool" data-tool="height">
+            <h3 class="tool-name"><span class="tool-rise" data-part="name">身高計算</span></h3>
+            <p class="tool-line" data-part>上傳服裝 QR，讀出身高與體型，還原你的角色與穿搭。</p>
+            <div class="tool-ctl ctl-height" data-part>
+              <div class="hgt-read"><span class="hgt-k">身高</span><strong id="h-val">1.98</strong><span class="hgt-note">數字越小越高</span></div>
+              <div class="hgt-slide">
+                <input type="range" id="h-height" min="-2" max="2" step="0.01" value="1.89" aria-label="身高">
+                <span class="hgt-fish" id="h-fish" aria-hidden="true">魚</span>
               </div>
             </div>
-          </div>
-        </li>
-        <li class="tool" data-tool="height">
-          <div class="tool-head">
-            <h3 class="tool-h"><button type="button" class="tool-name" id="b-height" aria-expanded="false" aria-controls="p-height"><span class="tool-flame" aria-hidden="true"></span><span class="tool-label">身高計算</span></button></h3>
-            <a class="tool-go" href="height.html" aria-label="打開身高計算">打開<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-          </div>
-          <div class="tool-panel" id="p-height" role="region" aria-labelledby="b-height">
-            <div class="tool-inner">
-              <p class="tool-line">上傳服裝 QR，讀出身高與體型，還原你的角色與穿搭。</p>
-              <div class="tool-ctl ctl-height">
-                <div class="hgt-read"><span class="hgt-k">身高</span><strong id="h-val">1.98</strong><span class="hgt-note">數字越小越高</span></div>
-                <div class="hgt-slide">
-                  <input type="range" id="h-height" min="-2" max="2" step="0.01" value="1.89" aria-label="身高">
-                  <span class="hgt-fish" id="h-fish" aria-hidden="true">魚</span>
-                </div>
-              </div>
+            <a class="tool-go" data-part href="height.html" aria-label="打開身高計算">打開<span class="go-name">身高計算</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+          </li>
+          <li class="tool" data-tool="events">
+            <h3 class="tool-name"><span class="tool-rise" data-part="name">活動雷達</span></h3>
+            <p class="tool-line" data-part>間歇泉、奶奶的晚餐、聖島海龜與每日重置。</p>
+            <div class="tool-ctl ctl-events" data-part aria-live="polite">
+              <span class="ev-k" id="ev-k">下一場</span>
+              <strong class="ev-name" id="ev-name">—</strong>
+              <span class="ev-cd" id="ev-cd">--:--</span>
+              <span class="ev-reset">每日重置<b id="ev-reset">--:--:--</b></span>
             </div>
-          </div>
-        </li>
-        <li class="tool" data-tool="events">
-          <div class="tool-head">
-            <h3 class="tool-h"><button type="button" class="tool-name" id="b-events" aria-expanded="false" aria-controls="p-events"><span class="tool-flame" aria-hidden="true"></span><span class="tool-label">活動雷達</span></button></h3>
-            <a class="tool-go" href="events.html" aria-label="打開活動雷達">打開<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-          </div>
-          <div class="tool-panel" id="p-events" role="region" aria-labelledby="b-events">
-            <div class="tool-inner">
-              <p class="tool-line">間歇泉、奶奶的晚餐、聖島海龜與每日重置。</p>
-              <div class="tool-ctl ctl-events" aria-live="polite">
-                <span class="ev-k" id="ev-k">下一場</span>
-                <strong class="ev-name" id="ev-name">—</strong>
-                <span class="ev-cd" id="ev-cd">--:--</span>
-                <span class="ev-reset">每日重置<b id="ev-reset">--:--:--</b></span>
+            <a class="tool-go" data-part href="events.html" aria-label="打開活動雷達">打開<span class="go-name">活動雷達</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+          </li>
+          <li class="tool" data-tool="music">
+            <h3 class="tool-name"><span class="tool-rise" data-part="name">樂譜練習</span></h3>
+            <p class="tool-line" data-part>樂器模擬。</p>
+            <div class="tool-ctl ctl-music" data-part>
+              <div class="harp" id="harp" tabindex="0" aria-label="迷你琴，15 個鍵，C4 到 C6；選取後可以用鍵盤 Y U I O P、H J K L ;、N M , . / 彈奏">
+                <button type="button" class="key is-c" data-i="0" style="--k:0" tabindex="-1" aria-label="C4"></button>
+                <button type="button" class="key" data-i="1" style="--k:1" tabindex="-1" aria-label="D4"></button>
+                <button type="button" class="key" data-i="2" style="--k:2" tabindex="-1" aria-label="E4"></button>
+                <button type="button" class="key" data-i="3" style="--k:3" tabindex="-1" aria-label="F4"></button>
+                <button type="button" class="key" data-i="4" style="--k:4" tabindex="-1" aria-label="G4"></button>
+                <button type="button" class="key" data-i="5" style="--k:5" tabindex="-1" aria-label="A4"></button>
+                <button type="button" class="key" data-i="6" style="--k:6" tabindex="-1" aria-label="B4"></button>
+                <button type="button" class="key is-c" data-i="7" style="--k:7" tabindex="-1" aria-label="C5"></button>
+                <button type="button" class="key" data-i="8" style="--k:8" tabindex="-1" aria-label="D5"></button>
+                <button type="button" class="key" data-i="9" style="--k:9" tabindex="-1" aria-label="E5"></button>
+                <button type="button" class="key" data-i="10" style="--k:10" tabindex="-1" aria-label="F5"></button>
+                <button type="button" class="key" data-i="11" style="--k:11" tabindex="-1" aria-label="G5"></button>
+                <button type="button" class="key" data-i="12" style="--k:12" tabindex="-1" aria-label="A5"></button>
+                <button type="button" class="key" data-i="13" style="--k:13" tabindex="-1" aria-label="B5"></button>
+                <button type="button" class="key is-c" data-i="14" style="--k:14" tabindex="-1" aria-label="C6"></button>
               </div>
+              <button type="button" class="pill" id="harp-demo"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2.2v9.6a.6.6 0 0 0 .9.5l7.6-4.8a.6.6 0 0 0 0-1L4.4 1.7a.6.6 0 0 0-.9.5z" fill="currentColor"/></svg>小星星</button>
             </div>
-          </div>
-        </li>
-        <li class="tool" data-tool="music">
-          <div class="tool-head">
-            <h3 class="tool-h"><button type="button" class="tool-name" id="b-music" aria-expanded="false" aria-controls="p-music"><span class="tool-flame" aria-hidden="true"></span><span class="tool-label">樂譜練習</span></button></h3>
-            <a class="tool-go" href="music.html" aria-label="打開樂譜練習">打開<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-          </div>
-          <div class="tool-panel" id="p-music" role="region" aria-labelledby="b-music">
-            <div class="tool-inner">
-              <p class="tool-line">樂器模擬。</p>
-              <div class="tool-ctl ctl-music">
-                <div class="harp" id="harp" tabindex="0" aria-label="迷你琴，15 個鍵，C4 到 C6；選取後可以用鍵盤 Y U I O P、H J K L ;、N M , . / 彈奏">
-              <button type="button" class="key is-c" data-i="0" aria-label="C4"></button>
-              <button type="button" class="key" data-i="1" aria-label="D4"></button>
-              <button type="button" class="key" data-i="2" aria-label="E4"></button>
-              <button type="button" class="key" data-i="3" aria-label="F4"></button>
-              <button type="button" class="key" data-i="4" aria-label="G4"></button>
-              <button type="button" class="key" data-i="5" aria-label="A4"></button>
-              <button type="button" class="key" data-i="6" aria-label="B4"></button>
-              <button type="button" class="key is-c" data-i="7" aria-label="C5"></button>
-              <button type="button" class="key" data-i="8" aria-label="D5"></button>
-              <button type="button" class="key" data-i="9" aria-label="E5"></button>
-              <button type="button" class="key" data-i="10" aria-label="F5"></button>
-              <button type="button" class="key" data-i="11" aria-label="G5"></button>
-              <button type="button" class="key" data-i="12" aria-label="A5"></button>
-              <button type="button" class="key" data-i="13" aria-label="B5"></button>
-              <button type="button" class="key is-c" data-i="14" aria-label="C6"></button>
-                </div>
-                <button type="button" class="pill" id="harp-demo"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2.2v9.6a.6.6 0 0 0 .9.5l7.6-4.8a.6.6 0 0 0 0-1L4.4 1.7a.6.6 0 0 0-.9.5z" fill="currentColor"/></svg>小星星</button>
-              </div>
+            <a class="tool-go" data-part href="music.html" aria-label="打開樂譜練習">打開<span class="go-name">樂譜練習</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+          </li>
+          <li class="tool" data-tool="album">
+            <h3 class="tool-name"><span class="tool-rise" data-part="name">光影相簿</span></h3>
+            <p class="tool-line" data-part>就是相簿。</p>
+            <div class="tool-ctl ctl-album" data-part>
+              <button type="button" class="pill" id="snap-btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="4" width="13" height="9.5" rx="2"/><circle cx="8" cy="8.8" r="2.6"/><path d="M5.5 4 6.5 2.5h3L10.5 4"/></svg>拍一張</button>
             </div>
-          </div>
-        </li>
-        <li class="tool" data-tool="album">
-          <div class="tool-head">
-            <h3 class="tool-h"><button type="button" class="tool-name" id="b-album" aria-expanded="false" aria-controls="p-album"><span class="tool-flame" aria-hidden="true"></span><span class="tool-label">光影相簿</span></button></h3>
-            <a class="tool-go" href="gallery.html" aria-label="打開光影相簿">打開<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-          </div>
-          <div class="tool-panel" id="p-album" role="region" aria-labelledby="b-album">
-            <div class="tool-inner">
-              <p class="tool-line">就是相簿。</p>
-              <div class="tool-ctl ctl-album">
-                <button type="button" class="pill" id="snap-btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="4" width="13" height="9.5" rx="2"/><circle cx="8" cy="8.8" r="2.6"/><path d="M5.5 4 6.5 2.5h3L10.5 4"/></svg>拍一張</button>
-              </div>
-            </div>
-          </div>
-        </li>
-        </ol>
+            <a class="tool-go" data-part href="gallery.html" aria-label="打開光影相簿">打開<span class="go-name">光影相簿</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+          </li>
+          </ol>
+        </div>
       </section>
     </div>
 
@@ -187,7 +169,7 @@
       <canvas class="stage-canvas" id="stage-canvas" role="img" aria-label="魚的光之子：戴巫師帽、披蝙蝠斗篷，站在夕陽前。可以拖曳轉動，點一下會呼喚。"></canvas>
       <img class="stage-still" id="stage-still" src="assets/img/home/snap-kid.jpg" alt="戴巫師帽的光之子" width="360" height="360" hidden>
       <svg class="stage-ruler" id="stage-ruler" aria-hidden="true"></svg>
-      <div class="stage-prints" id="prints" aria-live="polite"></div>
+      <div class="stage-prints" id="prints" aria-live="polite"><figure class="print" style="--r:-5deg"><img src="assets/img/home/snap-kid.jpg" alt="魚的照片" width="360" height="360" loading="lazy"></figure></div>
       <div class="stage-flash" id="stage-flash" aria-hidden="true"></div>
       <p class="stage-hint" id="stage-hint">拖曳轉動　點一下呼喚</p>
       <div class="stage-veil" id="stage-veil" role="status"><span>魚還在路上</span><i></i></div>
@@ -196,10 +178,10 @@
   </div>
 
   <section class="about wrap" id="about" aria-labelledby="about-title">
-    <h2 class="about-title" id="about-title">關於這個網站</h2>
-    <p class="about-lead">sky-salmon 是魚做的工具小站。</p>
-    <p class="about-text">身高計算讀取的截圖、相簿裡的照片，都只留在你的裝置上。</p>
-    <p class="about-note">這是粉絲自製網站，與 thatgamecompany 無關；遊戲中的模型、圖示與名稱屬於 thatgamecompany。</p>
+    <h2 class="about-title" data-rise id="about-title">關於這個網站</h2>
+    <p class="about-lead" data-rise>sky-salmon 是魚做的工具小站。</p>
+    <p class="about-text" data-rise>身高計算讀取的截圖、相簿裡的照片，都只留在你的裝置上。</p>
+    <p class="about-note" data-rise>這是粉絲自製網站，與 thatgamecompany 無關；遊戲中的模型、圖示與名稱屬於 thatgamecompany。</p>
   </section>
 
 </main>

@@ -2,6 +2,7 @@
 // One small stage: the kid (assets/js/avatar-engine.js, wearing the look read from the author's outfit QR) at dusk, lit
 // from behind by the sun the page paints there and from the front by what is left of the sky. The page drives it by name:
 //   stage.shot('height')      camera, pose and turn for one of the tools
+//   stage.between(a, b, t)    part of the way from tool a's shot to tool b's (the page moves it as it scrolls)
 //   stage.handoff(e, frame)   0…1: from the clip's own camera and pose (the kid squatting by the wall, drawn exactly
 //                             over the footage in `frame`) to the tool's shot. The page moves it as the page scrolls.
 //   stage.body(h)             the kid's height value (the game's own body rules stretch the rig)
@@ -211,7 +212,12 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
   let W = 1, H = 1, dirty = true, visible = true;
   const cur = { turn: SHOTS.card.turn, yaw: SHOTS.card.yaw, pitch: SHOTS.card.pitch, dist: SHOTS.card.dist, look: new THREE.Vector3(...SHOTS.card.look), x: SHOTS.card.x || 0 };
   let goal = { ...SHOTS.card, look: new THREE.Vector3(...SHOTS.card.look) }, shotName = 'card';
-  let drag = 0, dragV = 0, spinT = 0, fit = 1, busyUntil = 0, grab = null;
+  let drag = 0, dragV = 0, spinT = 0, fit = 1, busyUntil = 0, grab = null, held = true;
+  // take off what the visitor dragged and what the turntable added, by the short way round
+  const unwind = () => {
+    const full = Math.PI * 2, extra = spinT + drag, wrapped = ((extra + Math.PI) % full + full) % full - Math.PI;
+    cur.turn += wrapped; spinT = 0; drag = 0; dragV = 0;
+  };
   // hand-off: 0 = the clip's camera and pose, 1 = the shot. `frame` is the footage on the page, relative to the canvas.
   const hand = { e: 0, frame: null, stood: false, shown: true };
   const camA = new THREE.PerspectiveCamera(CLIP.fov, 1, 0.1, 200), projB = new THREE.Matrix4(), posB = new THREE.Vector3(), quatB = new THREE.Quaternion();
@@ -345,11 +351,27 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
       const s = SHOTS[name]; if (!s) return;
       shotName = name;
       goal = { ...s, ...over, look: new THREE.Vector3(...(over.look || s.look)) };
-      // unwind what the visitor dragged and what the turntable added, by the short way round
-      const full = Math.PI * 2, extra = spinT + drag, wrapped = ((extra + Math.PI) % full + full) % full - Math.PI;
-      cur.turn += wrapped; spinT = 0; drag = 0; dragV = 0;
+      unwind(); held = true;
       if (hand.stood) playShot();
       busyUntil = performance.now() + 2600; dirty = true;
+    },
+    // t of the way from tool a's shot to tool b's: the camera, the kid's turn and the picture's slide go evenly; the
+    // pose changes over once, near the middle. The page calls this as it scrolls from one tool to the next.
+    between(a, b, t) {
+      const A = SHOTS[a], B = SHOTS[b] || A; if (!A) return;
+      t = Math.max(0, Math.min(1, t));
+      const L = (x, y) => x + (y - x) * t;
+      goal.yaw = L(A.yaw, B.yaw); goal.pitch = L(A.pitch, B.pitch); goal.dist = L(A.dist, B.dist);
+      goal.turn = L(A.turn, B.turn); goal.x = L(A.x || 0, B.x || 0);
+      goal.look.set(L(A.look[0], B.look[0]), L(A.look[1], B.look[1]), L(A.look[2], B.look[2]));
+      // the nearer tool's pose, holding on a little past half-way so it does not flicker there
+      const near = shotName === b ? (t < 0.42 ? a : b) : shotName === a ? (t > 0.58 ? b : a) : (t < 0.5 ? a : b);
+      if (near !== shotName) { shotName = near; goal.clip = SHOTS[near].clip; goal.once = SHOTS[near].once; if (hand.stood) playShot(); }
+      // the turntable and the visitor's own turning belong to a tool at rest: on the way to the next they unwind
+      const rest = t <= 0.001 || t >= 0.999;
+      if (!rest && held) unwind();
+      held = rest; goal.spin = rest ? SHOTS[near].spin : 0;
+      busyUntil = performance.now() + 900; dirty = true;
     },
     // e: 0 = the author's clip (its camera, the squat), 1 = the tool's shot. frame: where the footage is on the page,
     // relative to the canvas, { x, y, w, h } in CSS pixels.

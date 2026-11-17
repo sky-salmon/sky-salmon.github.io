@@ -1,12 +1,12 @@
 /* sky-salmon — home page behaviour (a module; the 3D stage in home-stage.js is loaded only when it is needed).
  *   clip      the pause button; a warm light that follows the pointer over the clip; the top bar turns to glass once
  *             the page scrolls
- *   hand-off  as the page scrolls, the clip (pinned behind the page) fades and the stage's kid fades in over the same
- *             spot, drawn through the clip's own camera, then stands up into the stage; the sun rises behind them
- *   index     the six tools as a list; opening one turns the stage to it
+ *   scroll    hand-off: the clip fades into the stage's kid, who stands up in front of a rising sun. Then the walk:
+ *             the six tools go by one at a time, pinned beside the stage; each one's words slide in as the stage
+ *             turns to it. Further down, the closing lines come up as they enter the screen.
  *   stage     the author's own Sky kid: one camera shot and pose per tool, drag to turn; their head follows the
  *             pointer and a tap makes them call, as in the game
- *   per tool  card: a name card that tilts · wardrobe: other capes · height: the height page's formula on the kid's
+ *   per tool  card: a name card that tilts · wardrobe: six capes to try on · height: the height page's formula on the kid's
  *             real body · events: the two-hour clock, live, in game time · music: fifteen keys · album: take a picture
  * Every part checks that its elements exist, so a missing block never stops the rest. */
 const $ = id => document.getElementById(id);
@@ -64,33 +64,15 @@ if (hero && media && clipStage) {
   wake();
 }
 
-/* ── the index and the stage ───────────────────────────────────────── */
-const stageEl = $('stage'), toolEls = [...document.querySelectorAll('.tool')];
-const narrow = matchMedia('(max-width: 920px)');   // the layout where the stage is pinned above the list
-let stage = null, active = 'card', hintOff = () => {};
-const onShow = {};   // tool → what to do when it opens (each tool below adds its own)
-
-function open(name, { scroll = false } = {}) {
-  active = name;
-  for (const li of toolEls) {
-    const on = li.dataset.tool === name, panel = li.querySelector('.tool-panel');
-    li.classList.toggle('is-open', on);
-    li.querySelector('.tool-name').setAttribute('aria-expanded', String(on));
-    panel.inert = !on;
-    // on a narrow screen the stage is pinned above the list: bring the opened row up under it once the list has settled
-    if (on && scroll && stageEl && narrow.matches) setTimeout(() => {
-      const top = li.getBoundingClientRect().top, want = stageEl.getBoundingClientRect().bottom + 6;
-      if (Math.abs(top - want) > 24) scrollBy({ top: top - want, behavior: reduce.matches ? 'auto' : 'smooth' });
-    }, 520);
-  }
-  if (stageEl) stageEl.dataset.tool = name;
-  if (stage) stage.shot(name);
-  if (onShow[name]) onShow[name]();
-}
-toolEls.forEach(li => {
-  li.querySelector('.tool-panel').inert = !li.classList.contains('is-open');
-  li.querySelector('.tool-name').addEventListener('click', () => { if (active !== li.dataset.tool) open(li.dataset.tool, { scroll: true }); });
-});
+/* ── the tools and the stage ───────────────────────────────────────── */
+const stageEl = $('stage'), track = $('made'), pin = $('made-pin');
+const toolEls = [...document.querySelectorAll('.tool')], NAMES = toolEls.map(li => li.dataset.tool), N = NAMES.length;
+const railBs = [...document.querySelectorAll('.rail-b')];
+const narrow = matchMedia('(max-width: 920px)');   // the layout where the stage is pinned above the text
+let stage = null, active = NAMES[0] || 'card', hintOff = () => {};
+const onShow = {};    // tool → what to do when the walk arrives at it (each tool below adds its own)
+const weight = {};    // tool → 0…1: how far the stage has turned to it
+NAMES.forEach((n, i) => { weight[n] = i ? 0 : 1; });
 
 // the stage itself: loaded once the section is near, after the page has finished loading
 const canvas = $('stage-canvas');
@@ -104,39 +86,83 @@ async function mount() {
     const { mountStage } = await import('./home-stage.js');
     stage = await mountStage({ canvas, container: stageEl, reducedMotion: reduce.matches, onProgress: p => veil && veil.style.setProperty('--p', Math.round(p * 100) + '%') });
     stage.shot(active);
-    handoff();
+    walked = null; update();
     stageEl.classList.add('is-ready'); hintOff();
-    window.__home = { stage, open };
+    window.__home = { stage, go, get active() { return active; } };
     if (onShow[active]) onShow[active]();
   } catch (e) { console.warn('[home] stage left out', e); still(); }
 }
 if (stageEl) {
   let asked = false;
-  const go = () => { if (asked) return; asked = true; (window.requestIdleCallback || setTimeout)(mount, { timeout: 1200 }); };
-  const near = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { near.disconnect(); if (document.readyState === 'complete') go(); else addEventListener('load', go, { once: true }); } }, { rootMargin: '600px' });
+  const begin = () => { if (asked) return; asked = true; (window.requestIdleCallback || setTimeout)(mount, { timeout: 1200 }); };
+  const near = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { near.disconnect(); if (document.readyState === 'complete') begin(); else addEventListener('load', begin, { once: true }); } }, { rootMargin: '600px' });
   near.observe(stageEl);
   stageEl.addEventListener('stage-grab', () => stageEl.classList.add('is-touched'));
   hintOff = () => setTimeout(() => stageEl.classList.add('is-touched'), 9000);   // the hint leaves on its own after a while
 }
 
-/* ── hand-off: the clip becomes the stage as the page scrolls ───────── */
-// T is how far the page scrolls for the whole change: on a wide screen most of the clip's height; on a narrow one,
-// exactly until the list arrives under the pinned stage. Everything else reads how far along that is.
-const smooth = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
-let T = 400, queued = 0, pausedByScroll = false;
+/* ── scroll: everything that moves with the page ───────────────────────
+ * Two stretches, both read straight off how far the page has scrolled:
+ *   hand-off  0 … T          the clip (pinned behind the page) fades, and the stage's kid fades in over the same spot,
+ *                            drawn through the clip's own camera, then stands up into the stage; the sun rises
+ *   the walk  start … +5½ steps   the text block stays pinned beside the stage, and the tools go by one at a time. Each
+ *                            rests for HOLD of its step; over the remainder its words leave upward, the next tool's
+ *                            slide in from below one after another, and the stage (camera, pose, sun, and the tool's own
+ *                            piece: the name card, the measuring stick, the clock…) goes from one to the other with them.
+ * Past the walk, anything marked data-rise comes up into place as it enters the screen. */
+const clamp01 = v => Math.min(1, Math.max(0, v));
+const smooth = (a, b, v) => { const t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+// The walk needs a screen tall enough to hold a whole tool beside (or under) the stage. On a shorter one (a phone on
+// its side) the tools are a plain list that scrolls by, and the stage turns to whichever is in the middle. The height
+// that decides is the screen at its smallest (a phone's with its bars showing), so it does not flip as the bars hide.
+const root = document.documentElement, probe = document.body.appendChild(Object.assign(document.createElement('i'), { className: 'svh-probe' }));
+let scrolly = false;
+function setMode() {
+  const h = probe.offsetHeight || innerHeight, wide = !narrow.matches;
+  const was = scrolly;
+  scrolly = !!(track && pin && N && stageEl) && h >= (wide ? 590 : 520);
+  root.classList.toggle('scrolly', scrolly);
+  root.classList.toggle('short', !wide && h < 700);
+  if (was !== scrolly) { parts.flat().forEach(el => { el.style.transform = el.style.opacity = ''; el._put = null; }); walked = null; sv = null; }
+}
+const HOLD = 0.5, TAIL = 0.5;   // of a step: how long a tool rests before the next begins; how long the last one stays
+// the sun's size and place for each tool: scale, x %, y %
+const SUN = { card: [1.2, 0, -3], wardrobe: [1, 0, 0], height: [1.06, 0, 2], events: [0.86, 0, 0], music: [1.12, -7, -4], album: [0.9, 3, -12] };
+const parts = toolEls.map(li => [...li.querySelectorAll('[data-part]')]);
+const risers = [...document.querySelectorAll('[data-rise]')];
+let T = 400, start = 0, step = 600, line = 0, vh = innerHeight, queued = 0, last = 0, sv = null, walked = null, pausedByScroll = false;
+
 function measure() {
   if (!hero || !stageEl) return;
-  const made = $('made');
-  if (narrow.matches && made) {
-    const top = parseFloat(getComputedStyle(stageEl).top) || 58;
-    T = Math.max(140, made.getBoundingClientRect().top + scrollY - (top + stageEl.offsetHeight + 16));
-  } else T = hero.offsetHeight * 0.6;
+  vh = innerHeight;
+  setMode();
+  const top = parseFloat(getComputedStyle(stageEl).top) || 58;
+  // T: how far the page scrolls for the whole hand-off. On a wide screen most of the clip's height; on a narrow one,
+  // exactly until the text arrives under the pinned stage.
+  if (narrow.matches && track) T = Math.max(140, track.getBoundingClientRect().top + scrollY - (top + stageEl.offsetHeight + 16));
+  else T = hero.offsetHeight * 0.6;
+  // where things sit on the page with nothing moved (what is below the first screen comes up as it scrolls into it)
+  const plain = (el, add = 0) => { const hold = el.style.transform; el.style.transform = 'none'; const r = el.getBoundingClientRect(); el.style.transform = hold; el._y = r.top + scrollY + add; return r; };
+  if (scrolly) {
+    // beside the stage the pinned block is exactly as tall as the stage, so the two let go of the screen together
+    if (narrow.matches) track.style.removeProperty('--pin-h'); else track.style.setProperty('--pin-h', stageEl.offsetHeight + 'px');
+    step = Math.max(1, (track.offsetHeight - pin.offsetHeight) / (N - 1 + TAIL));
+    start = track.getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(pin).top) || 0);
+    const unpin = track.getBoundingClientRect().top - pin.getBoundingClientRect().top;   // 0 unless the block is pinned now
+    parts[0].forEach(el => plain(el, unpin));
+  } else if (track) {
+    track.style.removeProperty('--pin-h');
+    // the line a tool is read at: the middle of what the stage leaves of the screen
+    const under = narrow.matches ? top + stageEl.offsetHeight : 0;
+    line = under + (vh - under) * 0.45;
+    toolEls.forEach((li, i) => { const r = li.getBoundingClientRect(); li._c = r.top + scrollY + r.height / 2; parts[i].forEach(el => plain(el)); });
+  }
+  risers.forEach(el => plain(el));
 }
+
 function handoff() {
-  queued = 0;
-  if (!hero || !stageEl) return;
-  const p = Math.min(1, Math.max(0, scrollY / T)), step = reduce.matches ? (p > 0.5 ? 1 : 0) : null;
-  const v = { fade: step ?? smooth(0.06, 0.7, p), kid: step ?? smooth(0.2, 0.78, p), rise: step ?? smooth(0.3, 1, p), solid: step ?? smooth(0.5, 0.95, p) };
+  const p = clamp01(scrollY / T), stepped = reduce.matches ? (p > 0.5 ? 1 : 0) : null;
+  const v = { fade: stepped ?? smooth(0.06, 0.7, p), kid: stepped ?? smooth(0.2, 0.78, p), rise: stepped ?? smooth(0.3, 1, p), solid: stepped ?? smooth(0.5, 0.95, p), live: stepped ?? smooth(0.84, 1, p) };
   for (const k in v) document.body.style.setProperty('--' + k, v[k].toFixed(3));
   document.body.classList.toggle('is-live', p >= 0.9);
   document.body.classList.toggle('is-past', p >= 1);
@@ -148,15 +174,121 @@ function handoff() {
   }
   if (stage && clipStage) {
     const f = clipStage.getBoundingClientRect(), c = stageEl.getBoundingClientRect();
-    stage.handoff(step ?? smooth(0.34, 1, p), { x: f.left - c.left, y: f.top - c.top, w: f.width, h: f.height }, v.kid > 0.001);
+    stage.handoff(stepped ?? smooth(0.34, 1, p), { x: f.left - c.left, y: f.top - c.top, w: f.width, h: f.height }, v.kid > 0.001);
   }
 }
+
+// one part of a tool's text: o = how much of it is there, y = how far it still has to come (+ below, − gone above).
+// A name rolls inside its own line; everything else rises and fades.
+const put = (el, o, y) => {
+  const key = o.toFixed(3) + '|' + y.toFixed(3);
+  if (el._put === key) return;
+  el._put = key;
+  if (reduce.matches) { el.style.opacity = o > 0.5 ? '1' : '0'; return; }
+  if (el.dataset.part === 'name') { el.style.transform = y ? `translate3d(0,${(y * 108).toFixed(2)}%,0)` : ''; el.style.opacity = ''; }
+  else {
+    el.style.transform = y ? `translate3d(0,${(y * (y > 0 ? 52 : 30)).toFixed(2)}px,0)` : ''; el.style.opacity = o >= 1 ? '' : o.toFixed(3);
+    el.style.setProperty('--t', o.toFixed(3));   // for whatever inside it arrives piece by piece (the keys)
+  }
+};
+// something on the page at height y (from the top of the document): 0 while it is below the screen, 1 once it is well in
+const risen = y => (y < vh - 12 ? 1 : smooth(vh * 0.99, vh * 0.8, y - scrollY));
+
+function setActive(name) {
+  if (name === active) return;
+  active = name;
+  if (stageEl) stageEl.dataset.tool = name;
+  toolEls.forEach(li => li.classList.toggle('is-on', li.dataset.tool === name));
+  railBs.forEach(b => { if (b.dataset.go === name) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+  if (onShow[name]) onShow[name]();
+}
+
+function walk(pos) {
+  const a = Math.min(N - 1, Math.floor(pos)), b = Math.min(N - 1, a + 1), f = pos - a, e = f * f * (3 - 2 * f);
+  // the words
+  const roll = smooth(0.16, 0.74, f);   // the two names share one line: one rolls out as the other rolls in
+  if (!scrolly) parts.forEach(list => list.forEach(el => { const r = risen(el._y ?? 0); put(el, r, 1 - r); }));   // a plain list: each part comes up as it enters the screen
+  else toolEls.forEach((li, i) => {
+    const near = i === a || (i === b && f > 0);
+    li.classList.toggle('is-near', near);
+    if (!near) return;
+    parts[i].forEach((el, k) => {
+      if (i === a && f === 0) {   // at rest; the first tool, before the block is pinned, comes up as the page brings it in
+        const r = i === 0 && scrollY < start ? risen(el._y ?? 0) : 1;
+        return put(el, r, 1 - r);
+      }
+      if (el.dataset.part === 'name') return put(el, 1, i === a ? -roll : 1 - roll);
+      if (i === a) { const out = smooth(0.03 * k, 0.36 + 0.03 * k, f); put(el, 1 - out, -out); }
+      else { const d = 0.07 * Math.min(k, 3), inn = smooth(0.43 + d, 0.79 + d, f); put(el, inn, 1 - inn); }
+    });
+  });
+  // the stage
+  NAMES.forEach((n, i) => {
+    const w = i === a ? 1 - e : i === b ? e : 0;
+    if (weight[n] !== w) { weight[n] = w; stageEl.style.setProperty('--w-' + n, w.toFixed(3)); }
+  });
+  const A = SUN[NAMES[a]] || SUN.wardrobe, B = SUN[NAMES[b]] || A;
+  stageEl.style.setProperty('--sun-s', (A[0] + (B[0] - A[0]) * e).toFixed(3));
+  stageEl.style.setProperty('--sun-x', (A[1] + (B[1] - A[1]) * e).toFixed(2) + '%');
+  stageEl.style.setProperty('--sun-y', (A[2] + (B[2] - A[2]) * e).toFixed(2) + '%');
+  if (stage) stage.between(NAMES[a], NAMES[b], e);
+  // the candles: each one lights as the walk comes to its tool
+  railBs.forEach((btn, i) => btn.style.setProperty('--lit', clamp01(pos - i + 1).toFixed(3)));
+  setActive(NAMES[f < 0.5 ? a : b]);
+  if (weight.height > 0.01 && onShow.height) onShow.height(500);
+}
+
+function update(now = performance.now()) {
+  queued = 0;
+  if (!hero || !stageEl) return;
+  handoff();
+  if (scrolly) {
+    // the walk follows the page a moment behind, so a wheel's notches come out as one movement
+    const target = Math.min(N - 1 + TAIL, Math.max(0, (scrollY - start) / step)), dt = Math.min(0.05, (now - (last || now)) / 1000);
+    last = now;
+    if (sv === null || reduce.matches || !dt) sv = target; else sv += (target - sv) * (1 - Math.exp(-dt * 13));
+    if (Math.abs(target - sv) < 0.0006) { sv = target; last = 0; } else ask();
+    const i = Math.min(N - 1, Math.floor(sv));
+    let f = i >= N - 1 ? 0 : clamp01((sv - i - HOLD) / (1 - HOLD));
+    if (reduce.matches) f = f > 0.5 ? 1 : 0;
+    const pos = i + f, key = pos.toFixed(4) + (scrollY < start ? '|' + Math.round(scrollY) : '');
+    if (key !== walked) { walked = key; walk(pos); }
+  } else if (N && toolEls[0]._c !== undefined) {
+    // a plain list: the walk is at the tool whose middle is on the reading line, and part way between two
+    const y = scrollY + line;
+    let i = 0;
+    while (i < N - 1 && toolEls[i + 1]._c <= y) i++;
+    let f = i >= N - 1 ? 0 : clamp01(((y - toolEls[i]._c) / (toolEls[i + 1]._c - toolEls[i]._c) - 0.3) / 0.4);
+    if (reduce.matches) f = f > 0.5 ? 1 : 0;
+    const key = (i + f).toFixed(4) + '|' + Math.round(scrollY);
+    if (key !== walked) { walked = key; walk(i + f); }
+  }
+  // further down, lines come up into place as they enter the screen
+  for (const el of risers) {
+    const r = reduce.matches ? 1 : smooth(vh * 1.0, vh * 0.78, (el._y ?? 0) - scrollY), key = r.toFixed(3);
+    if (el._put === key) continue;
+    el._put = key; el.style.opacity = r >= 1 ? '' : key; el.style.transform = r >= 1 ? '' : `translate3d(0,${((1 - r) * 40).toFixed(2)}px,0)`;
+  }
+}
+function ask() { if (!queued) queued = requestAnimationFrame(update); }
+
+// to a tool by name: the page scrolls to where that tool rests
+function go(name, instant = false) {
+  const i = NAMES.indexOf(name);
+  if (i < 0) return;
+  measure();
+  scrollTo({ top: Math.round(scrolly ? start + (i + 0.18) * step : toolEls[i]._c - line), behavior: instant || reduce.matches ? 'auto' : 'smooth' });
+}
 if (hero && stageEl) {
-  const ask = () => { if (!queued) queued = requestAnimationFrame(handoff); };
   addEventListener('scroll', ask, { passive: true });
-  addEventListener('resize', () => { measure(); ask(); });
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); ask(); });
-  measure(); handoff();
+  addEventListener('resize', () => { measure(); walked = null; ask(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); walked = null; ask(); });
+  addEventListener('load', () => { measure(); walked = null; ask(); });
+  railBs.forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  // a tool that is not showing can still take the keyboard: the page goes to it
+  const list = $('tools');
+  if (list) list.addEventListener('focusin', e => { const li = e.target.closest('.tool'); if (scrolly && li && li.dataset.tool !== active) go(li.dataset.tool); });
+  measure(); update();
 }
 
 /* ── life: the kid looks toward the pointer, and answers a tap with a call ── */
@@ -210,21 +342,19 @@ if (stageEl && nameCard) {
 }
 
 /* ── wardrobe: the kid stays 魚; the cape changes ──────────────────── */
-const wearNext = $('wear-next'), wearBack = $('wear-back');
-if (wearNext && wearBack) {
-  const CAPES = ['Wing_AP10YellowCape_01', 'Wing_ClassicOne_TGCBlue', 'Wing_AP07Butterfly_01', 'Wing_AP09Phoenix_01', 'Wing_AP06Layered_01'].map(n => 'CharSkyKid_' + n);
-  let at = -1, busy = false;
-  const wear = async i => {
-    if (!stage || busy) return;
-    busy = true; wearNext.classList.add('is-playing');
-    const { FISH } = await import('./home-stage.js');
-    at = i;
-    await stage.wear(i < 0 ? FISH : { ...FISH, pieces: { ...FISH.pieces, cape: CAPES[i] } });
-    busy = false; wearNext.classList.remove('is-playing');
-    wearBack.hidden = at < 0;
+// six capes from the closet, by their in-game icons; the first is the one 魚 wears
+const capeBs = [...document.querySelectorAll('.cape')];
+if (capeBs.length) {
+  let busy = false;
+  const wear = async btn => {
+    if (!stage || busy || btn.classList.contains('is-on')) return;
+    busy = true; btn.classList.add('is-busy');
+    const { FISH } = await import('./home-stage.js'), cape = btn.dataset.cape;
+    await stage.wear(cape ? { ...FISH, pieces: { ...FISH.pieces, cape: 'CharSkyKid_' + cape } } : FISH);
+    busy = false; btn.classList.remove('is-busy');
+    capeBs.forEach(b => { const on = b === btn; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on)); });
   };
-  wearNext.addEventListener('click', () => wear(at + 1 >= CAPES.length ? -1 : at + 1));
-  wearBack.addEventListener('click', () => wear(-1));
+  capeBs.forEach(b => b.addEventListener('click', () => wear(b)));
 }
 
 /* ── height: the height page's formula, on the kid's real body ─────── */
@@ -237,7 +367,7 @@ if (hIn) {
   const line = (el, a, b) => { el.setAttribute('x1', a[0].toFixed(1)); el.setAttribute('y1', a[1].toFixed(1)); el.setAttribute('x2', b[0].toFixed(1)); el.setAttribute('y2', b[1].toFixed(1)); };
   // the stick stands beside the kid, in the stage's own space, so it follows the camera
   const draw = () => {
-    if (!stage || !parts || active !== 'height') return;
+    if (!stage || !parts || !(weight.height > 0.01)) return;
     ruler.setAttribute('viewBox', `0 0 ${stageEl.clientWidth} ${stageEl.clientHeight}`);
     const X = 1.3, P = y => stage.project(X, y, 0);   // the picture is mirrored: +x is to the visitor's left
     line(parts.axis, P(0), P(3));
@@ -246,7 +376,7 @@ if (hIn) {
     line(parts.head, a, b); parts.dot.setAttribute('cx', a[0].toFixed(1)); parts.dot.setAttribute('cy', a[1].toFixed(1)); parts.dot.setAttribute('r', '3.5');
   };
   let until = 0, raf = 0;
-  const follow = () => { raf = 0; draw(); if (performance.now() < until && active === 'height') raf = requestAnimationFrame(follow); };
+  const follow = () => { raf = 0; draw(); if (performance.now() < until && weight.height > 0.01) raf = requestAnimationFrame(follow); };
   const watch = ms => { until = performance.now() + ms; if (!raf) raf = requestAnimationFrame(follow); };
   const show = () => {
     const h = Number(hIn.value);
@@ -258,7 +388,7 @@ if (hIn) {
   $('h-fish').style.setProperty('--at', String((FISH_H + 2) / 4));
   hIn.addEventListener('input', show);
   hIn.style.setProperty('--p', ((Number(hIn.value) + 2) / 4 * 100) + '%');
-  onShow.height = () => watch(3200);
+  onShow.height = (ms = 3200) => watch(ms);
   addEventListener('resize', () => watch(400));
 }
 
