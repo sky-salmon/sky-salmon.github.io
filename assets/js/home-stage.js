@@ -86,6 +86,55 @@ function batCape(root) {
   });
 }
 
+// ── the clip's own light ─────────────────────────────────────────────────
+// By the wall the kid has to look as the footage does: dim and warm, the hat a black shape, the hair the brightest
+// thing. The stage's sunset lighting cannot give that, so while the footage still shows each piece is drawn a second
+// way and the two are mixed (uClip, 1 by the wall → 0 on the stage): the piece's own colours, through one soft light
+// from low on the lamp's side, tinted per piece to the colours measured in the footage.
+//   tint   what the piece's own colours are multiplied by (as shown on screen, r g b)
+//   gamma  contrast on those colours: 1 leaves dark parts (the hat, on the hair's mesh) black, less lifts them
+//   lo     how dark the side away from the light is, against 1 for the lit side
+//   floor  the darkest the piece gets (the footage's own shadow colour); with no tint, the whole piece (the cape:
+//          its lit hem does not show in the footage)
+// On the stage itself two smaller things keep the kid the footage's colours under the sunset: `dark` holds a piece's
+// black cloth down (the hat is black in the game; under the stage's strong back light it came out brown), and `warm`
+// tints the whole piece (the hair, pale in plain light, is warm in the footage's).
+const CLIP_LOOK = {
+  hair:   { tint: [1.07, 0.65, 0.475], gamma: 1.0, lo: 0.527, dark: 0.4, warm: [1, 0.93, 0.84] },
+  outfit: { tint: [1.52, 0.79, 0.38], gamma: 0.5, lo: 0.2, floor: [0.115, 0.098, 0.063], dark: 0.8 },
+  neck:   { tint: [0.52, 0.34, 0.16], gamma: 0.6, lo: 0.5, warm: [1, 0.96, 0.9] },
+  horn:   { tint: [2.03, 1.7, 0.67], gamma: 0.7, lo: 0.6 },
+  cape:   { tint: [0, 0, 0], gamma: 1, lo: 1, floor: [0.085, 0.07, 0.042], dark: 0.7 },
+  other:  { tint: [0.3, 0.24, 0.16], gamma: 1, lo: 0.6, floor: [0.07, 0.055, 0.035] }
+};
+const clipU = { value: 0 }, clipDir = { value: new THREE.Vector3(0.3, -0.9, 0.3).normalize() };   // in the camera's space: from below, a little to the lamp's side
+function clipLook(root) {
+  root.traverse(o => {
+    const m = o.material;
+    if (!o.isMesh || !m || !m.userData.u || m.userData.clipLook) return;
+    const L = CLIP_LOOK[m.userData.slot] || CLIP_LOOK.other;
+    const u = m.userData.clipLook = { uClip: clipU, uClipDir: clipDir, uClipTint: { value: new THREE.Vector3(...L.tint) },
+      uClipShape: { value: new THREE.Vector2(L.gamma, L.lo) }, uClipFloor: { value: new THREE.Vector3(...(L.floor || [0, 0, 0])) },
+      uStage: { value: new THREE.Vector4(...(L.warm || [1, 1, 1]), L.dark ?? 1) } };
+    const prev = m.onBeforeCompile, key = m.customProgramCacheKey();
+    m.onBeforeCompile = (sh, r) => {
+      prev(sh, r);
+      Object.assign(sh.uniforms, u);
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform float uClip; uniform vec2 uClipShape; uniform vec3 uClipDir, uClipTint, uClipFloor; uniform vec4 uStage;')
+        .replace('#include <dithering_fragment>', `#include <dithering_fragment>
+          gl_FragColor.rgb *= uStage.rgb * mix(uStage.a, 1.0, smoothstep(0.01, 0.12, dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722))));
+          if (uClip > 0.0) {
+            float cs = clamp(dot(normal, uClipDir) * 0.5 + 0.5, 0.0, 1.0);
+            vec3 cc = pow(max(diffuseColor.rgb, vec3(0.0)), vec3(uClipShape.x)) * uClipTint * mix(uClipShape.y, 1.0, smoothstep(0.6, 0.95, cs));
+            gl_FragColor.rgb = mix(gl_FragColor.rgb, max(cc, uClipFloor), uClip);
+          }`);
+    };
+    m.customProgramCacheKey = () => key + '|clip';
+    m.needsUpdate = true;
+  });
+}
+
 function softDisc(inner, outer, size = 128) {
   return canvasTexture(size, (ctx, s) => {
     const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
@@ -182,6 +231,7 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
   let look = FISH;
   await kid.wearLook({ ...look, clip: CLIP.pose });
   if (look.pieces.cape === FISH.pieces.cape) batCape(kid.object);
+  clipLook(kid.object);
   onProgress(0.9);
 
   // ── the clip's camera, in this stage's space ───────────────────────────
@@ -318,6 +368,7 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
     capeFollow(dt);
     lookAt(dt);
     pool.material.opacity = shadow.material.opacity = hand.e;   // no stage floor by the wall
+    clipU.value = 1 - THREE.MathUtils.smoothstep(hand.e, 0.1, 0.7);   // … and the footage's light there
     place();
     renderer.render(scene, camera);
     frames++;
@@ -379,7 +430,7 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
     pose(clip, restart = false) { kid.play(clip, restart, 'idle'); dirty = true; },
     clap() { kid.play('clap', true); dirty = true; },
     body(height, scale = look.body.scale) { kid.setBody({ height, scale }); dirty = true; },
-    async wear(next) { look = next; const ok = await kid.wearLook({ ...next, clip: hand.stood ? goal.clip : CLIP.pose }); if (ok && next.pieces.cape === FISH.pieces.cape) batCape(kid.object); dirty = true; return ok; },
+    async wear(next) { look = next; const ok = await kid.wearLook({ ...next, clip: hand.stood ? goal.clip : CLIP.pose }); if (ok && next.pieces.cape === FISH.pieces.cape) batCape(kid.object); clipLook(kid.object); dirty = true; return ok; },
     headTop() { return kid.headTop() * S; },
     // x, y in −1…1 across the stage: where the kid should look (0, 0 = straight ahead)
     gaze(x, y) { gaze.tx = Math.max(-1, Math.min(1, x)); gaze.ty = Math.max(-1, Math.min(1, y)); dirty = true; },
@@ -390,7 +441,7 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
     // them). The stage draws the portrait's framing for the one frame it takes; the next frame puts the shot back.
     snap(size = 480, paint = null) {
       const keep = { yaw: cur.yaw, pitch: cur.pitch, dist: cur.dist, x: cur.x, look: cur.look.clone(), fit, e: hand.e };
-      Object.assign(cur, { yaw: PORTRAIT.yaw, pitch: PORTRAIT.pitch, dist: PORTRAIT.dist, x: 0 }); cur.look.set(...PORTRAIT.look); fit = 1; hand.e = 1;
+      Object.assign(cur, { yaw: PORTRAIT.yaw, pitch: PORTRAIT.pitch, dist: PORTRAIT.dist, x: 0 }); cur.look.set(...PORTRAIT.look); fit = 1; hand.e = 1; clipU.value = 0;
       place(); renderer.render(scene, camera);
       const out = document.createElement('canvas'); out.width = out.height = size;
       const ctx = out.getContext('2d');
@@ -403,6 +454,17 @@ export async function mountStage({ canvas, container, reducedMotion = false, onP
       return out;
     },
     refresh() { dirty = true; },
-    _fit(o) { Object.assign(CLIP, o); fitClip(); dirty = true; return { ...CLIP }; }   // for fitting the clip camera by eye
+    _fit(o) { Object.assign(CLIP, o); fitClip(); dirty = true; return { ...CLIP }; },   // for fitting the clip camera by eye
+    _look(o, dir) {   // … and the clip's light: { slot: { tint, gamma, lo, floor, dark, warm } }, [x, y, z]
+      for (const k in o) Object.assign(CLIP_LOOK[k] || (CLIP_LOOK[k] = {}), o[k]);
+      if (dir) clipDir.value.set(...dir).normalize();
+      kid.object.traverse(n => {
+        const u = n.isMesh && n.material.userData.clipLook, L = u && (CLIP_LOOK[n.material.userData.slot] || CLIP_LOOK.other);
+        if (!u) return;
+        u.uClipTint.value.set(...L.tint); u.uClipShape.value.set(L.gamma, L.lo); u.uClipFloor.value.set(...(L.floor || [0, 0, 0]));
+        u.uStage.value.set(...(L.warm || [1, 1, 1]), L.dark ?? 1);
+      });
+      dirty = true;
+    }
   };
 }
