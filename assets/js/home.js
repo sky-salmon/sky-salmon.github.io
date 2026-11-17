@@ -89,6 +89,7 @@ async function mount() {
     walked = null; update();
     stageEl.classList.add('is-ready'); hintOff();
     window.__home = { stage, go, get active() { return active; } };
+    window.dispatchEvent(new Event('home-stage-ready'));
     if (onShow[active]) onShow[active]();
   } catch (e) { console.warn('[home] stage left out', e); still(); }
 }
@@ -301,22 +302,31 @@ if (stageEl) {
     stage.gaze((e.clientX - (r.left + r.width / 2)) / (r.width * 0.7), (e.clientY - (r.top + r.height * 0.36)) / (r.height * 0.7));
   });
   made.addEventListener('pointerleave', () => stage && stage.gaze(0, 0));
-  // the call: one ring of light from the kid's chest and one short note
-  let ac = null;
-  const voice = () => {
+  // the call: one ring of light from the kid's chest, and the game's own default call (FMOD event ShoutDefault:
+  // the recording the game plays at its shoutPitch default, -5 → "ShoutDefaultG-01", taken from the game's sound bank)
+  const CALL = 'assets/audio/call.mp3';
+  let ac = null, callBuf = null, callLoad = null;
+  const audio = () => {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    ac = ac || new AC();
+    return ac;
+  };
+  // fetched once the stage is up, decoded on the first tap (a context may only start on a gesture)
+  const fetchCall = () => (callLoad ||= fetch(CALL).then(r => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('call ' + r.status)))).catch(e => { callLoad = null; throw e; }));
+  const voice = async () => {
     try {
-      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-      ac = ac || new AC(); if (ac.state === 'suspended') ac.resume();
-      const t = ac.currentTime, o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), g2 = ac.createGain(), lp = ac.createBiquadFilter();
-      o.type = 'sine'; o2.type = 'triangle';
-      o.frequency.setValueAtTime(700, t); o.frequency.exponentialRampToValueAtTime(880, t + 0.09);
-      o2.frequency.setValueAtTime(1400, t); o2.frequency.exponentialRampToValueAtTime(1760, t + 0.09);
-      lp.type = 'lowpass'; lp.frequency.value = 2600; g2.gain.value = 0.16;
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.025); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
-      o.connect(lp); o2.connect(g2); g2.connect(lp); lp.connect(g); g.connect(ac.destination);
-      o.start(t); o2.start(t); o.stop(t + 0.32); o2.stop(t + 0.32);
+      const c = audio(); if (!c) return;
+      if (c.state === 'suspended') c.resume();
+      if (!callBuf) {
+        const raw = await fetchCall();
+        callBuf = await new Promise((res, rej) => c.decodeAudioData(raw.slice(0), res, rej));   // the older callback form, for Safari
+      }
+      const src = c.createBufferSource(), g = c.createGain();
+      g.gain.value = 1.6;   // the recording is mixed quietly in the bank; the game raises it on the bus
+      src.buffer = callBuf; src.connect(g); g.connect(c.destination); src.start();
     } catch { /* no sound is fine */ }
   };
+  window.addEventListener('home-stage-ready', () => fetchCall().catch(() => {}), { once: true });
   let lastCall = 0;
   stageEl.addEventListener('stage-tap', () => {
     const now = performance.now();
