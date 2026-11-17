@@ -1,6 +1,7 @@
-/* 活動雷達 — event radar (theme: olive). Builds on base.css tokens. */
+/* 活動雷達 — event radar (theme: dusk). Builds on base.css tokens. */
 
 .ev {
+  --paper: #ddd3bf;   /* the tickets' paper (base.css's dusk --paper is the evening surface) */
   --p-ink: #1f1a16;
   --p-soft: #4f4739;
   --p-muted: #6d6455;

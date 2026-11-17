@@ -1,4 +1,4 @@
-/* 光影相簿 — polaroid wall (default paper theme). Builds on base.css tokens. */
+/* 光影相簿 — polaroid wall (theme: dusk): white prints on a dark board, as on the home page. Builds on base.css tokens. */
 
 .ga { --cap-font: "Caveat", var(--font-serif-tc); }
 .ga [hidden], .ga-lb [hidden] { display: none !important; }
@@ -9,7 +9,7 @@
   position: relative; width: 260px; margin: 0 14px 6px 0; padding: 24px 20px 14px; border-radius: 3px;
   background: #fffdf8 repeating-linear-gradient(180deg, transparent 0 25px, rgba(194, 98, 45, .13) 25px 26px);
   background-position: 0 14px; transform: rotate(-2.2deg);
-  box-shadow: 0 1px 1px rgba(31, 26, 22, .06), 0 16px 30px -14px rgba(60, 45, 25, .32);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 18px 34px -14px rgba(0, 0, 0, .6);
 }
 .ga-memo::before { content: ""; position: absolute; top: 0; bottom: 0; left: 18px; width: 1px; background: rgba(192, 57, 43, .22); }
 .ga-memo-tape {
@@ -45,22 +45,25 @@
 /* ── board + toolbar ─────────────────────────────────────────────────── */
 .ga-board {
   position: relative; min-height: 440px; margin-top: 18px; padding: 22px 40px 56px; border-radius: 24px; border: 1px solid var(--line);
-  background-color: #fdfaf3;
-  background-image: radial-gradient(rgba(31, 26, 22, .14) 1px, transparent 1.3px);
+  background-color: rgba(241, 232, 210, .03);
+  background-image: radial-gradient(rgba(241, 232, 210, .09) 1px, transparent 1.3px);
   background-size: 22px 22px; background-position: 11px 11px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 30px 60px -40px rgba(60, 45, 25, .45);
+  box-shadow: inset 0 1px 0 rgba(241, 232, 210, .05), 0 30px 60px -40px rgba(0, 0, 0, .6);
   transition: box-shadow .2s;
 }
-.ga-board.is-drag { box-shadow: inset 0 0 0 2px var(--accent), 0 30px 60px -40px rgba(60, 45, 25, .45); }
+.ga-board.is-drag { box-shadow: inset 0 0 0 2px var(--accent), 0 30px 60px -40px rgba(0, 0, 0, .6); }
 .ga-toolbar {
   display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 0 -18px 44px; padding: 0 18px 20px;
   border-bottom: 1.5px dashed var(--line-strong);
 }
-.ga-sort button[aria-checked="true"] { background: var(--accent); color: #fff; box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent); }
+.ga-sort button[aria-checked="true"] { background: var(--accent); color: #1f1d12; box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent); }
 .ga-search { position: relative; flex: 1 1 220px; max-width: 360px; }
 .ga-search svg { position: absolute; left: 13px; top: 50%; width: 16px; height: 16px; margin-top: -8px; color: var(--muted); pointer-events: none; }
 .ga-search .input { padding-left: 38px; border-radius: 999px; background: var(--surface); }
 .ga-count { margin-left: auto; padding: 6px 12px; border-radius: 999px; background: var(--surface-3); font-size: 12px; font-weight: 600; letter-spacing: .06em; color: var(--ink-soft); white-space: nowrap; }
+
+/* white paper on the dark board: what is printed on it keeps the paper's ink */
+.ga-pol, .ga-lb-photo { --ink: #1f1a16; --ink-soft: #5d544b; --muted: #8f867b; --line-strong: rgba(31, 26, 22, .24); --accent: #c2622d; }
 
 /* ── polaroids ───────────────────────────────────────────────────────── */
 .ga-wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 48px 34px; margin: 0; padding: 0; list-style: none; }
@@ -72,7 +75,7 @@
 .ga-pol {
   position: relative; display: block; width: 100%; max-width: 270px; padding: 12px 12px 0; border: 0; border-radius: 3px;
   background: #fff; color: var(--ink); text-align: center; transform: rotate(var(--tilt));
-  box-shadow: 0 1px 1px rgba(31, 26, 22, .08), 0 12px 24px -10px rgba(60, 45, 25, .32);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 16px 30px -10px rgba(0, 0, 0, .6);
   transition: transform .35s cubic-bezier(.2, .8, .2, 1), box-shadow .35s;
 }
 .ga-pol::after { /* faint paper sheen */
@@ -81,7 +84,7 @@
 }
 .ga-pol:hover, .ga-pol:focus-visible {
   z-index: 2; transform: rotate(0deg) translateY(-8px) scale(1.035);
-  box-shadow: 0 2px 2px rgba(31, 26, 22, .06), 0 28px 40px -16px rgba(60, 45, 25, .42);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, .2), 0 30px 46px -16px rgba(0, 0, 0, .7);
 }
 .ga-pol:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
 .ga-img { display: block; aspect-ratio: 1; overflow: hidden; background: #ece5d8; box-shadow: inset 0 0 0 1px rgba(31, 26, 22, .06); }
@@ -119,7 +122,7 @@
 .ga-lb::backdrop { background: rgba(24, 19, 15, .8); backdrop-filter: blur(6px); }
 .ga-lb[open] .ga-lb-photo { animation: ga-lb-in .35s cubic-bezier(.2, .8, .2, 1) both; }
 @keyframes ga-lb-in { from { opacity: 0; transform: translateY(14px) rotate(calc(var(--tilt) * 3)) scale(.97); } }
-.ga-lb-close { position: fixed; top: 16px; right: 16px; z-index: 2; background: rgba(255, 253, 248, .92); border-color: transparent; color: var(--ink); }
+.ga-lb-close { position: fixed; top: 16px; right: 16px; z-index: 2; background: rgba(255, 253, 248, .92); border-color: transparent; color: #1f1a16; }
 .ga-lb-photo {
   position: relative; width: fit-content; max-width: 100%; margin: 0; padding: 14px 14px 0; border-radius: 3px; background: #fff;
   box-shadow: 0 34px 80px rgba(0, 0, 0, .5); transform: rotate(var(--tilt, 0deg));
@@ -181,5 +184,5 @@
 }
 @media (hover: none) {
   .ga-paste-hint { display: none; }
-  .ga-pol:hover { transform: rotate(var(--tilt)); box-shadow: 0 1px 1px rgba(31, 26, 22, .08), 0 12px 24px -10px rgba(60, 45, 25, .32); }
+  .ga-pol:hover { transform: rotate(var(--tilt)); box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 16px 30px -10px rgba(0, 0, 0, .6); }
 }

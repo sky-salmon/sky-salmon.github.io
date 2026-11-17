@@ -60,6 +60,23 @@
   --accent: #c9483b; --accent-soft: rgba(201, 72, 59, .18); --red: #c9483b; --gold: #d8a54c;
   --shadow: 0 24px 50px rgba(0, 0, 0, .35); --grain-opacity: .05; --grain-blend: screen; color-scheme: dark;
 }
+/* dusk: the home page's evening, for every page. Colours taken from the author's in-game clip: the ground in shadow,
+   the lamp-lit hair (ink) and the lamp on the hair ties (accent); the sun is that lamp light, turned up. No paper grain
+   and no monospace: labels and figures are set in Outfit (real code keeps --font-code). */
+[data-theme="dusk"] {
+  --bg: #1f1d12; --bg-2: #1b190f; --bg-glow: rgba(242, 160, 90, .07);
+  --surface: #29271a; --surface-2: rgba(241, 232, 210, .045); --surface-3: rgba(241, 232, 210, .07);
+  --paper: #29271a; --ticket-bg: #fdfaf3; --ticket-ink: #1f1a16;
+  --ink: #f1e8d2; --ink-soft: #cbc1a6; --muted: #958e75;
+  --line: rgba(241, 232, 210, .12); --line-strong: rgba(241, 232, 210, .24);
+  --accent: #f2a05a; --accent-soft: rgba(242, 160, 90, .15); --red: #dc6a58; --gold: #e0ae52; --ok: #9cc088;
+  --sun-1: #ffedbb; --sun-2: #fbc77c; --sun-3: #ee9a52; --sun-4: #c5653a;
+  --shadow: 0 24px 60px rgba(0, 0, 0, .45); --shadow-hard: 4px 4px 0 rgba(0, 0, 0, .55);
+  --grain-opacity: 0; --grain-blend: screen;
+  --font-mono: "Outfit", "NaniFont", "NaniFont Common", "Noto Sans TC", system-ui, sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
 /* music: black stage with warm gold light */
 [data-theme="night"] {
   --bg: #0b0a09; --bg-2: #050505; --bg-glow: rgba(150, 110, 40, .28);
@@ -243,3 +260,68 @@ main { padding-bottom: 72px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ── dusk ─────────────────────────────────────────────────────────────────
+ * The look of the home page, for the tool pages: one flat evening ground with the glow of a sun just set above the
+ * top right, headings in NaniFont with an italic Instrument Serif word in the lamp's orange, and a candle flame (the
+ * site's mark) where the old pages had a dot. */
+[data-theme="dusk"] body {
+  background: radial-gradient(1100px 640px at 86% -18%, rgba(242, 160, 90, .11), rgba(242, 160, 90, .035) 46%, transparent 70%), var(--bg);
+}
+[data-theme="dusk"] .mono { font-variant-numeric: tabular-nums; }
+[data-theme="dusk"] code, [data-theme="dusk"] kbd { font-family: var(--font-code); }
+[data-theme="dusk"] .topbar { border-bottom-color: var(--line); background: color-mix(in srgb, var(--bg) 80%, transparent); }
+
+/* the page head: where the tool is among the six, its name, one line about it */
+[data-theme="dusk"] .page-head { position: relative; padding: 60px 0 40px; }
+[data-theme="dusk"] .eyebrow {
+  gap: 10px; font-family: var(--font-serif-tc); font-size: 16px; font-weight: 400; letter-spacing: .08em; text-transform: none; color: var(--muted);
+}
+[data-theme="dusk"] .eyebrow::before, [data-theme="dusk"] .flame {
+  width: 10px; height: 15px; border-radius: 0; box-shadow: none; flex: none;
+  background: linear-gradient(to top, var(--accent) 10%, #ffd9a0 90%);
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 18'><path d='M6 0c3.6 5.2 6 8.4 6 11.6a6 6 0 0 1-12 0C0 8.4 2.4 5.2 6 0z'/></svg>") center / contain no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 18'><path d='M6 0c3.6 5.2 6 8.4 6 11.6a6 6 0 0 1-12 0C0 8.4 2.4 5.2 6 0z'/></svg>") center / contain no-repeat;
+}
+[data-theme="dusk"] .eyebrow b { font-family: var(--font-sans); font-weight: 400; letter-spacing: .04em; color: var(--ink-soft); }
+[data-theme="dusk"] .title {
+  margin: 14px 0 16px; font-size: clamp(46px, 6.6vw, 96px); line-height: 1.04; letter-spacing: .03em;
+  text-shadow: 0 2px 28px rgba(18, 17, 9, .55);
+}
+[data-theme="dusk"] .title em { margin-left: .16em; font-size: .54em; letter-spacing: 0; color: var(--accent); }
+[data-theme="dusk"] .lead { max-width: 34em; font-size: 17px; line-height: 1.85; color: var(--ink-soft); }
+
+@media (max-width: 760px) {
+  [data-theme="dusk"] .page-head { padding: 36px 0 24px; }
+  [data-theme="dusk"] .eyebrow { font-size: 14px; }
+  [data-theme="dusk"] .lead { font-size: 16px; line-height: 1.8; }
+}
+
+/* surfaces and controls in the evening light */
+[data-theme="dusk"] .panel { background: var(--surface-2); }
+[data-theme="dusk"] .btn-primary, [data-theme="dusk"] .icon-btn.is-primary { background: var(--accent); color: #1f1d12; border-color: transparent; }
+[data-theme="dusk"] .btn-primary:hover, [data-theme="dusk"] .icon-btn.is-primary:hover { background: #ffb877; border-color: transparent; }
+[data-theme="dusk"] .btn:not(.btn-primary):hover, [data-theme="dusk"] .icon-btn:not(.is-primary):hover { border-color: var(--accent); color: var(--ink); }
+[data-theme="dusk"] .seg button[aria-selected="true"] { color: #1f1d12; box-shadow: 0 6px 18px rgba(242, 160, 90, .28); }
+[data-theme="dusk"] .chip { letter-spacing: .06em; }
+[data-theme="dusk"] .toast { background: var(--ink); color: #1f1d12; }
+[data-theme="dusk"] .dropzone:hover, [data-theme="dusk"] .dropzone.is-drag { background: var(--accent-soft); }
+[data-theme="dusk"] .input, [data-theme="dusk"] .select, [data-theme="dusk"] .textarea { background: rgba(17, 16, 9, .35); }
+[data-theme="dusk"] .select option { background: var(--surface); color: var(--ink); }
+[data-theme="dusk"] .site-footer { border-top: 1px solid var(--line); margin-top: 24px; }
+
+/* paper in the evening: a ticket (or anything marked .paper) keeps the paper's own ink, so what is set in it reads */
+[data-theme="dusk"] .ticket, [data-theme="dusk"] .paper {
+  --ink: #1f1a16; --ink-soft: #5d544b; --muted: #8f867b; --line: rgba(31, 26, 22, .12); --line-strong: rgba(31, 26, 22, .24);
+  --surface: #fffdf8; --surface-2: rgba(31, 26, 22, .03); --surface-3: rgba(31, 26, 22, .05);
+  --accent: #c2622d; --accent-soft: #f3d9c4; --red: #b8442f; --ok: #3f8f5f; --gold: #b07a1d;
+  color: var(--ink);
+}
+[data-theme="dusk"] .ticket .btn-primary, [data-theme="dusk"] .paper .btn-primary { color: #fffaf2; }
+
+/* things rise into place as they come into view (site.js marks them .is-in; the first screen rises on load) */
+@media (prefers-reduced-motion: no-preference) {
+  .js-rise [data-rise]:not(.is-settled) { transition: opacity .7s ease var(--rd, 0s), transform .95s cubic-bezier(.2, .8, .2, 1) var(--rd, 0s); }
+  .js-rise [data-rise]:not(.is-in) { opacity: 0; transform: translateY(34px); }
+}
+

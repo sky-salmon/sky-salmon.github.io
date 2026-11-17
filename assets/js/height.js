@@ -188,6 +188,7 @@ const fmtRaw = v => {
   return (s.includes('.') ? s : v.toFixed(1)).replace('-', '−');
 };
 
+const tagKey = document.querySelector('#stage-tag .stage-tag-k');
 let stage = null;      // 3D stage API once loaded
 let pendingStage = null; // latest [t, value] for when the stage finishes loading
 let last = null;       // last computed result
@@ -243,6 +244,8 @@ function showResult(height, scale, src, { quiet = false } = {}) {
     els.result.classList.remove('is-in'); void els.result.offsetWidth; els.result.classList.add('is-in');
   }
   document.body.classList.add('has-result');
+  document.body.classList.remove('is-fish');
+  tagKey.textContent = '目前';
 
   if (stage) stage.setResult(tc, r.current);
   pendingStage = [tc, r.current];
@@ -408,8 +411,9 @@ new MutationObserver(() => requestAnimationFrame(updateMore)).observe(els.scroll
 // ── the player's own kid ────────────────────────────────────────────────
 // An outfit QR (sky.thatg.co/o=…) carries the whole look: every slot, its dyes, the stance and the body. The kid is
 // assembled from the game's own models (assets/js/avatar-engine.js) and replaces the stand-in on the stage.
-// Until a visitor has scanned their own QR, the stage shows the game's starting outfit: at a neutral build before any
-// result, at the typed height for a manual entry. The scanned look is kept in this browser (KEY_LOOK).
+// Before any result the stage shows 魚, the author's own kid (assets/js/fish.js), at 魚's own height; after a manual
+// entry without a scanned QR, the game's starting outfit at the typed height. The scanned look is kept in this
+// browser (KEY_LOOK).
 const ORDER = ['outfit', 'cape', 'hair', 'hat', 'horn', 'mask', 'face', 'neck', 'shoes', 'prop'];
 const SLOT_ZH = { cape: '斗篷', mask: '面具', hair: '髮型', outfit: '服裝', hat: '髮飾', horn: '頭飾', neck: '項鍊', face: '面飾', shoes: '鞋子', prop: '道具' };
 const ATT_ZH = { Neutral: '一般', ColdWind: '怕冷', HandsOut: '張開雙手', Proud: '驕傲', Sneaky: '偷偷摸摸', Tough: '強悍', Solemn: '莊重',
@@ -468,18 +472,30 @@ async function showKid(body, src) {
   const my = ++kidJob;
   try {
     const api = await engine();
+    const fish = src === 'fish' && !look ? await import('./fish.js') : null;   // nothing read or typed yet: 魚
     if (my !== kidJob) return;
-    const idx = api.index, pieces = {}, worn = look;   // the visitor's own look, else the starting outfit
+    const idx = api.index, pieces = {}, worn = look;   // the visitor's own look, else 魚 or the starting outfit
     const defaults = Object.fromEntries(Object.entries(idx.defaults || {}).filter(([, n]) => (idx.pieces[n] || {}).file));
     if (worn) ORDER.forEach(sl => { const n = worn.pieces[sl]; pieces[sl] = n && idx.pieces[n] ? n : null; });
+    else if (fish) ORDER.forEach(sl => { const n = fish.FISH.pieces[sl]; pieces[sl] = n && idx.pieces[n] ? n : null; });
     else Object.assign(pieces, defaults);
     if (!pieces.outfit) pieces.outfit = defaults.outfit || null;          // the body piece carries the head too
     const clip = worn && api.rules && api.rules.attitudeClip ? api.rules.attitudeClip(idx, worn.attitude) : 'idle';
     els.outfitNote.textContent = '舞台上的角色正在組裝…';
     // the game's own range; typed numbers far outside it would stretch the kid off the stage (the ticket keeps them)
+    if (fish) body = fish.FISH.body;
     const R = api.rules || {}, shape = { height: clampTo(body.height, R.HEIGHT_RANGE || [-2, 2]), scale: clampTo(body.scale, R.SCALE_RANGE || [-0.2, 0.2]) };
-    const shown = await api.wearLook({ pieces, dyes: worn ? worn.dyes || {} : {}, clip, body: shape });
+    const dyes = worn ? worn.dyes || {} : fish ? fish.FISH.dyes : {};
+    const shown = await api.wearLook({ pieces, dyes, clip, body: shape });
     if (!shown || my !== kidJob) return;
+    if (fish) {   // the Bat cape's hem, and the black hat kept black, as on the home page
+      fish.batCape(api.object); fish.clipLook(api.object);
+      const r = compute(fish.FISH.body.height, fish.FISH.body.scale), t = Math.min(1, Math.max(0, rangePos(r)));
+      tagKey.textContent = '魚';
+      pendingStage = [t, r.current];
+      if (stage) stage.setResult(t, r.current);
+    }
+    document.body.classList.toggle('is-fish', !!fish);
     els.outfitNote.textContent = !look ? ''
       : src === 'qr' && lookFresh ? '舞台上就是依這份 QR 組裝的你：穿搭、染色、姿態、身高與體型都照遊戲的規則還原。'
         : '舞台上的角色穿的是上次掃 QR 讀到的穿搭，身高與體型用的是目前的數值。';
@@ -512,7 +528,7 @@ async function bootStage() {
     const mod = await import('./height-scene.js');
     stage = await mod.mountStage({
       container: els.stage, canvas: $('stage-canvas'), svg: $('ruler-marks'),
-      tag: $('stage-tag'), tagValue: $('stage-tag-v'), note: $('stage-note'), safeRect, reducedMotion
+      tag: $('stage-tag'), tagValue: $('stage-tag-v'), note: $('stage-note'), kidNote: $('kid-note'), safeRect, reducedMotion
     });
     if (pendingStage) stage.setResult(...pendingStage);
     if (kidShown) stage.setKid(kidShown);
@@ -534,7 +550,7 @@ if (saved && Number.isFinite(saved.height) && Number.isFinite(saved.scale)) {
   els.inS.value = saved.scale;
   showResult(saved.height, saved.scale, 'saved', { quiet: true });
 } else {
-  showKid({ height: 0, scale: 0 }, 'default');   // nothing measured yet: the kid waits on the stage at a neutral build
+  showKid({ height: 0, scale: 0 }, 'fish');   // nothing measured yet: 魚 waits on the stage at their own height
 }
 
 window.__height = { compute, extractParams };

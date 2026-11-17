@@ -138,6 +138,29 @@
     zone.addEventListener('drop', e => { [...e.dataTransfer.files].forEach(onFile); });
   }
 
+  // Anything marked data-rise comes up into place as it enters the screen (base.css); what is on the first screen
+  // rises on load, a little after one another. Nothing is hidden without the means to show it again.
+  function rise() {
+    if (document.body.dataset.page === 'home') return;   // the home page moves its own (assets/js/home.js)
+    const els = [...document.querySelectorAll('[data-rise]')];
+    if (!els.length || !('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.documentElement.classList.add('js-rise');
+    const io = new IntersectionObserver(es => {
+      let n = 0;
+      for (const e of es) {
+        if (!e.isIntersecting) continue;
+        io.unobserve(e.target);
+        if (!e.target.style.getPropertyValue('--rd')) e.target.style.setProperty('--rd', Math.min(n++ * 0.09, 0.45) + 's');
+        e.target.classList.add('is-in');
+      }
+    }, { rootMargin: '0px 0px -6% 0px' });
+    els.forEach(el => io.observe(el));
+    // once it has risen, an element's own transitions (hover, open…) are its own again
+    const settle = e => { if (e.target !== e.currentTarget || e.propertyName !== 'transform') return; e.currentTarget.classList.add('is-settled'); e.currentTarget.style.removeProperty('--rd'); e.currentTarget.removeEventListener('transitionend', settle); };
+    els.forEach(el => el.addEventListener('transitionend', settle));
+  }
+
   window.Site = { store, toast, readFileAsDataURL, loadImage, bindDropzone, PAGES, pageURL: () => location.origin + prettyPath(location.pathname) };
   renderChrome();
+  rise();
 })();

@@ -1,4 +1,4 @@
-/* sky-salmon — 名片產生器 (Sky Profile card editor). Theme: ink.
+/* sky-salmon — 名片產生器 (Sky Profile card editor). Theme: dusk (base.css).
  * Two halves: the editor chrome (free to use any CSS) and the card itself (.card …), which is
  * rasterised by html2canvas — keep it to rgba()/gradients/borders/shadows/transforms there:
  * no color-mix(), filter, mask, clip-path, blend modes or conic gradients inside .card. */
@@ -8,16 +8,11 @@
  * base.css's `img { display: block }` would push every exported line of text down. */
 body > div[style*="visibility: hidden"] > img { display: inline !important; }
 body[data-page="card"] {
-  background:
-    radial-gradient(760px 420px at 18% 4%, rgba(63, 143, 137, .2), transparent 70%),
-    radial-gradient(900px 600px at 92% 38%, rgba(64, 120, 116, .16), transparent 65%),
-    radial-gradient(600px 400px at 30% 92%, rgba(226, 178, 92, .06), transparent 70%),
-    linear-gradient(180deg, var(--bg), var(--bg-2)) fixed;
-  background-color: var(--bg);
+  background: radial-gradient(1100px 640px at 86% -18%, rgba(242, 160, 90, .11), rgba(242, 160, 90, .035) 46%, transparent 70%), var(--bg);
 }
 .card-page .hand, .height-note.hand { font-family: "Caveat", "LXGW WenKai TC", cursive; }
 .card-page .page-head { padding-bottom: 18px; }
-.card-page .title em { text-shadow: 0 0 28px rgba(226, 178, 92, .25); }
+.card-page .title em { text-shadow: 0 0 28px rgba(242, 160, 90, .25); }
 
 /* ── design strip ──────────────────────────────────────────────────────── */
 .styles { margin: 8px 0 30px; }
