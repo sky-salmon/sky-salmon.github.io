@@ -1,26 +1,123 @@
-/* sky-salmon — home: who made this, what they made, and about the site. Plain text on the shared paper theme. */
-.home { max-width: 760px; }
-.home-intro { padding: 56px 0 8px; }
-.home-links { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 0; padding: 0; list-style: none; }
-.home-links a { display: inline-flex; gap: 6px; padding: 7px 14px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 14px; font-weight: 600; text-decoration: none; }
+/* sky-salmon — home. The author's in-game clip is the top of the page: it runs edge to edge under the top bar,
+ * fades into the page at its foot, and the introduction is set in that fade, over the dark low wall to the kid's left.
+ * Everything below (what they made, about the site) sits on the same dusk ground. */
+
+/* Dusk: colours taken from the clip itself, so the video's edge disappears into the page.
+ * bg = the clip's shadowed ground, ink = the lit hair, accent = the lamp on the hair ties, fog = the sky behind the tower. */
+body[data-page="home"] {
+  --bg: #1f1d12;
+  --bg-2: #17160d;
+  --bg-glow: rgba(242, 160, 90, .05);
+  --surface: #29271a;
+  --surface-2: rgba(241, 232, 210, .05);
+  --surface-3: rgba(241, 232, 210, .07);
+  --paper: #29271a;
+  --ink: #f1e8d2;
+  --ink-soft: #cbc1a6;
+  --muted: #958e75;
+  --line: rgba(241, 232, 210, .12);
+  --line-strong: rgba(241, 232, 210, .26);
+  --accent: #f2a05a;
+  --accent-soft: rgba(242, 160, 90, .15);
+  --fog: #928769;
+  --shade: rgba(18, 17, 9, .62);
+  --grain-opacity: .05;
+  --grain-blend: screen;
+  color-scheme: dark;
+}
+:root:has(> body[data-page="home"]) { color-scheme: dark; background: #1f1d12; }
+/* the top bar floats over the clip: at the top of the page it is only a soft shade, and it gets its tinted glass back once
+   the page scrolls (the script below the page sets .home-scrolled) */
+body[data-page="home"] .topbar { border-bottom-color: transparent; }
+body[data-page="home"]:not(.home-scrolled) .topbar {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 62%, transparent), transparent) border-box;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+
+/* ── the clip ───────────────────────────────────────────────────────────
+ * --hero-h is how much of the screen the clip takes. The stage keeps the clip's 1280×802 shape and covers the hero;
+ * --fx/--fy say which part stays in view when it is cropped (like object-position), so the kid on the right never leaves.
+ * The handwritten note is placed in the clip's own pixels, so it stays on the hat at every size. */
+.hero { --hero-h: clamp(520px, 82vh, 900px); --sw: max(100%, calc(var(--hero-h) * 1.596)); --fx: .8; --fy: .4; margin-top: -65px; }
+.hero-media {
+  position: relative; height: var(--hero-h); margin: 0; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 54%, transparent 97%);
+          mask-image: linear-gradient(to bottom, #000 0, #000 54%, transparent 97%);
+}
+.hero-stage {
+  position: absolute; width: var(--sw); aspect-ratio: 1280 / 802; container-type: inline-size;
+  left: calc((100% - var(--sw)) * var(--fx)); top: calc(var(--hero-h) * var(--fy)); transform: translateY(calc(var(--fy) * -100%));
+}
+.hero-stage video { display: block; width: 100%; height: 100%; object-fit: cover; background: var(--bg); }
+/* a soft shade at the lower left, under the introduction */
+.hero-media::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(70% 60% at 8% 100%, var(--shade), transparent 72%);
+}
+
+.hero-note { position: absolute; right: 27.3%; top: 22%; margin: 0; font: 600 clamp(17px, 2.05cqi, 30px)/1 var(--font-hand); color: var(--ink); text-shadow: 0 1px 10px rgba(18, 17, 9, .7); white-space: nowrap; }
+.hero-arrow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.hero-arrow path { fill: none; stroke: var(--ink); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 4px rgba(18, 17, 9, .7)); }
+
+.hero-pause {
+  position: absolute; z-index: 2; top: 82px; right: max(16px, calc((100% - 1180px) / 2));
+  display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 50%;
+  border: 1px solid var(--line-strong); background: color-mix(in srgb, var(--bg) 45%, transparent); color: var(--ink);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); opacity: .8;
+}
+.hero-pause:hover { opacity: 1; border-color: var(--accent); color: var(--accent); }
+.hero-pause svg { width: 14px; height: 14px; }
+.hero-pause .i-play, .hero-pause[data-state="paused"] .i-pause { display: none; }
+.hero-pause[data-state="paused"] .i-play { display: block; }
+
+/* ── the introduction, set in the clip's fade ─────────────────────────── */
+.hero-copy { position: relative; display: grid; justify-items: start; gap: 14px; margin-top: calc(var(--hero-h) * -.37); }
+.hero-title {
+  margin: 0; font-family: var(--font-serif-tc); font-weight: 400; font-size: clamp(54px, 8.2vw, 116px); line-height: 1;
+  letter-spacing: .03em; text-shadow: 0 2px 28px rgba(18, 17, 9, .6);
+}
+.hero-title em { margin-left: .22em; font-family: var(--font-serif); font-style: italic; font-size: .52em; letter-spacing: 0; color: var(--accent); }
+.hero-copy .lead { font-size: 17px; }
+.home-links { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 0; padding: 0; list-style: none; }
+.home-links a {
+  display: inline-flex; gap: 6px; padding: 7px 15px; border: 1px solid var(--line-strong); border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 40%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  font-size: 14px; font-weight: 600; text-decoration: none;
+}
 .home-links a:hover { border-color: var(--accent); color: var(--accent); }
 .home-links span { font-weight: 400; color: var(--ink-soft); }
-/* the author's own clip from the game: a still frame shows until it plays, and it plays silent on a loop */
-.home-video { margin: 28px 0 0; }
-.home-video video { display: block; width: 100%; height: auto; aspect-ratio: 1280 / 802; object-fit: cover; border-radius: 18px; background: var(--surface-3); border: 1px solid var(--line); }
-.home-video figcaption { margin-top: 6px; font-family: var(--font-hand); font-size: 19px; font-weight: 600; color: var(--ink-soft); }
-.home-section { margin-top: 48px; }
+
+/* ── below the clip ───────────────────────────────────────────────────── */
+.home > * { max-width: 760px; }
+.home-section { margin-top: 64px; }
 .home-h2 { margin: 0 0 14px; font-family: var(--font-serif-tc); font-weight: 400; font-size: 26px; line-height: 1.3; }
 .home-section p { margin: 0 0 10px; color: var(--ink-soft); max-width: 42em; }
 .home-section .home-note { font-size: 13.5px; color: var(--muted); }
 
 .works { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .works li { border-bottom: 1px solid var(--line); }
-.works a { display: grid; grid-template-columns: 9em minmax(0, 1fr); gap: 4px 20px; padding: 14px 4px; text-decoration: none; }
+.works a { display: grid; grid-template-columns: 9em minmax(0, 1fr); gap: 4px 20px; padding: 15px 4px; text-decoration: none; transition: background-color .2s ease; }
+.works a:hover { background: var(--surface-2); }
 .works a:hover .works-name { color: var(--accent); }
 .works-name { font-weight: 600; }
 .works-desc { color: var(--ink-soft); font-size: 14.5px; }
-@media (max-width: 560px) {
-  .home-intro { padding-top: 36px; }
-  .works a { grid-template-columns: 1fr; }
+
+/* phones and tall screens: the clip is cropped around the kid and the introduction sits below them */
+@media (max-width: 760px), (max-aspect-ratio: 1/1) {
+  .hero { --hero-h: min(122vw, 70vh); --fx: .86; --fy: .5; }
+  .hero-media {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 50%, transparent 96%);
+            mask-image: linear-gradient(to bottom, #000 0, #000 50%, transparent 96%);
+  }
+  .hero-media::after { background: radial-gradient(90% 45% at 0% 100%, var(--shade), transparent 75%); }
+  .hero-copy { margin-top: calc(var(--hero-h) * -.2); }
+  .hero-pause { top: 76px; }
 }
+@media (max-width: 760px) { .hero { margin-top: -59px; } }
+@media (max-width: 560px) {
+  .works a { grid-template-columns: 1fr; }
+  .home-links { gap: 8px; }
+  .home-links a { padding: 6px 12px; font-size: 13px; }
+  .home-section { margin-top: 52px; }
+}
+@media (prefers-reduced-motion: reduce) { .works a { transition: none; } }
