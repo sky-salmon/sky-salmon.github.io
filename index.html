@@ -19,6 +19,7 @@
 </script>
 </head>
 <body data-page="home">
+<!-- the author's clip: pinned to the top of the screen, behind the scene -->
 <div class="hero" id="hero">
   <figure class="hero-media">
     <div class="hero-stage">
@@ -36,25 +37,26 @@
     <svg class="i-pause" viewBox="0 0 14 14" aria-hidden="true"><rect x="2.5" y="2" width="3" height="10" rx="1" fill="currentColor"/><rect x="8.5" y="2" width="3" height="10" rx="1" fill="currentColor"/></svg>
     <svg class="i-play" viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2.2v9.6a.6.6 0 0 0 .9.5l7.6-4.8a.6.6 0 0 0 0-1L4.4 1.7a.6.6 0 0 0-.9.5z" fill="currentColor"/></svg>
   </button>
-  <div class="wrap hero-copy">
-    <div class="hero-intro">
-      <p class="hero-by">sky-salmon 的作者</p>
-      <h1 class="hero-title">我是魚<em>salmon</em></h1>
-      <p class="hero-lead">一個喜歡光遇的工程師。</p>
-      <p class="hero-social">
-        <span class="hero-handle">@im._.salmon</span>
-        <a href="https://www.instagram.com/im._.salmon/" target="_blank" rel="noopener">Instagram</a>
-        <a href="https://www.threads.com/@im._.salmon" target="_blank" rel="noopener">Threads</a>
-      </p>
-    </div>
-  </div>
 </div>
 
 <main class="home">
 
-  <section class="made" id="made" aria-labelledby="made-title">
-    <div class="wrap made-grid">
-      <div class="made-index">
+  <!-- One scene. The clip above stays pinned behind it and fades as the page scrolls, while the stage (right) fades
+       in over the same spot: the kid by the wall becomes the kid on the stage. -->
+  <div class="scene wrap" id="scene">
+    <div class="scene-text">
+      <div class="hero-intro" id="intro">
+        <p class="hero-by">sky-salmon 的作者</p>
+        <h1 class="hero-title">我是魚<em>salmon</em></h1>
+        <p class="hero-lead">一個喜歡光遇的工程師。</p>
+        <p class="hero-social">
+          <span class="hero-handle">@im._.salmon</span>
+          <a href="https://www.instagram.com/im._.salmon/" target="_blank" rel="noopener">Instagram</a>
+          <a href="https://www.threads.com/@im._.salmon" target="_blank" rel="noopener">Threads</a>
+        </p>
+      </div>
+
+      <section class="made" id="made" aria-labelledby="made-title">
         <h2 class="made-title" id="made-title">我做的東西</h2>
         <ol class="tools" id="tools">
         <li class="tool is-open" data-tool="card">
@@ -164,34 +166,34 @@
           </div>
         </li>
         </ol>
-      </div>
-
-      <!-- the stage: the author's own kid, live (assets/js/home-stage.js), in front of a setting sun. For 活動雷達 the
-           sun's rim becomes the two-hour clock of the game's recurring events. -->
-      <div class="stage-col">
-      <div class="stage" id="stage" data-tool="card">
-        <div class="stage-sky" aria-hidden="true">
-          <div class="stage-disc"></div>
-          <svg class="stage-ring" id="ring" viewBox="0 0 400 400"></svg>
-        </div>
-        <div class="stage-card" id="stage-card" aria-hidden="true">
-          <svg class="sc-mark" viewBox="0 0 36 36"><circle cx="18" cy="13" r="11" fill="#f6d68f" opacity=".45"/><path d="M18 4c3.2 4.6 5.2 7.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0C12.8 11.6 14.8 8.6 18 4z" fill="#f0a24a" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18 10.5c1.3 1.9 2 3.1 2 4.2a2 2 0 0 1-4 0c0-1.1.7-2.3 2-4.2z" fill="#fff4cf"/><rect x="13.5" y="20" width="9" height="12" rx="2.5" fill="#fffdf8" stroke="currentColor" stroke-width="1.6"/></svg>
-          <strong class="sc-name">魚</strong>
-          <span class="sc-en">salmon</span>
-          <span class="sc-line">一個喜歡光遇的工程師。</span>
-          <span class="sc-handle">@im._.salmon</span>
-        </div>
-        <canvas class="stage-canvas" id="stage-canvas" role="img" aria-label="魚的光之子：戴巫師帽、披蝙蝠斗篷，站在夕陽前。可以拖曳轉動，點一下會呼喚。"></canvas>
-        <img class="stage-still" id="stage-still" src="assets/img/home/snap-kid.jpg" alt="戴巫師帽的光之子" width="360" height="360" hidden>
-        <svg class="stage-ruler" id="stage-ruler" aria-hidden="true"></svg>
-        <div class="stage-prints" id="prints" aria-live="polite"></div>
-        <div class="stage-flash" id="stage-flash" aria-hidden="true"></div>
-        <p class="stage-hint" id="stage-hint">拖曳轉動　點一下呼喚</p>
-        <div class="stage-veil" id="stage-veil" role="status"><span>魚還在路上</span><i></i></div>
-      </div>
-      </div>
+      </section>
     </div>
-  </section>
+
+    <!-- the stage: the author's own kid, live (assets/js/home-stage.js), in front of a setting sun. For 活動雷達 the
+         sun's rim becomes the two-hour clock of the game's recurring events. -->
+    <div class="stage-col">
+    <div class="stage" id="stage" data-tool="card">
+      <div class="stage-sky" aria-hidden="true">
+        <div class="stage-disc"></div>
+        <svg class="stage-ring" id="ring" viewBox="0 0 400 400"></svg>
+      </div>
+      <div class="stage-card" id="stage-card" aria-hidden="true">
+        <svg class="sc-mark" viewBox="0 0 36 36"><circle cx="18" cy="13" r="11" fill="#f6d68f" opacity=".45"/><path d="M18 4c3.2 4.6 5.2 7.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0C12.8 11.6 14.8 8.6 18 4z" fill="#f0a24a" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18 10.5c1.3 1.9 2 3.1 2 4.2a2 2 0 0 1-4 0c0-1.1.7-2.3 2-4.2z" fill="#fff4cf"/><rect x="13.5" y="20" width="9" height="12" rx="2.5" fill="#fffdf8" stroke="currentColor" stroke-width="1.6"/></svg>
+        <strong class="sc-name">魚</strong>
+        <span class="sc-en">salmon</span>
+        <span class="sc-line">一個喜歡光遇的工程師。</span>
+        <span class="sc-handle">@im._.salmon</span>
+      </div>
+      <canvas class="stage-canvas" id="stage-canvas" role="img" aria-label="魚的光之子：戴巫師帽、披蝙蝠斗篷，站在夕陽前。可以拖曳轉動，點一下會呼喚。"></canvas>
+      <img class="stage-still" id="stage-still" src="assets/img/home/snap-kid.jpg" alt="戴巫師帽的光之子" width="360" height="360" hidden>
+      <svg class="stage-ruler" id="stage-ruler" aria-hidden="true"></svg>
+      <div class="stage-prints" id="prints" aria-live="polite"></div>
+      <div class="stage-flash" id="stage-flash" aria-hidden="true"></div>
+      <p class="stage-hint" id="stage-hint">拖曳轉動　點一下呼喚</p>
+      <div class="stage-veil" id="stage-veil" role="status"><span>魚還在路上</span><i></i></div>
+    </div>
+    </div>
+  </div>
 
   <section class="about wrap" id="about" aria-labelledby="about-title">
     <h2 class="about-title" id="about-title">關於這個網站</h2>

@@ -1,9 +1,11 @@
 /* sky-salmon — home page behaviour (a module; the 3D stage in home-stage.js is loaded only when it is needed).
- *   hero      the clip's pause button; a warm light that follows the pointer over the clip; the top bar turns to glass
- *             once the page scrolls
+ *   clip      the pause button; a warm light that follows the pointer over the clip; the top bar turns to glass once
+ *             the page scrolls
+ *   hand-off  as the page scrolls, the clip (pinned behind the page) fades and the stage's kid fades in over the same
+ *             spot, drawn through the clip's own camera, then stands up into the stage; the sun rises behind them
  *   index     the six tools as a list; opening one turns the stage to it
- *   stage     the author's own Sky kid: one camera shot and pose per tool, drag to turn
- *             their head follows the pointer and a tap makes them call, as in the game
+ *   stage     the author's own Sky kid: one camera shot and pose per tool, drag to turn; their head follows the
+ *             pointer and a tap makes them call, as in the game
  *   per tool  card: a name card that tilts · wardrobe: other capes · height: the height page's formula on the kid's
  *             real body · events: the two-hour clock, live, in game time · music: fifteen keys · album: take a picture
  * Every part checks that its elements exist, so a missing block never stops the rest. */
@@ -26,17 +28,19 @@ const scrolled = () => document.body.classList.toggle('home-scrolled', scrollY >
 addEventListener('scroll', scrolled, { passive: true }); scrolled();
 
 /* ── the light over the clip ───────────────────────────────────────── */
+// The clip sits behind the page, so the pointer is followed on the window, for as long as the clip still shows.
 const hero = $('hero'), media = hero && hero.querySelector('.hero-media'), clipStage = hero && hero.querySelector('.hero-stage');
+let clipGone = false;   // set by the hand-off below once the clip has faded out
 if (hero && media && clipStage) {
   const REST = [1000, 545];   // where the light rests: the lamp-lit hair ties under the hat, in the clip's own pixels
-  let x = 0, y = 0, tx = 0, ty = 0, held = false, seen = true, raf = 0, last = 0, started = false;
+  let x = 0, y = 0, tx = 0, ty = 0, held = false, raf = 0, last = 0, started = false;
   const rest = () => {
     const m = media.getBoundingClientRect(), s = clipStage.getBoundingClientRect();
     return [s.left - m.left + REST[0] / 1280 * s.width, s.top - m.top + REST[1] / 802 * s.height];
   };
   const frame = now => {
     raf = 0;
-    if (!seen || document.hidden) return;
+    if (clipGone || document.hidden) return;
     const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
     if (!held) [tx, ty] = rest();
     if (!started) { x = tx; y = ty; started = true; }
@@ -45,19 +49,17 @@ if (hero && media && clipStage) {
     media.style.setProperty('--lx', x.toFixed(1) + 'px'); media.style.setProperty('--ly', y.toFixed(1) + 'px');
     if (Math.abs(tx - x) > 0.3 || Math.abs(ty - y) > 0.3) raf = requestAnimationFrame(frame); else last = 0;   // stop once it has arrived
   };
-  const wake = () => { if (!raf && seen && !document.hidden) raf = requestAnimationFrame(frame); };
-  const point = e => {
+  const wake = () => { if (!raf && !clipGone && !document.hidden) raf = requestAnimationFrame(frame); };
+  const letGo = () => { if (held) { held = false; media.classList.remove('is-lit'); wake(); } };
+  addEventListener('pointermove', e => {
+    if (clipGone || (e.pointerType === 'touch' && !e.buttons)) return;
     const r = media.getBoundingClientRect();
-    if (e.clientY > r.bottom) return;
+    if (e.clientY > r.bottom || e.clientY < r.top) return letGo();
     held = true; tx = e.clientX - r.left; ty = e.clientY - r.top; media.classList.add('is-lit'); wake();
-  };
-  const letGo = () => { held = false; media.classList.remove('is-lit'); wake(); };
-  hero.addEventListener('pointermove', e => { if (e.pointerType !== 'touch' || e.buttons) point(e); });
-  hero.addEventListener('pointerdown', point);
-  hero.addEventListener('pointerleave', letGo);
-  hero.addEventListener('pointerup', e => { if (e.pointerType === 'touch') letGo(); });
+  }, { passive: true });
+  addEventListener('pointerup', e => { if (e.pointerType === 'touch') letGo(); });
+  document.documentElement.addEventListener('pointerleave', letGo);
   new ResizeObserver(wake).observe(media);
-  new IntersectionObserver(es => { seen = es[0].isIntersecting; wake(); }).observe(media);
   document.addEventListener('visibilitychange', wake);
   wake();
 }
@@ -102,6 +104,7 @@ async function mount() {
     const { mountStage } = await import('./home-stage.js');
     stage = await mountStage({ canvas, container: stageEl, reducedMotion: reduce.matches, onProgress: p => veil && veil.style.setProperty('--p', Math.round(p * 100) + '%') });
     stage.shot(active);
+    handoff();
     stageEl.classList.add('is-ready'); hintOff();
     window.__home = { stage, open };
     if (onShow[active]) onShow[active]();
@@ -116,41 +119,80 @@ if (stageEl) {
   hintOff = () => setTimeout(() => stageEl.classList.add('is-touched'), 9000);   // the hint leaves on its own after a while
 }
 
+/* ── hand-off: the clip becomes the stage as the page scrolls ───────── */
+// T is how far the page scrolls for the whole change: on a wide screen most of the clip's height; on a narrow one,
+// exactly until the list arrives under the pinned stage. Everything else reads how far along that is.
+const smooth = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+let T = 400, queued = 0, pausedByScroll = false;
+function measure() {
+  if (!hero || !stageEl) return;
+  const made = $('made');
+  if (narrow.matches && made) {
+    const top = parseFloat(getComputedStyle(stageEl).top) || 58;
+    T = Math.max(140, made.getBoundingClientRect().top + scrollY - (top + stageEl.offsetHeight + 16));
+  } else T = hero.offsetHeight * 0.6;
+}
+function handoff() {
+  queued = 0;
+  if (!hero || !stageEl) return;
+  const p = Math.min(1, Math.max(0, scrollY / T)), step = reduce.matches ? (p > 0.5 ? 1 : 0) : null;
+  const v = { fade: step ?? smooth(0.06, 0.7, p), kid: step ?? smooth(0.2, 0.78, p), rise: step ?? smooth(0.3, 1, p), solid: step ?? smooth(0.5, 0.95, p) };
+  for (const k in v) document.body.style.setProperty('--' + k, v[k].toFixed(3));
+  document.body.classList.toggle('is-live', p >= 0.9);
+  document.body.classList.toggle('is-past', p >= 1);
+  clipGone = p >= 1;
+  // the clip rests while it cannot be seen
+  if (video) {
+    if (clipGone && !video.paused) { video.pause(); pausedByScroll = true; }
+    else if (!clipGone && pausedByScroll) { pausedByScroll = false; if (!reduce.matches) video.play().catch(() => {}); }
+  }
+  if (stage && clipStage) {
+    const f = clipStage.getBoundingClientRect(), c = stageEl.getBoundingClientRect();
+    stage.handoff(step ?? smooth(0.34, 1, p), { x: f.left - c.left, y: f.top - c.top, w: f.width, h: f.height }, v.kid > 0.001);
+  }
+}
+if (hero && stageEl) {
+  const ask = () => { if (!queued) queued = requestAnimationFrame(handoff); };
+  addEventListener('scroll', ask, { passive: true });
+  addEventListener('resize', () => { measure(); ask(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); ask(); });
+  measure(); handoff();
+}
+
 /* ── life: the kid looks toward the pointer, and answers a tap with a call ── */
 if (stageEl) {
   // the pointer anywhere in the section turns the head a little; leaving lets it go back
-  const made = $('made');
+  const made = $('scene');
   made.addEventListener('pointermove', e => {
     if (!stage || e.pointerType === 'touch' || reduce.matches) return;
     const r = stageEl.getBoundingClientRect();
     stage.gaze((e.clientX - (r.left + r.width / 2)) / (r.width * 0.7), (e.clientY - (r.top + r.height * 0.36)) / (r.height * 0.7));
   });
   made.addEventListener('pointerleave', () => stage && stage.gaze(0, 0));
-  // the call: rings of light from the kid's chest and a short two-note voice
+  // the call: one ring of light from the kid's chest and one short note
   let ac = null;
   const voice = () => {
     try {
       const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
       ac = ac || new AC(); if (ac.state === 'suspended') ac.resume();
-      const t = ac.currentTime, o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), lp = ac.createBiquadFilter();
+      const t = ac.currentTime, o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), g2 = ac.createGain(), lp = ac.createBiquadFilter();
       o.type = 'sine'; o2.type = 'triangle';
-      o.frequency.setValueAtTime(620, t); o.frequency.exponentialRampToValueAtTime(930, t + 0.11); o.frequency.exponentialRampToValueAtTime(760, t + 0.3);
-      o2.frequency.setValueAtTime(1240, t); o2.frequency.exponentialRampToValueAtTime(1860, t + 0.11); o2.frequency.exponentialRampToValueAtTime(1520, t + 0.3);
-      lp.type = 'lowpass'; lp.frequency.value = 2600;
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
-      const g2 = ac.createGain(); g2.gain.value = 0.18;
+      o.frequency.setValueAtTime(700, t); o.frequency.exponentialRampToValueAtTime(880, t + 0.09);
+      o2.frequency.setValueAtTime(1400, t); o2.frequency.exponentialRampToValueAtTime(1760, t + 0.09);
+      lp.type = 'lowpass'; lp.frequency.value = 2600; g2.gain.value = 0.16;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.025); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
       o.connect(lp); o2.connect(g2); g2.connect(lp); lp.connect(g); g.connect(ac.destination);
-      o.start(t); o2.start(t); o.stop(t + 0.45); o2.stop(t + 0.45);
+      o.start(t); o2.start(t); o.stop(t + 0.32); o2.stop(t + 0.32);
     } catch { /* no sound is fine */ }
   };
+  let lastCall = 0;
   stageEl.addEventListener('stage-tap', () => {
-    if (!stage) return;
-    const [x, y] = stage.chest();
-    for (let i = 0; i < (reduce.matches ? 1 : 3); i++) {
-      const ring = document.createElement('i');
-      ring.className = 'call-ring'; ring.style.left = x.toFixed(1) + 'px'; ring.style.top = y.toFixed(1) + 'px'; ring.style.animationDelay = (i * 0.12) + 's';
-      stageEl.appendChild(ring); setTimeout(() => ring.remove(), 1300 + i * 120);
-    }
+    const now = performance.now();
+    if (!stage || now - lastCall < 250) return;   // one tap, one call
+    lastCall = now;
+    const [x, y] = stage.chest(), ring = document.createElement('i');
+    ring.className = 'call-ring'; ring.style.left = x.toFixed(1) + 'px'; ring.style.top = y.toFixed(1) + 'px';
+    stageEl.appendChild(ring); setTimeout(() => ring.remove(), 1300);
     voice();
     stageEl.classList.add('is-touched');
   });
@@ -197,10 +239,10 @@ if (hIn) {
   const draw = () => {
     if (!stage || !parts || active !== 'height') return;
     ruler.setAttribute('viewBox', `0 0 ${stageEl.clientWidth} ${stageEl.clientHeight}`);
-    const X = -1.3, P = y => stage.project(X, y, 0);
+    const X = 1.3, P = y => stage.project(X, y, 0);   // the picture is mirrored: +x is to the visitor's left
     line(parts.axis, P(0), P(3));
     parts.ticks.forEach((t, i) => { const p = P(i * 0.25); line(t, p, [p[0] + (i % 4 === 0 ? 16 : 8), p[1]]); });
-    const top = stage.headTop(), a = P(top), b = stage.project(0.95, top, 0);
+    const top = stage.headTop(), a = P(top), b = stage.project(-0.95, top, 0);
     line(parts.head, a, b); parts.dot.setAttribute('cx', a[0].toFixed(1)); parts.dot.setAttribute('cy', a[1].toFixed(1)); parts.dot.setAttribute('r', '3.5');
   };
   let until = 0, raf = 0;
@@ -308,7 +350,7 @@ if (harp) {
     if (sky && !reduce.matches) { const r = document.createElement('i'); r.className = 'note-ring'; sky.appendChild(r); setTimeout(() => r.remove(), 1050); }
     if (disc) { disc.classList.remove('is-pulse'); void disc.offsetWidth; disc.classList.add('is-pulse'); }
     const now = performance.now();
-    if (stage && active === 'music' && now - lastClap > 380) { lastClap = now; stage.pose('clap', true); }
+    if (stage && active === 'music' && now - lastClap > 380) { lastClap = now; stage.clap(); }
   };
   const play = i => { pluck(i); show(i); };
   keys.forEach((k, i) => k.addEventListener('pointerdown', e => { e.preventDefault(); play(i); }));

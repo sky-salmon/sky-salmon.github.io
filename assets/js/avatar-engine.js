@@ -5,7 +5,7 @@
  *
  *   const kid = await createAvatar()                        // loads index.json, the skeleton and the rules
  *   await kid.wearLook({ pieces: {slot: outfit|null}, dyes: {slot: [primary, secondary]}, clip, body: {height, scale} })
- *   kid.play(clip), kid.setBody({height, scale})          // change only the clip or the body shape
+ *   kid.play(clip, restart, then), kid.setBody({height, scale})   // change only the clip (once, then another) or the body shape
  *   kid.object, kid.update(dt), kid.headTop(), kid.body, kid.index, kid.rules */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -203,7 +203,10 @@ export async function createAvatar(opts = {}) {
     if (!clipLoads.has(def.file)) clipLoads.set(def.file, load(BASE + def.file).then(g => { g.animations.forEach(c => { clips[c.name] = cleanClip(c); }); }).catch(e => console.warn(e)));
     return clipLoads.get(def.file).then(() => clips[id] || null);
   }
-  async function play(id, restart = false) {   // restart: run a one-shot clip again from its first frame
+  // restart: run the clip again from its first frame. then: play this clip once, and that one when it ends.
+  let afterOnce = null;
+  mixer.addEventListener('finished', e => { if (afterOnce && e.action === action) { const next = afterOnce; afterOnce = null; play(next); } });
+  async function play(id, restart = false, then = null) {
     clipWanted = id || 'idle';
     // a prop held in the hands brings its hold pose (props carried on the back don't)
     const prop = worn.prop && IDX.pieces[worn.prop.name];
@@ -214,12 +217,14 @@ export async function createAvatar(opts = {}) {
     if ((clipWanted || 'idle') !== (id || 'idle')) return;
     const clip = clips[clipId] || clips.idle || Object.values(clips)[0];
     if (!clip) return;
-    if (action && action.getClip() === clip) { if (restart) action.reset().play(); return; }
+    const def = IDX.clips.find(c => c.id === clip.name);
+    const loop = then || (def && def.loop === false) ? THREE.LoopOnce : THREE.LoopRepeat;
+    if (action && action.getClip() === clip) { if (restart) { action.setLoop(loop, Infinity); action.reset().play(); afterOnce = then; } return; }
     if (action) action.fadeOut(0.25);
     if (rules && rules.restoreAvatarFrame) rules.restoreAvatarFrame(rig);  // the mixer must bind the plain pose
     action = mixer.clipAction(clip);
-    const def = IDX.clips.find(c => c.id === clip.name);
-    action.reset().setLoop(def && def.loop === false ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
+    afterOnce = then;
+    action.reset().setLoop(loop, Infinity);
     action.clampWhenFinished = true;
     action.fadeIn(0.25).play();
     groundAt = performance.now() + 350;  // re-measure the feet once the fade is over

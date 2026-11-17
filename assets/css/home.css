@@ -1,10 +1,13 @@
-/* sky-salmon — home. Three parts, top to bottom:
- *   1. the author's in-game clip, edge to edge under the top bar, fading into the page; the introduction is set in the fade
- *   2. what they made: the six tools as one large list, beside a stage where the author's own Sky kid stands against a
- *      setting sun and acts each tool out (assets/js/home-stage.js draws the kid; assets/js/home.js runs the rest)
- *   3. about the site
+/* sky-salmon — home. One scene, then a closing note:
+ *   The author's in-game clip is pinned to the top of the screen, behind everything. Over it, on the left, the
+ *   introduction and then the six tools as one large list; on the right, the stage: the author's own Sky kid, live
+ *   (assets/js/home-stage.js), against a setting sun. As the page scrolls the clip fades and the stage fades in over the
+ *   same spot, so the kid squatting by the wall becomes the kid on the stage, who then acts each tool out.
+ *   assets/js/home.js runs it and sets, on <body>, how far the hand-off has gone:
+ *     --fade 0→1 the clip goes · --kid 0→1 the 3D kid comes · --rise 0→1 the sun comes up · --solid 0→1 (narrow
+ *     screens) the pinned stage gets its backing · .is-live once the stage can be used
  * One dusk ground throughout, in colours taken from the clip; the sun is the clip's lamp light, turned up.
- * Type: NaniFont for Chinese, Instrument Serif italic for "salmon" and the big numerals, Outfit for Latin and digits. */
+ * Type: NaniFont for Chinese, Instrument Serif italic for "salmon", Outfit for Latin and digits. */
 
 /* Dusk: colours taken from the clip itself, so the video's edge disappears into the page.
  * bg = the clip's shadowed ground, ink = the lit hair, accent = the lamp on the hair ties, fog = the sky behind the tower. */
@@ -28,6 +31,8 @@ body[data-page="home"] {
   --shade: rgba(18, 17, 9, .62);
   --sun-1: #ffedbb; --sun-2: #fbc77c; --sun-3: #ee9a52; --sun-4: #c5653a;
   --grain-opacity: 0;   /* no paper grain here: the ground is flat so nothing pinned over it shows an edge */
+  --hero-h: clamp(480px, 74vh, 820px);   /* how much of the screen the clip takes */
+  --fade: 0; --kid: 0; --rise: 0; --solid: 0;
   color-scheme: dark;
 }
 :root:has(> body[data-page="home"]) { color-scheme: dark; background: #1f1d12; }
@@ -42,10 +47,14 @@ body[data-page="home"]:not(.home-scrolled) .topbar {
 }
 
 /* ── the clip ───────────────────────────────────────────────────────────
- * --hero-h is how much of the screen the clip takes. The stage keeps the clip's 1280×802 shape and covers the hero;
+ * Pinned to the top of the screen and faded by --fade. Its stage keeps the clip's 1280×802 shape and covers the hero;
  * --fx/--fy say which part stays in view when it is cropped (like object-position), so the kid on the right never leaves.
  * The handwritten note is placed in the clip's own pixels, so it stays on the hat at every size. */
-.hero { --hero-h: clamp(480px, 74vh, 820px); --sw: max(100%, calc(var(--hero-h) * 1.596)); --fx: .8; --fy: .4; margin-top: -65px; overflow-x: clip; }
+.hero {
+  --sw: max(100%, calc(var(--hero-h) * 1.596)); --fx: .8; --fy: .4;
+  position: fixed; z-index: 0; inset: 0 0 auto; height: var(--hero-h); overflow: clip; pointer-events: none; opacity: calc(1 - var(--fade));
+}
+body.is-past .hero { visibility: hidden; }
 .hero-media {
   --lx: 78%; --ly: 68%;
   position: relative; height: var(--hero-h); margin: 0; overflow: hidden;
@@ -79,7 +88,7 @@ body[data-page="home"]:not(.home-scrolled) .topbar {
 .hero-arrow path { fill: none; stroke: var(--ink); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 4px rgba(18, 17, 9, .7)); }
 
 .hero-pause {
-  position: absolute; z-index: 2; top: 82px; right: max(16px, calc((100% - 1180px) / 2));
+  position: absolute; z-index: 2; top: 82px; right: max(16px, calc((100% - 1180px) / 2)); pointer-events: auto;
   display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 50%;
   border: 1px solid var(--line-strong); background: color-mix(in srgb, var(--bg) 45%, transparent); color: var(--ink);
   backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); opacity: .8;
@@ -89,13 +98,16 @@ body[data-page="home"]:not(.home-scrolled) .topbar {
 .hero-pause .i-play, .hero-pause[data-state="paused"] .i-pause { display: none; }
 .hero-pause[data-state="paused"] .i-play { display: block; }
 
-/* ── the introduction, set in the clip's fade ─────────────────────────── */
-.hero-copy { position: relative; margin-top: calc(var(--hero-h) * -.37); }
+/* ── the scene: text on the left, the stage on the right ──────────────────
+ * The text column starts where the clip's fade begins, so the introduction is set in it; the list follows below.
+ * The stage column is as tall as the text, and the stage stays pinned inside it. */
+.scene { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 0 44px; align-items: start; }
+.scene-text { min-width: 0; padding-top: calc(var(--hero-h) * .63 - 65px); }
 .hero-intro { display: grid; justify-items: start; gap: 12px; min-width: 0; }
 .hero-by { margin: 0; font-family: var(--font-serif-tc); font-size: 18px; letter-spacing: .06em; color: var(--ink-soft); text-shadow: 0 1px 12px rgba(18, 17, 9, .7); }
 .hero-title {
   margin: 0; font-family: var(--font-serif-tc); font-weight: 400; font-size: clamp(54px, 8.2vw, 116px); line-height: 1;
-  letter-spacing: .03em; text-shadow: 0 2px 28px rgba(18, 17, 9, .6);
+  letter-spacing: .03em; text-shadow: 0 2px 28px rgba(18, 17, 9, .6); white-space: nowrap;   /* it may run past its column, over the clip */
 }
 .hero-title em { margin-left: .22em; font-family: var(--font-serif); font-style: italic; font-size: .52em; letter-spacing: 0; color: var(--accent); }
 .hero-lead { margin: 2px 0 0; font-size: 18px; color: var(--ink-soft); }
@@ -112,13 +124,8 @@ body[data-page="home"]:not(.home-scrolled) .topbar {
 .hero-social a:hover::after { transform: translate(2px, -2px); }
 
 /* ── what they made ─────────────────────────────────────────────────────
- * Left: the tools as a list in large type; the open one shows the author's line about it, one thing to try, and a link.
- * Right: the stage, which stays where it is while the list opens and closes. Its layers, back to front: the sun (and,
- * for 活動雷達, the clock ring) < the kid's canvas < name card, ruler, flash.
- * On narrow screens the stage sits on top and stays in view while the list scrolls under it. */
-.made { margin-top: 36px; overflow-x: clip; padding-bottom: 56px; }   /* clipped sideways only: the sun's glow may rise over the clip above */
-.made-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 0 44px; align-items: start; }
-.made-index { padding-top: 48px; }
+ * The tools as a list in large type; the open one shows the author's line about it, one thing to try, and the way in. */
+.made { margin-top: 104px; padding-bottom: 56px; }
 .made-title { margin: 0 0 14px; font-family: var(--font-serif-tc); font-weight: 400; font-size: 21px; line-height: 1.3; letter-spacing: .06em; color: var(--muted); }
 
 .tools { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
@@ -216,12 +223,14 @@ body[data-page="home"]:not(.home-scrolled) .topbar {
 @keyframes press { 0% { transform: scale(.88); background: var(--sun-2); box-shadow: 0 0 26px color-mix(in srgb, var(--sun-3) 80%, transparent); } 60% { background: var(--sun-2); } 100% { transform: scale(1); } }
 
 /* ── the stage ──────────────────────────────────────────────────────────
- * Its column starts a little under the clip, so the sun rises out of the footage; the stage itself stays pinned. */
-.stage-col { align-self: stretch; margin-top: -72px; min-width: 0; }   /* as tall as the list, so the stage has room to stay pinned */
+ * Layers, back to front: the sun (and, for 活動雷達, the clock ring) < the kid's canvas < name card, ruler, prints,
+ * flash. Until the hand-off is done (.is-live) it takes no clicks, so the clip's pause button under it still works. */
+.stage-col { align-self: stretch; min-width: 0; pointer-events: none; }
 .stage {
   --sun-s: 1; --sun-x: 0%; --sun-y: 0%;
   position: sticky; top: 76px; isolation: isolate; width: 100%; max-width: min(720px, 100vh - 104px); aspect-ratio: 1 / 1; margin-inline: auto;
 }
+body.is-live .stage { pointer-events: auto; }
 /* the sun moves a little for each tool, with the camera */
 .stage[data-tool="card"] { --sun-s: 1.2; --sun-y: -3%; }
 .stage[data-tool="height"] { --sun-s: 1.06; --sun-y: 2%; }
@@ -232,7 +241,7 @@ body[data-page="home"]:not(.home-scrolled) .topbar {
 /* the setting sun behind the kid; it swells for the close-up and draws in to make room for the clock */
 .stage-disc {
   position: absolute; left: 50%; top: 44%; width: 62%; aspect-ratio: 1; border-radius: 50%;
-  translate: calc(-50% + var(--sun-x)) calc(-50% + var(--sun-y)); scale: var(--sun-s);
+  translate: calc(-50% + var(--sun-x)) calc(-50% + var(--sun-y) + (1 - var(--rise)) * 26%); scale: var(--sun-s); opacity: var(--rise);
   background: radial-gradient(circle at 50% 44%, var(--sun-1) 0%, var(--sun-2) 36%, var(--sun-3) 70%, var(--sun-4) 100%);
   box-shadow: 0 0 80px 6px rgba(242, 150, 80, .3), 0 0 240px 70px rgba(242, 150, 80, .13);
   transition: scale 1s cubic-bezier(.2, .8, .2, 1), translate 1s cubic-bezier(.2, .8, .2, 1);
@@ -241,7 +250,7 @@ body[data-page="home"]:not(.home-scrolled) .topbar {
 @keyframes pulse { 0% { filter: brightness(1.18); } 100% { filter: none; } }
 /* for 活動雷達 the sun's rim is the two-hour clock of the game's recurring events; the rest of the time it is not there */
 .stage-ring { position: absolute; left: 50%; top: 44%; width: 70%; aspect-ratio: 1; translate: -50% -50%; overflow: visible; opacity: 0; scale: .92; transition: opacity .6s ease, scale .9s cubic-bezier(.2, .8, .2, 1); }
-.stage[data-tool="events"] .stage-ring { opacity: 1; scale: 1; }
+body.is-live .stage[data-tool="events"] .stage-ring { opacity: 1; scale: 1; }
 .ring-track { fill: none; stroke: color-mix(in srgb, var(--ink) 16%, transparent); stroke-width: 1; }
 .ring-tick { stroke: color-mix(in srgb, var(--ink) 34%, transparent); stroke-width: 1; }
 .ring-tick.is-big { stroke: color-mix(in srgb, var(--ink) 70%, transparent); stroke-width: 1.5; }
@@ -257,14 +266,15 @@ body[data-page="home"]:not(.home-scrolled) .topbar {
 
 /* the picture has no frame: whatever reaches the canvas edge (a cape in close-up) fades out */
 .stage-canvas {
-  position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; cursor: grab; touch-action: pan-y; outline: none; opacity: 0; transition: opacity .9s ease;
+  position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; cursor: grab; touch-action: pan-y; outline: none; opacity: 0;
+  scale: -1 1;   /* mirrored, like the author's clip (home-stage.js works in what the visitor sees) */
   -webkit-mask-image: linear-gradient(to bottom, #000 87%, transparent 100%), linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%);
           mask-image: linear-gradient(to bottom, #000 87%, transparent 100%), linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%);
   -webkit-mask-composite: source-in; mask-composite: intersect;
 }
 .stage-canvas:active { cursor: grabbing; }
-.stage.is-ready .stage-canvas { opacity: 1; }
-.stage-still { position: absolute; z-index: 2; left: 50%; top: 44%; width: 54%; height: auto; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; object-fit: cover; }
+.stage.is-ready .stage-canvas { opacity: var(--kid); }
+.stage-still { position: absolute; z-index: 2; left: 50%; top: 44%; width: 54%; height: auto; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; object-fit: cover; opacity: var(--rise); }
 
 /* the name card: a paper card in front of the kid, shown for 名片產生器; it leans toward the pointer */
 .stage-card {
@@ -276,7 +286,7 @@ body[data-page="home"]:not(.home-scrolled) .topbar {
   opacity: 0; transform: perspective(900px) translate(-10%, 16%) rotate(-14deg); pointer-events: none;
   transition: opacity .45s ease, transform .7s cubic-bezier(.2, .8, .2, 1);
 }
-.stage.is-ready[data-tool="card"] .stage-card, .stage.is-still[data-tool="card"] .stage-card { opacity: 1; transform: perspective(900px) rotate(-6deg) rotateX(var(--rx)) rotateY(var(--ry)); transition-delay: .25s; }
+body.is-live .stage.is-ready[data-tool="card"] .stage-card, body.is-live .stage.is-still[data-tool="card"] .stage-card { opacity: 1; transform: perspective(900px) rotate(-6deg) rotateX(var(--rx)) rotateY(var(--ry)); transition-delay: .25s; }
 .sc-mark { grid-column: 1 / -1; width: 22px; height: 22px; color: var(--ticket-ink); }
 .sc-name { align-self: end; font-family: var(--font-serif-tc); font-weight: 400; font-size: clamp(30px, 3.8vw, 52px); line-height: 1; }
 .sc-en { align-self: end; padding-bottom: .15em; font-family: var(--font-serif); font-style: italic; font-size: clamp(17px, 1.9vw, 25px); color: #c2622d; }
@@ -285,14 +295,14 @@ body[data-page="home"]:not(.home-scrolled) .topbar {
 
 /* the measuring line, drawn over the canvas for 身高計算 */
 .stage-ruler { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity .5s ease; overflow: visible; }
-.stage[data-tool="height"].is-ready .stage-ruler { opacity: 1; }
+body.is-live .stage[data-tool="height"].is-ready .stage-ruler { opacity: 1; }
 .ruler-axis, .ruler-tick { stroke: color-mix(in srgb, var(--ink) 85%, transparent); stroke-width: 1.3; stroke-linecap: round; }
 .ruler-head { stroke: var(--ink); stroke-width: 1.6; stroke-dasharray: 2 6; stroke-linecap: round; }
 .ruler-dot { fill: var(--ink); }
 
 /* the pictures taken here pile up at the foot of the stage, newest on top */
 .stage-prints { position: absolute; z-index: 3; left: 0; bottom: 4%; width: 34%; aspect-ratio: 1.25; pointer-events: none; opacity: 0; transition: opacity .4s ease; }
-.stage[data-tool="album"] .stage-prints { opacity: 1; }
+body.is-live .stage[data-tool="album"] .stage-prints { opacity: 1; }
 .print { position: absolute; left: 6%; bottom: 0; width: 62%; margin: 0; padding: 4.5% 4.5% 13%; border-radius: 4px; background: #f6f0e3; box-shadow: 0 16px 34px rgba(0, 0, 0, .55); transform: rotate(var(--r, -3deg)); animation: develop .8s cubic-bezier(.2, .8, .2, 1) both; }
 .print:nth-last-child(2) { left: 30%; bottom: 6%; }
 .print:nth-last-child(3) { left: 0; bottom: 14%; }
@@ -305,10 +315,10 @@ body[data-page="home"]:not(.home-scrolled) .topbar {
 .stage-flash.is-on { animation: flash .34s ease-out; }
 @keyframes flash { 0% { opacity: 1; } 100% { opacity: 0; } }
 .stage-hint { position: absolute; z-index: 3; left: 50%; bottom: 0; margin: 0; translate: -50% 0; white-space: nowrap; pointer-events: none; font-size: 14.5px; letter-spacing: .06em; color: var(--ink-soft); opacity: 0; transition: opacity .8s ease; }
-.stage.is-ready .stage-hint { opacity: 1; }
-.stage.is-ready.is-touched .stage-hint, .stage[data-tool="card"] .stage-hint { opacity: 0; }
+body.is-live .stage.is-ready .stage-hint { opacity: 1; }
+body.is-live .stage.is-ready.is-touched .stage-hint, body.is-live .stage[data-tool="card"] .stage-hint { opacity: 0; }
 /* while the kid loads, the words sit on the sun */
-.stage-veil { position: absolute; left: 50%; top: 44%; z-index: 5; translate: -50% -50%; display: grid; justify-items: center; gap: 12px; pointer-events: none; transition: opacity .6s ease; }
+.stage-veil { position: absolute; left: 50%; top: 44%; z-index: 5; translate: -50% -50%; display: grid; justify-items: center; gap: 12px; pointer-events: none; opacity: var(--rise); transition: opacity .6s ease; }
 .stage-veil span { font-size: 17px; letter-spacing: .1em; color: #5a3416; }
 .stage-veil i { display: block; width: 110px; height: 2px; border-radius: 2px; background: rgba(90, 52, 22, .25); overflow: hidden; }
 .stage-veil i::after { content: ""; display: block; width: var(--p, 8%); height: 100%; background: #5a3416; transition: width .4s ease; }
@@ -320,40 +330,44 @@ body[data-page="home"]:not(.home-scrolled) .topbar {
 .about-lead { margin: 0; font-family: var(--font-serif-tc); font-size: clamp(26px, 3.2vw, 42px); line-height: 1.3; letter-spacing: .03em; text-wrap: balance; }
 .about-text { margin: 0; max-width: 32em; color: var(--ink-soft); font-size: 16.5px; text-wrap: balance; }
 .about-note { margin: 12px 0 0; max-width: 44em; color: var(--muted); font-size: 13.5px; text-wrap: balance; }
-main.home { padding-bottom: 56px; }
+main.home { padding-bottom: 56px; overflow-x: clip; }   /* clipped sideways only (the flash and the rings reach past the stage); the stage can still stay pinned */
 /* the footer's own one-line disclaimer would repeat the one just above it: here it keeps only its link */
 body[data-page="home"] .site-footer .wrap > div:not(.hand) { font-size: 0; }
 body[data-page="home"] .site-footer .wrap > div:not(.hand) a { font-size: 13px; }
 
-/* phones and tall screens: the clip is cropped around the kid and the introduction sits below them */
+/* phones and tall screens: the clip is cropped around the kid */
 @media (max-width: 760px), (max-aspect-ratio: 1/1) {
-  .hero { --hero-h: min(116vw, 62vh); --fx: .86; --fy: .5; }
+  body[data-page="home"] { --hero-h: min(116vw, 62vh); }
+  .hero { --fx: .86; --fy: .5; }
   .hero-media {
     -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 50%, transparent 96%);
             mask-image: linear-gradient(to bottom, #000 0, #000 50%, transparent 96%);
   }
   .hero-media::after { background: radial-gradient(90% 45% at 0% 100%, var(--shade), transparent 75%); }
-  .hero-copy { margin-top: calc(var(--hero-h) * -.2); }
   .hero-pause { top: 76px; }
 }
-/* narrow: the stage on top, kept in view under the top bar while the list scrolls beneath it. Its backing runs the full
-   width of the screen in the page's own colour, so it has no edge. */
+/* narrow: one column. The stage is first and stays pinned under the top bar from the very top of the page, over the
+   clip; the introduction is set over its lower part and leaves as the page scrolls, and by the time the list arrives
+   the stage has its backing (--solid), full width in the page's own colour, so it has no edge. */
 @media (max-width: 920px) {
-  .made { margin-top: 28px; }
-  .made-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .scene { grid-template-columns: minmax(0, 1fr); }
   .stage-col { display: contents; }
-  .stage { order: -1; top: 64px; z-index: 5; max-width: none; aspect-ratio: auto; height: min(46vh, 430px); }
-  .stage-prints { width: auto; height: 34%; bottom: 3%; }
-  .stage::before { content: ""; position: absolute; z-index: -1; inset: -8px -16px 0; background: var(--bg); }
-  .stage::after { content: ""; position: absolute; z-index: 6; inset: 100% -16px auto; height: 26px; background: linear-gradient(var(--bg), transparent); pointer-events: none; }
+  .stage { --stage-h: min(46vh, 430px); order: -1; top: 64px; z-index: 5; max-width: none; aspect-ratio: auto; height: var(--stage-h); }
+  .stage::before { content: ""; position: absolute; z-index: -1; inset: -8px -16px 0; background: var(--bg); opacity: var(--solid); }
+  .stage::after { content: ""; position: absolute; z-index: 6; inset: 100% -16px auto; height: 26px; background: linear-gradient(var(--bg), transparent); opacity: var(--solid); pointer-events: none; }
   .stage-disc, .note-ring { width: auto; height: 64%; }
   .stage-ring { width: auto; height: 72%; }
   .stage-still { width: auto; height: 56%; }
   .stage-card { width: min(50%, 210px); left: 0; bottom: 5%; }
-  .made-index { padding-top: 14px; }
+  .stage-prints { width: auto; height: 34%; bottom: 3%; }
+  .scene-text { padding-top: 0; }
+  /* the introduction keeps its place over the clip's fade: 80% of the way down the clip */
+  .hero-intro { position: relative; z-index: 7; margin-top: calc(var(--hero-h) * .8 - 64px - var(--stage-h, 0px)); opacity: calc(1 - var(--solid) * 1.6); }
+  .scene { --stage-h: min(46vh, 430px); }
+  .made { margin-top: 88px; }
   .about { margin-top: 64px; }
 }
-@media (max-width: 760px) { .hero { margin-top: -59px; } .stage { top: 58px; } }
+@media (max-width: 760px) { .stage { top: 58px; } .hero-intro { margin-top: calc(var(--hero-h) * .8 - 58px - var(--stage-h, 0px)); } }
 @media (max-width: 560px) {
   .tool-name { font-size: 30px; padding: 11px 0; }
   .harp { grid-template-columns: repeat(5, 46px); gap: 8px; }
