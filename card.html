@@ -201,45 +201,46 @@
   </div>
 </main>
 
-<!-- item picker -->
+<!-- item picker: search and filters on top, the items, then what is picked and the way out -->
 <div class="modal" id="picker-modal" hidden>
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-dialog picker-dialog" role="dialog" aria-modal="true" aria-labelledby="picker-title">
-    <div class="modal-head">
-      <h2 class="modal-title" id="picker-title">選擇物品</h2>
-      <div class="modal-actions">
-        <button type="button" class="sq-btn" data-close aria-label="取消"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg></button>
-        <button type="button" class="sq-btn is-primary" id="picker-ok" aria-label="確定"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 10.5 3.6 3.6 7.4-8"/></svg></button>
-      </div>
+  <div class="modal-backdrop" data-picker-cancel></div>
+  <div class="modal-dialog picker-dialog" role="dialog" aria-modal="true" aria-labelledby="picker-title" aria-describedby="picker-sub">
+    <div class="modal-head picker-head">
+      <div class="picker-titles"><h2 class="modal-title" id="picker-title">選擇物品</h2><p class="picker-sub" id="picker-sub"></p></div>
+      <button type="button" class="sq-btn" data-picker-cancel aria-label="關閉"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg></button>
     </div>
     <div class="picker-tools" id="picker-tools">
       <label class="picker-search">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.4"/><path d="m12.6 12.6 4.4 4.4"/></svg>
         <input type="search" id="picker-q" placeholder="搜尋名稱、季節，例如 Deer、AP21、感恩" autocomplete="off" spellcheck="false" aria-label="搜尋物品">
       </label>
-      <div class="picker-row">
+      <div class="picker-filters">
         <div class="chips" id="picker-cats" role="group" aria-label="分類"></div>
-      </div>
-      <div class="picker-row picker-row-2">
         <select class="select picker-season" id="picker-season" aria-label="季節"></select>
         <select class="select picker-browse" id="picker-group" aria-label="瀏覽方式">
           <option value="closet">依衣櫃順序</option>
           <option value="season">依季節分組</option>
         </select>
         <button type="button" class="chip-btn" id="picker-only" aria-pressed="false" hidden>只看已選</button>
-        <button type="button" class="btn btn-sm" id="picker-upload"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M10 14V4M6 7.8 10 4l4 3.8M4 13.5v1.6A1.9 1.9 0 0 0 5.9 17h8.2a1.9 1.9 0 0 0 1.9-1.9v-1.6"/></svg>上傳自己的圖示</button>
-        <input type="file" id="custom-input" accept="image/*" multiple hidden>
-      </div>
-      <div class="picker-price" id="picker-price" hidden>
-        <span class="picker-price-label">新加入的物品標價</span>
-        <div class="chips" id="price-chips" role="radiogroup" aria-label="新加入物品的價格"></div>
       </div>
     </div>
-    <div class="picker-body" id="picker-body" tabindex="-1"></div>
+    <div class="picker-body" id="picker-body" tabindex="-1" data-touch-focus></div>
+    <input type="file" id="custom-input" accept="image/*" multiple hidden>
     <div class="picker-foot">
-      <span id="picker-status" aria-live="polite">已選 0 個</span>
-      <div class="picker-tray" id="picker-tray" aria-label="已選的物品"></div>
-      <button type="button" class="text-link" id="picker-clear">全部取消</button>
+      <div class="picker-picked">
+        <span class="picker-count"><b id="picker-status" aria-live="polite">已選 0 個</b><button type="button" class="text-link" id="picker-clear">全部取消</button></span>
+        <div class="picker-tray" id="picker-tray" aria-label="已選的物品"></div>
+      </div>
+      <label class="picker-price" id="picker-price" hidden><span>新加入的標價</span><select class="select" id="price-select" aria-label="新加入物品的標價"></select></label>
+      <button type="button" class="btn btn-primary picker-done" id="picker-ok">完成</button>
+    </div>
+    <!-- leaving with picks that are not on the card yet -->
+    <div class="picker-guard" id="picker-guard" role="alertdialog" aria-labelledby="picker-guard-text" hidden>
+      <p id="picker-guard-text">選好的物品還沒加入名片。</p>
+      <div class="picker-guard-btns">
+        <button type="button" class="btn btn-sm" id="picker-discard">不要了</button>
+        <button type="button" class="btn btn-sm btn-primary" id="picker-keep">加入名片</button>
+      </div>
     </div>
   </div>
 </div>
