@@ -170,7 +170,7 @@
   let commitTimer = 0;
   function commit(now = true) {
     clearTimeout(commitTimer); commitTimer = 0;
-    if (now) { pushHistory(); save(); scheduleThumbs(); }
+    if (now) { pushHistory(); save(); scheduleThumbs(); if (window.CardValue) window.CardValue.refresh(state.items); }
     else commitTimer = setTimeout(() => commit(true), 650);
   }
   function stepHistory(dir) {
@@ -575,6 +575,7 @@
     if (focus) tab.focus();
     store.set(KEY_TAB, tab.id);
     if (tab.id === 'tab-style') scheduleThumbs();   // the thumbnails measure their box, which a hidden tab doesn't have
+    if (tab.id === 'tab-value' && window.CardValue) window.CardValue.refresh(state.items);
   }
   tabs.forEach((t, i) => {
     t.addEventListener('click', () => selectTab(t));
@@ -1772,7 +1773,7 @@
   renderAll();
   pushHistory(); save();
   // Seasons and categories come from icons.csv; redraw once it is in so saved items show the right ones.
-  D.loadCatalog().then(() => { renderMain(); renderCols(); scheduleThumbs(); }).catch(() => {});
+  D.loadCatalog().then(() => { renderMain(); renderCols(); scheduleThumbs(); if (window.CardValue) window.CardValue.refresh(state.items); }).catch(() => {});
   if (document.fonts) document.fonts.ready.then(() => { fitStage(); updateMeta(); scheduleThumbs(); });
   addEventListener('load', () => { fitStage(); scheduleThumbs(); });
   window.addEventListener('pageshow', e => { if (e.persisted && !viewing) { state = normalize(store.get(KEY, null)) || state; renderAll(); } });

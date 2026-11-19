@@ -915,3 +915,28 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
   .picker-done { margin-left: auto; padding: 12px 20px; }
   .picker-guard { padding: 12px 12px calc(14px + env(safe-area-inset-bottom)) 16px; }
 }
+
+/* ── 估價 (account value, beta) ── */
+.val-beta { margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: rgba(243, 199, 122, .16); color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: .02em; vertical-align: 2px; }
+.val-cur { width: auto; padding: 6px 28px 6px 10px; font-size: 13px; }
+.val-range { display: flex; align-items: flex-end; gap: 10px; margin: 6px 0 4px; min-height: 64px; }
+.val-range small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .04em; margin-bottom: 2px; }
+.val-lo, .val-hi { font-size: 26px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1.15; }
+.val-hi { color: var(--accent); }
+.val-dash { font-size: 22px; color: var(--muted); padding-bottom: 2px; }
+.val-empty { font-size: 14px; color: var(--ink-soft); line-height: 1.6; align-self: center; }
+.val-legend { margin: 0 0 12px; }
+.val-why { list-style: none; margin: 0 0 16px; padding: 0; border-top: 1px solid var(--line); }
+.val-why li { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.val-why .k { color: var(--muted); font-weight: 600; }
+.val-why .v { color: var(--ink); line-height: 1.5; }
+.val-why .x { color: var(--accent); font-size: 12.5px; white-space: nowrap; }
+.val-q { display: grid; gap: 10px; margin-bottom: 14px; }
+.val-q .pane-title { margin-bottom: 0; }
+.val-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--ink); line-height: 1.5; cursor: pointer; }
+.val-check[hidden] { display: none; }
+.val-check input { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+.val-field { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--ink); }
+.val-field .select { width: auto; min-width: 150px; padding: 7px 30px 7px 10px; font-size: 13.5px; }
+.val-basis { margin: 0 0 6px; }
+.val-note { margin: 0; font-size: 12px; opacity: .85; }

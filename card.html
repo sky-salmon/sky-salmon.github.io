@@ -69,6 +69,8 @@
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1.6"/><path d="M2 8h12M8 2v12"/></svg>尺寸</button>
             <button type="button" role="tab" id="tab-theme" aria-controls="pane-theme" aria-selected="false" tabindex="-1">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor"/></svg>主題</button>
+            <button type="button" role="tab" id="tab-value" aria-controls="pane-value" aria-selected="false" tabindex="-1">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M8.6 1.8H14v5.4l-6.6 6.6a1.2 1.2 0 0 1-1.7 0L2.2 10.3a1.2 1.2 0 0 1 0-1.7z"/><circle cx="11" cy="4.9" r="1"/></svg>估價</button>
           </div>
 
           <!-- 風格 -->
@@ -186,6 +188,32 @@
 
             <p class="pane-title">字型</p>
             <div class="font-grid" id="font-grid" role="radiogroup" aria-label="名片字型"></div>
+          </div>
+
+          <!-- 估價 -->
+          <div class="pane" id="pane-value" role="tabpanel" aria-labelledby="tab-value" tabindex="0" hidden>
+            <div class="pane-row">
+              <p class="pane-title">帳號估價 <span class="val-beta">測試版</span></p>
+              <select class="select val-cur" id="val-cur" aria-label="幣別">
+                <option value="TWD">台幣</option><option value="CNY">人民幣</option><option value="MYR">馬幣</option><option value="HKD">港幣</option>
+              </select>
+            </div>
+            <div class="val-range" id="val-range" aria-live="polite"></div>
+            <p class="hint val-legend">低值：開這個價很快會有人搶。高值：放幾週到一個月有機會賣出。</p>
+            <ul class="val-why" id="val-why"></ul>
+            <div class="val-q">
+              <p class="pane-title">名片看不出來的</p>
+              <label class="val-check" id="val-fake-row"><input type="checkbox" id="val-fake"><span>斷掉的季節，物品之後有換齊（偽無斷）</span></label>
+              <label class="val-field"><span>綁定</span>
+                <select class="select" id="val-binding">
+                  <option value="unknown">不確定</option><option value="all_free">全部可換綁</option>
+                  <option value="one_locked">1 個不能出</option><option value="more_locked">2 個以上不能出</option>
+                </select></label>
+              <label class="val-check"><input type="checkbox" id="val-h0"><span>0 號身高（舊號才有的極限矮）</span></label>
+              <label class="val-check"><input type="checkbox" id="val-dirty"><span>有刷退禮包或髒號紀錄</span></label>
+            </div>
+            <p class="hint val-basis" id="val-basis"></p>
+            <p class="hint val-note">依公開交易社團的開價推估，只是行情參考，不是成交保證。帳號買賣違反官方服務條款，可能被原主找回或封號。</p>
           </div>
         </div>
 
@@ -389,6 +417,7 @@
 <script src="assets/js/seasons-data.js"></script>
 <script src="assets/js/card-data.js"></script>
 <script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/card-value.js"></script>
 <script src="assets/js/card.js"></script>
 <script src="assets/js/cloud.js"></script>
 </body>
