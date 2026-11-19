@@ -17,7 +17,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedInAs(uid) { return request.auth != null && request.auth.uid == uid; }
     // Always an admin, even if config/admins is emptied or deleted (so the owner can't lock themselves out).
-    function rootAdmins() { return ['dhY5yeJvwGUobxmWj35UzBtzKbr2']; }
+    // Empty in a new project: admin.html's "還不是管理員" screen offers these rules with the signed-in owner's ID filled in.
+    function rootAdmins() { return []; }
     function isAdmin() {
       let admins = /databases/$(database)/documents/config/admins;
       return request.auth != null && (request.auth.uid in rootAdmins()
