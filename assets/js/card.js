@@ -170,7 +170,7 @@
   let commitTimer = 0;
   function commit(now = true) {
     clearTimeout(commitTimer); commitTimer = 0;
-    if (now) { pushHistory(); save(); scheduleThumbs(); }
+    if (now) { pushHistory(); save(); scheduleThumbs(); if (window.CardValue) window.CardValue.refresh(state.items); }
     else commitTimer = setTimeout(() => commit(true), 650);
   }
   function stepHistory(dir) {
@@ -369,10 +369,18 @@
     fitStage();
     updateMeta();
   }
+  const stageCol = frameEl.closest('.stage-col'), wideMQ = matchMedia('(min-width: 961px)');
+  const PIN_TOP = 76, MIN_FIT = 0.62;
   function fitStage() {
     const avail = frameEl.clientWidth - parseFloat(getComputedStyle(frameEl).paddingLeft) * 2;
     const w = shellEl.offsetWidth, h = shellEl.offsetHeight;
-    const k = Math.min(1, avail / w);
+    let k = Math.min(1, avail / w), pin = false;
+    if (wideMQ.matches && !viewing && stageCol) {
+      const chrome = stageCol.offsetHeight - scaleEl.offsetHeight;   // everything in the column but the card
+      const kH = (innerHeight - PIN_TOP - 14 - chrome) / h;
+      if (Math.min(k, kH) >= MIN_FIT) { k = Math.min(k, kH); pin = true; }
+    }
+    if (stageCol) stageCol.classList.toggle('is-pinned', pin);
     shellEl.style.transform = k < 1 ? `scale(${k})` : '';
     scaleEl.style.width = w * k + 'px';
     scaleEl.style.height = h * k + 'px';
@@ -386,6 +394,7 @@
     if (Number.isFinite(h) && Math.abs(h - Math.round(h)) > .001) card.style.minHeight = Math.max(Math.ceil(h), state.size.h || 0) + 'px';
   }
   new ResizeObserver(() => fitStage()).observe(frameEl);
+  addEventListener('resize', () => fitStage());
   new ResizeObserver(() => { fitStage(); updateMeta(); }).observe(cardEl);
   // The card's own box can't report shrinking content (its min-height holds it), so watch the
   // content — fonts arriving late or typed text — and re-snap from there.
@@ -565,6 +574,8 @@
     });
     if (focus) tab.focus();
     store.set(KEY_TAB, tab.id);
+    if (tab.id === 'tab-style') scheduleThumbs();   // the thumbnails measure their box, which a hidden tab doesn't have
+    if (tab.id === 'tab-value' && window.CardValue) window.CardValue.refresh(state.items);
   }
   tabs.forEach((t, i) => {
     t.addEventListener('click', () => selectTab(t));
@@ -599,7 +610,7 @@
     const hidden = !!state.layout.hidden[id], meta = SECTIONS[id], name = state.titles[id] || meta.title;
     return `<li class="sec-row${hidden ? ' is-hidden' : ''}" data-sec="${id}">
       <button type="button" class="row-btn eye-btn" data-act="eye" aria-pressed="${!hidden}" aria-label="${hidden ? t('顯示') : t('隱藏')} ${esc(name)}">${hidden ? EYE_OFF : EYE}</button>
-      <span class="name">${esc(name)}${isEmpty(id, state) && !hidden ? `<span class="empty-tag">${t('（空）')}</span>` : ''}</span>
+      <span class="name">${esc(name)}${meta.zh && meta.zh !== name ? `<small class="zh-tag">${esc(meta.zh)}</small>` : ''}${isEmpty(id, state) && !hidden ? `<span class="empty-tag">${t('（空）')}</span>` : ''}</span>
       <button type="button" class="row-btn handle" aria-label="${t('拖曳或用方向鍵移動：{name}', { name: esc(name) })}" aria-roledescription="${t('可拖曳')}">${GRIP}</button>
     </li>`;
   }
@@ -813,16 +824,24 @@
     openers.set(m, opener || document.activeElement);
     m.hidden = false;
     document.body.style.overflow = 'hidden';
-    requestAnimationFrame(() => ($('[autofocus]', m) || $('.modal-dialog input:not([type=hidden]), .modal-dialog select, .modal-dialog button', m))?.focus({ preventScroll: true }));
+    // on touch screens a search field would pop the keyboard up before anything was chosen: focus the dialog instead
+    const touch = matchMedia('(pointer: coarse)').matches;
+    requestAnimationFrame(() => ((touch && $('[data-touch-focus]', m)) || $('[autofocus]', m) || $('.modal-dialog input:not([type=hidden]), .modal-dialog select, .modal-dialog button', m))?.focus({ preventScroll: true }));
   }
-  function closeModal(m) {
+  function closeModal(m, force) {
     if (!m || m.hidden) return;
+    if (!force && m.beforeClose && m.beforeClose() === false) return;
     m.hidden = true;
     if (!anyModalOpen()) document.body.style.overflow = '';
     const o = openers.get(m);
     if (o && document.contains(o)) o.focus({ preventScroll: true });
     m.dispatchEvent(new Event('modal-close'));
   }
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const open = $$('.modal').filter(m => !m.hidden);
+    if (open.length && !open.some(m => m.contains(e.target))) closeModal(open[open.length - 1]);
+  });
   $$('.modal').forEach(m => {
     m.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeModal(m); });
     m.addEventListener('keydown', e => {
@@ -839,7 +858,15 @@
   const picker = $('#picker-modal'), pBody = $('#picker-body');
   const PRICES = ['auto', '', '0.99', '1.99', '2.99', '4.99', '9.99', '14.99', '19.99', '24.99', '29.99', '49.99', '99.99'];
   let pk = null; // { sec, mode, sel: Map(key → item), order: [keys], cat, season, q, price }
-  const PICK_TITLES = { pass: t('PASS · 項鍊（含畢業禮）'), pin: t('PIN & STAR · 徽章'), iap: t('IAP · 內購禮包'), spells: t('SPELLS · 魔法'), extra: t('CLOSET · 衣櫃'), link: t('LINK · 綁定平台') };
+  const PICK_TITLES = { pass: t('PASS · 季卡與畢業禮'), pin: t('PIN & STAR · 徽章'), iap: t('IAP · 內購禮包'), spells: t('SPELLS · 魔法'), extra: t('CLOSET · 衣櫃'), link: t('LINK · 綁定平台') };
+  const PICK_SUBS = {
+    pass: t('點季卡或畢業禮選取，「整季」一次選好那一季。'),
+    iap: t('點禮包選取，裡面的物品會一起放上名片。'),
+    spells: t('點魔法選取，數量之後在名片上點它就能改。'),
+    extra: t('用左邊的分類或搜尋找物品，點一下選取。'),
+    pin: t('點徽章選取。'),
+    link: t('點平台選取，之後在名片上點它可以標記成已失效。')
+  };
   // which catalogue categories each section offers
   const SEC_CATS = { pass: ['pass'], iap: D.CLOSET_CATS, spells: ['spell'], extra: D.CLOSET_CATS };
   function inSection(i, sec) {
@@ -854,31 +881,47 @@
     pk = { sec, mode: meta.picker, sel: new Map(), cat: sec === 'iap' ? 'packs' : cats.length === 1 ? cats[0] : 'all', season: 'all', q: '',
       price: sec === 'iap' ? 'auto' : '', group: 'closet', series: '__recent', only: false };
     state.items[sec].forEach(it => pk.sel.set(itemKey(it), it));
+    pk.start = [...pk.sel.keys()].join('|');
     $('#picker-title').textContent = PICK_TITLES[sec];
+    $('#picker-sub').textContent = PICK_SUBS[sec] || '';
     $('#picker-tools').hidden = pk.mode === 'links';
     $('#picker-price').hidden = sec !== 'iap';
+    $('#picker-guard').hidden = true;
     $('#picker-q').value = '';
-    $('#picker-q').placeholder = sec === 'pass' ? t('找季節或畢業禮，例如 梵谷、Moomin、31') : sec === 'iap' ? t('搜尋全部禮包，例如 Bat、Moomin、Fortune') : t('搜尋名稱、季節，例如 Deer、AP21、感恩');
+    $('#picker-q').placeholder = sec === 'pass' ? t('找季節或畢業禮，例如 梵谷、Moomin、31') : sec === 'iap' ? t('搜尋禮包，例如 Bat、Moomin、Fortune') : t('搜尋名稱、季節，例如 Deer、AP21、感恩');
     $('.picker-search').hidden = pk.mode !== 'catalog';
-    $('#picker-cats').closest('.picker-row').hidden = sec === 'extra';
+    $('#picker-cats').hidden = sec === 'extra';
     $('#picker-season').hidden = sec !== 'extra';
     $('#picker-group').hidden = sec !== 'extra';
     $('#picker-only').hidden = sec !== 'extra' && sec !== 'pass';
     $('#picker-only').setAttribute('aria-pressed', 'false');
     $('#picker-only').textContent = t('只看已選');
     $('#picker-group').value = pk.group;
-    if (sec === 'iap') $('#price-chips').innerHTML = PRICES.map(p => `<button type="button" role="radio" class="chip-btn" data-price="${p}" aria-checked="${p === pk.price}">${p === 'auto' ? t('官方價格') : p ? '$' + p : t('不標價')}</button>`).join('');
+    if (sec === 'iap') {
+      $('#price-select').innerHTML = PRICES.map(p => `<option value="${p}">${p === 'auto' ? t('官方價格') : p ? '$' + p : t('不標價')}</option>`).join('');
+      $('#price-select').value = pk.price;
+    }
     openModal(picker, opener);
     renderPickerChrome();
     renderPicker();
   }
+  // leaving with picks that are not on the card yet: ask first (the footer turns into the question)
+  const pickerDirty = () => pk && [...pk.sel.keys()].join('|') !== pk.start;
+  picker.beforeClose = () => {
+    if (!pickerDirty() || !$('#picker-guard').hidden) return true;
+    $('#picker-guard').hidden = false; $('#picker-keep').focus();
+    return false;
+  };
+  picker.addEventListener('click', e => { if (e.target.closest('[data-picker-cancel]')) closeModal(picker); });
+  $('#picker-discard').addEventListener('click', () => closeModal(picker, true));
+  $('#picker-keep').addEventListener('click', () => $('#picker-ok').click());
   function renderPickerChrome() {
     let cats = null;
-    if (pk.mode === 'pins') cats = [['all', t('徽章')], ['mine', t('我的圖示')]];
+    if (pk.mode === 'pins') cats = [['all', t('徽章')], ['mine', t('自訂圖示')]];
     else if (pk.mode === 'catalog') {
-      if (pk.sec === 'pass') cats = [['pass', t('季節')], ['mine', t('我的圖示')]];
-      else if (pk.sec === 'iap') cats = [['packs', t('禮包')], ['mine', t('我的圖示')]];
-      else if (pk.sec === 'spells') cats = [['spell', D.CAT_BY_ID.spell.zh], ['mine', t('我的圖示')]];
+      if (pk.sec === 'pass') cats = [['pass', t('季節')], ['mine', t('自訂圖示')]];
+      else if (pk.sec === 'iap') cats = [['packs', t('禮包')], ['mine', t('自訂圖示')]];
+      else if (pk.sec === 'spells') cats = [['spell', D.CAT_BY_ID.spell.zh], ['mine', t('自訂圖示')]];
     }
     if (cats) $('#picker-cats').innerHTML = cats.map(([id, zh]) => `<button type="button" class="chip-btn" data-cat="${id}" aria-pressed="${id === pk.cat}">${zh}</button>`).join('');
   }
@@ -887,6 +930,8 @@
     const items = [...pk.sel.values()];
     const sum = pk.sec === 'iap' ? items.reduce((a, it) => a + (priceOf(it) || 0), 0) : 0;
     $('#picker-status').textContent = sum ? t('已選 {n} 個 · 合計 {sum}', { n: items.length, sum: money(sum, 'US$') }) : t('已選 {n} 個', { n: items.length });
+    $('#picker-clear').hidden = !items.length;
+    $('#picker-guard').hidden = true;
     $('#picker-tray').innerHTML = [...pk.sel.entries()].map(([k, it]) => {
       const info = itemInfo(it);
       return `<span class="tray-it" title="${esc(it.label || info.label)}">${info.html}<button type="button" data-unpick="${esc(k)}" aria-label="${esc(t('移除 {name}', { name: it.label || info.label }))}">×</button></span>`;
@@ -898,7 +943,9 @@
   function mineHTML() {
     const ids = lib.filter(id => assets[id]);
     const btns = ids.map(id => `<span class="pick-wrap">${pickBtn('u:' + id, `<img src="${esc(assets[id])}" alt="">`, t('自訂圖示'))}<button type="button" class="pick-del" data-del="${esc(id)}" aria-label="${t('從圖庫刪除')}">×</button></span>`).join('');
-    return `<div class="picker-group"><p class="picker-group-head">${t('我的圖示')} <span class="mono">${ids.length}</span></p>${ids.length ? `<div class="picker-grid">${btns}</div>` : `<p class="picker-empty">${t('還沒有自己的圖示 — 按「上傳自己的圖示」加入截圖或圖片，會自動裁成正方形。')}</p>`}</div>`;
+    const up = `<button type="button" class="pick pick-upload" data-upload aria-label="${t('上傳圖片')}"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M10 14V4M6 7.8 10 4l4 3.8M4 13.5v1.6A1.9 1.9 0 0 0 5.9 17h8.2a1.9 1.9 0 0 0 1.9-1.9v-1.6"/></svg><span>${t('上傳')}</span></button>`;
+    return `<div class="picker-group"><p class="picker-group-head">${t('自訂圖示')} <span class="mono">${ids.length}</span></p>
+      <div class="picker-grid">${up}${btns}</div>${ids.length ? '' : `<p class="hint mine-hint">${t('上傳截圖或圖片，會自動裁成正方形，之後每個區塊都能用。')}</p>`}</div>`;
   }
   const iconImg = path => `<img src="${esc(D.iconURL(path))}" alt="" loading="lazy" decoding="async">`;
   const catRank = c => { const r = D.CLOSET_CATS.indexOf(c); return r < 0 ? (c === 'pass' ? -1 : 99) : r; };
@@ -946,14 +993,22 @@
       (!q || (`ap${s.code} ` + D.seasonFull(s.code)).toLowerCase().includes(q) || s.ults.some(u => matches(u, q))));
     const nOn = all.filter(s => st(s).on).length;
     $('#picker-only').textContent = t('只看已選（{n} 季）', { n: nOn });
-    pBody.innerHTML = `<div class="pk-bar"><p class="pk-how">${t('點季節掛墜＝整季全選或取消；點旁邊的小圖示＝只切換那件畢業禮。灰色是沒選的。')}</p>
+    const sample = all.find(s => s.pend && s.ults.length);
+    pBody.innerHTML = `<div class="pk-bar">
+        <span class="pk-key">${sample ? `<i>${iconImg(sample.pend.path)}</i>` : ''}${t('季卡')}</span>
+        <span class="pk-key">${sample ? `<i>${iconImg(sample.ults[0].path)}</i>` : ''}${t('畢業禮')}</span>
         <button type="button" class="text-link" data-pass-all>${t('全部季節都有')}</button></div>
-      ${list.length ? `<div class="pk-pills">${list.map(s => {
+      ${list.length ? `<div class="pk-rows">${list.map(s => {
         const x = st(s);
-        return `<div class="pk-pill${x.on ? ' on' : ''}${x.full ? ' full' : ''}">
-          <button type="button" class="pk-pend" data-season-toggle="${s.code}" aria-pressed="${x.full}" title="${esc(t('{season}：點一下{act}', { season: D.seasonFull(s.code), act: x.full ? t('取消整季') : t('選整季') }))}">${s.pend ? iconImg(s.pend.path) : `<span class="mono">AP${s.code}</span>`}</button>
-          <span class="pk-pill-body"><span class="pk-pill-name"><span class="mono">AP${s.code}</span><b>${esc(D.seasonName(s.code))}</b></span>
-            <span class="pk-ults">${s.ults.map(u => `<button type="button" class="pk-ult" data-ult="c:${esc(u.path)}" data-season="${s.code}" aria-pressed="${pk.sel.has('c:' + u.path)}" title="${esc(t('畢業禮：{name}', { name: u.label }))}">${iconImg(u.path)}</button>`).join('')}</span></span></div>`;
+        return `<div class="pk-row${x.on ? ' on' : ''}">
+          <span class="pk-row-name"><span class="mono">AP${s.code}</span><b>${esc(D.seasonName(s.code))}</b></span>
+          <span class="pk-row-items">
+            ${s.pend ? `<button type="button" class="pk-it is-pend" data-pend="c:${esc(s.pend.path)}" data-season="${s.code}" aria-pressed="${pk.sel.has('c:' + s.pend.path)}" title="${esc(t('{season}・季卡', { season: D.seasonFull(s.code) }))}" aria-label="${esc(t('{season}・季卡', { season: D.seasonFull(s.code) }))}">${iconImg(s.pend.path)}</button>` : ''}
+            ${s.ults.length ? `<span class="pk-div" aria-hidden="true"></span>` : ''}
+            ${s.ults.map(u => `<button type="button" class="pk-it" data-ult="c:${esc(u.path)}" data-season="${s.code}" aria-pressed="${pk.sel.has('c:' + u.path)}" title="${esc(t('畢業禮：{name}', { name: u.label }))}" aria-label="${esc(t('畢業禮：{name}', { name: u.label }))}">${iconImg(u.path)}</button>`).join('')}
+          </span>
+          <button type="button" class="pk-all" data-season-toggle="${s.code}" aria-pressed="${x.full}">${x.full ? t('取消整季') : t('整季')}</button>
+        </div>`;
       }).join('')}</div>` : `<p class="picker-empty">${pk.only ? t('還沒選任何季節。') : t('找不到符合的季節，換個關鍵字試試。')}</p>`}`;
   }
   function setSeason(code, on) {
@@ -1042,7 +1097,7 @@
     const q = pk.q.trim().toLowerCase();
     const inSec = pk.catalog.filter(i => inSection(i, 'extra'));
     const ok = i => (pk.season === 'all' || (pk.season === 'none' ? !i.season : i.season === pk.season)) && (!pk.only || pk.sel.has('c:' + i.path)) && matches(i, q);
-    const rail = [['all', t('全部')], ...D.CLOSET_CATS.map(c => [c, D.CAT_BY_ID[c].zh]), ['mine', t('我的圖示')]].map(([c, zh]) => {
+    const rail = [['all', t('全部')], ...D.CLOSET_CATS.map(c => [c, D.CAT_BY_ID[c].zh]), ['mine', t('自訂圖示')]].map(([c, zh]) => {
       const n = c === 'mine' ? lib.filter(id => assets[id]).length : inSec.filter(i => c === 'all' || i.cat === c).length;
       const k = c === 'mine' ? lib.filter(id => pk.sel.has('u:' + id)).length : inSec.filter(i => (c === 'all' || i.cat === c) && pk.sel.has('c:' + i.path)).length;
       return `<button type="button" data-rail="${c}" aria-pressed="${pk.cat === c}"><span>${zh}${k ? ` <span class="sel">· ${k}</span>` : ''}</span><span class="n">${n}</span></button>`;
@@ -1103,12 +1158,25 @@
     if (!on) pk.sel.delete(key);
     $$(`.pick[data-key="${CSS.escape(key)}"]`, pBody).forEach(b => b.setAttribute('aria-pressed', on));
   }
-  function refreshPicker() { const top = pBody.scrollTop; renderPicker(); pBody.scrollTop = top; }
+  // re-render the list; the button that had focus is rebuilt, so put focus back on its new copy (Esc and Tab keep working)
+  const FOCUS_DATA = ['key', 'pend', 'ult', 'seasonToggle', 'pack', 'series', 'rail', 'all', 'del'];
+  function refreshPicker(toTop) {
+    const a = document.activeElement, inside = pBody.contains(a), top = toTop ? 0 : pBody.scrollTop;
+    const k = inside && FOCUS_DATA.find(x => a.dataset[x] !== undefined);
+    const sel = k && `[data-${k.replace(/[A-Z]/g, c => '-' + c.toLowerCase())}="${CSS.escape(a.dataset[k])}"]`;
+    renderPicker(); pBody.scrollTop = top;
+    if (inside && !pBody.contains(document.activeElement)) ((sel && $(sel, pBody)) || pBody).focus({ preventScroll: true });
+  }
   pBody.addEventListener('click', e => {
-    const b2 = e.target.closest('[data-season-toggle], [data-ult], [data-pass-all], [data-series], [data-pack], [data-rail]');
+    if (e.target.closest('[data-upload]')) { $('#custom-input').click(); return; }
+    const b2 = e.target.closest('[data-season-toggle], [data-pend], [data-ult], [data-pass-all], [data-series], [data-pack], [data-rail]');
     if (b2) {
       const d = b2.dataset;
       if (d.seasonToggle) { const s = pk.seasons.find(x => x.code === d.seasonToggle); setSeason(d.seasonToggle, !seasonKeys(s).every(k => pk.sel.has(k))); }
+      else if (d.pend) {  // a season's gifts need its pass: taking the pass away takes them too
+        const on = !pk.sel.has(d.pend);
+        if (on) togglePick(d.pend, true); else setSeason(d.season, false);
+      }
       else if (d.ult) {  // one ultimate gift; having any gift of a season means having its pendant
         const on = !pk.sel.has(d.ult);
         togglePick(d.ult, on);
@@ -1116,13 +1184,13 @@
         if (on && s && s.pend) togglePick('c:' + s.pend.path, true);
       }
       else if (b2.hasAttribute('data-pass-all')) pk.seasons.forEach(s => setSeason(s.code, true));
-      else if (d.series) { pk.series = d.series; pk.q = ''; $('#picker-q').value = ''; renderPicker(); pBody.scrollTop = 0; return; }
+      else if (d.series) { pk.series = d.series; pk.q = ''; $('#picker-q').value = ''; refreshPicker(true); return; }
       else if (d.pack) togglePack(d.pack);
-      else if (d.rail) { pk.cat = d.rail; renderPicker(); pBody.scrollTop = 0; return; }
+      else if (d.rail) { pk.cat = d.rail; refreshPicker(true); return; }
       refreshPicker(); return;
     }
     const del = e.target.closest('[data-del]');
-    if (del) { lib = lib.filter(id => id !== del.dataset.del); pk.sel.delete('u:' + del.dataset.del); save(); renderPicker(); return; }
+    if (del) { lib = lib.filter(id => id !== del.dataset.del); pk.sel.delete('u:' + del.dataset.del); save(); refreshPicker(); return; }
     const all = e.target.closest('[data-all]');
     if (all) {
       const keys = all.dataset.all.split('|'), on = !keys.every(k => pk.sel.has(k));
@@ -1134,8 +1202,11 @@
   $('#picker-tray').addEventListener('click', e => {
     const b = e.target.closest('[data-unpick]');
     if (!b) return;
+    const at = $$('[data-unpick]', $('#picker-tray')).indexOf(b);
     togglePick(b.dataset.unpick, false);
     if (pk.mode === 'catalog' && pk.catalog) refreshPicker(); else updatePickerStatus();
+    const rest = $$('[data-unpick]', $('#picker-tray'));
+    (rest[Math.min(at, rest.length - 1)] || $('#picker-ok')).focus({ preventScroll: true });
   });
   $('#picker-only').addEventListener('click', e => {
     pk.only = !pk.only;
@@ -1153,14 +1224,8 @@
   $('#picker-group').addEventListener('change', e => { pk.group = e.target.value; pBody.scrollTop = 0; renderPicker(); });
   let qTimer = 0;
   $('#picker-q').addEventListener('input', e => { clearTimeout(qTimer); qTimer = setTimeout(() => { pk.q = e.target.value; pBody.scrollTop = 0; renderPicker(); }, 180); });
-  $('#price-chips').addEventListener('click', e => {
-    const b = e.target.closest('[data-price]');
-    if (!b) return;
-    pk.price = b.dataset.price;
-    $$('[data-price]', $('#price-chips')).forEach(x => x.setAttribute('aria-checked', String(x === b)));
-  });
-  $('#picker-clear').addEventListener('click', () => { [...pk.sel.keys()].forEach(k => togglePick(k, false)); if (pk.mode === 'catalog' && pk.catalog) refreshPicker(); else updatePickerStatus(); });
-  $('#picker-upload').addEventListener('click', () => $('#custom-input').click());
+  $('#price-select').addEventListener('change', e => { pk.price = e.target.value; });
+  $('#picker-clear').addEventListener('click', () => { [...pk.sel.keys()].forEach(k => togglePick(k, false)); if (pk.mode === 'catalog' && pk.catalog) refreshPicker(); else updatePickerStatus(); $('#picker-ok').focus({ preventScroll: true }); });
   $('#custom-input').addEventListener('change', async e => {
     const files = [...e.target.files].filter(f => /^image\//.test(f.type));
     e.target.value = '';
@@ -1183,7 +1248,7 @@
     const added = [...pk.sel.entries()].filter(([k]) => !keptKeys.has(k)).map(([, it]) => it);
     state.items[sec] = [...kept, ...added];
     if (state.layout.hidden[sec] && state.items[sec].length) delete state.layout.hidden[sec];
-    closeModal(picker);
+    closeModal(picker, true);
     commit(); renderMain(); renderCols();
     if (added.length) toast(t('已加入 {n} 個物品', { n: added.length }), 1500);
   });
@@ -1708,7 +1773,7 @@
   renderAll();
   pushHistory(); save();
   // Seasons and categories come from icons.csv; redraw once it is in so saved items show the right ones.
-  D.loadCatalog().then(() => { renderMain(); renderCols(); scheduleThumbs(); }).catch(() => {});
+  D.loadCatalog().then(() => { renderMain(); renderCols(); scheduleThumbs(); if (window.CardValue) window.CardValue.refresh(state.items); }).catch(() => {});
   if (document.fonts) document.fonts.ready.then(() => { fitStage(); updateMeta(); scheduleThumbs(); });
   addEventListener('load', () => { fitStage(); scheduleThumbs(); });
   window.addEventListener('pageshow', e => { if (e.persisted && !viewing) { state = normalize(store.get(KEY, null)) || state; renderAll(); } });
