@@ -114,22 +114,36 @@
     mischief: 'Days of Mischief', feast: 'Days of Feast', style: 'Days of Style', tot: 'Tournament of Triumph', treasure: 'Days of Treasure',
     personality: 'Personality Quiz', music: 'Days of Music', camping: 'Summer Camping', sanrio: 'Cinnamoroll Pop-Up Cafe', ivory: 'Ivory Cafe',
     ribbon: 'Twin Ribbon', gamescom: 'AURORA Encore' };
+  // the same events as players call them; listed one by one for the translation build
+  const EVENTS_ZH = { fortune: t('春節'), love: t('情人節'), bloom: t('花季'), nature: t('自然日'), color: t('彩虹日'), rainbow: t('彩虹日'),
+    anniv: t('周年慶'), sunlight: t('夏日'), summer: t('夏日'), moonlight: t('月光節'), mischief: t('萬聖節'), feast: t('冬季盛宴'),
+    style: t('時裝週'), tot: t('凱旋運動會'), treasure: t('尋寶節'), personality: t('性格測驗'), music: t('音樂節'), camping: t('夏日露營'),
+    sanrio: t('大耳狗聯名'), ivory: t('大耳狗咖啡廳'), ribbon: t('絆愛'), gamescom: t('AURORA 演唱會') };
+  // packs.json leaves the event empty for some older packs; their names still say which event sold them
+  const EVENT_BY_NAME = [[/^(Days of )?Fortune/i, 'fortune'], [/^(Days of )?Love/i, 'love'], [/Bloom/i, 'bloom'], [/^(Nature|Ocean|Earth Cape)/i, 'nature'],
+    [/(Rainbow|^Color)/i, 'color'], [/^(Sunlight|Summer)/i, 'sunlight'], [/^Moonlight/i, 'moonlight'], [/^Mischief|Feline Familiar|Cat Costume/i, 'mischief'],
+    [/^(Winter|Days of Feast|Snowflake|Cozy|Tournament Skyball)/i, 'feast'], [/^Style/i, 'style'], [/^Tournament/i, 'tot'], [/^Treasure/i, 'treasure'],
+    [/(Anniversary|Oreo|TGC|SkyFest|Moth Plush|Swag Hoodie)/i, 'anniv'], [/(Violin|Harp|Rhythm Guitar|Handpan|Upright Piano|Marching)/i, 'music']];
   let PACKS = [];
   function buildPacks(list, catalog) {
     const byName = new Map(catalog.filter(i => CLOSET_CATS.includes(i.cat)).map(i => [i.name, i.path]));
     return list.map(p => {
       const items = p.items.map(n => byName.get(n)).filter(Boolean);
       if (!items.length) return null;
-      const ev = p.event || '', m = ev.match(/^season_(\d+)$/);
-      let kind, series, year = String(p.year || '');
+      let ev = p.event || '';
+      if (!ev) { const g = EVENT_BY_NAME.find(([re]) => re.test(p.name_en || '')); if (g) ev = g[1]; }
+      const m = ev.match(/^season_(\d+)$/);
+      let kind, series, year = String(p.year || ''), evKey = '', evZh = '';
       if (m) { kind = 'season'; series = String(+m[1]).padStart(2, '0'); }
       else if (ev) {
         const [pre, yy] = ev.split('_');
-        kind = 'event'; series = EVENTS[pre] || pre.charAt(0).toUpperCase() + pre.slice(1);
+        kind = 'event'; series = EVENTS[pre] || pre.charAt(0).toUpperCase() + pre.slice(1); evKey = pre;
+        evZh = LANG === 'en' ? series : (EVENTS_ZH[pre] || series);
         if (/^\d\d$/.test(yy || '')) year = '20' + yy;
       } else { kind = 'other'; series = 'other'; }
-      return { id: p.id, name: (LANG !== 'en' && p.name_zh) || p.name_en || p.id, usd: p.usd == null ? null : Number(p.usd),
-        status: p.status, kind, series, year, items };
+      const zh = LANG === 'zh-Hans' ? (p.name_zh_hans || p.name_zh) : p.name_zh;
+      return { id: p.id, name: (LANG !== 'en' && zh) || p.name_en || p.id, nameEn: p.name_en || '', nameZh: p.name_zh || '', nameHans: p.name_zh_hans || '',
+        aka: p.aka || [], usd: p.usd == null ? null : Number(p.usd), status: p.status, kind, series, year, evKey, evZh, items };
     }).filter(Boolean);
   }
   const packs = () => PACKS;
@@ -407,6 +421,7 @@
 
   window.CardData = {
     CATS, CAT_BY_ID, CLOSET_CATS, SEASONS, seasonName, seasonFull, seasonLabel, parsePath, iconURL, loadCatalog, packs,
+    seasonYear: code => ((SEASONS[code] || {}).start || '').slice(0, 4),
     CURRENCIES, GLYPH, PINS, LINKS, GRADIENTS, gradientCSS, SOLIDS, FONTS,
     WALLPAPERS, wallpaperURL, textureURL, PAPERS
   };

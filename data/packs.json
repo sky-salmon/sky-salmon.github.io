@@ -9,13 +9,15 @@
   "event": "季節或活動標記（遊戲資料，如 season_31、mischief_26）",
   "year": "年份",
   "status": "confirmed / game-only / wiki-only",
-  "note": "備註"
+  "note": "備註",
+  "aka": "玩家常用的別稱，繁簡都可（搜尋用）",
+  "name_zh_hans": "簡中名稱"
  },
  "packs": [
   {
    "id": "XSNC01",
    "name_en": "Sunheadband",
-   "name_zh": "",
+   "name_zh": "向日葵髮箍",
    "usd": null,
    "items": [
     "CharSkyKid_Hat_SunflowerHeadband"
@@ -23,7 +25,11 @@
    "event": "",
    "year": "",
    "status": "game-only",
-   "note": ""
+   "note": "",
+   "aka": [
+    "向日葵"
+   ],
+   "name_zh_hans": "向日葵发箍"
   },
   {
    "id": "XSNC02",
@@ -41,7 +47,7 @@
   {
    "id": "XSNC03",
    "name_en": "Sunflowerneck",
-   "name_zh": "",
+   "name_zh": "向日葵領帶",
    "usd": null,
    "items": [
     "CharSkyKid_Neck_SunflowerTie"
@@ -49,12 +55,16 @@
    "event": "",
    "year": "",
    "status": "game-only",
-   "note": ""
+   "note": "",
+   "aka": [
+    "向日葵"
+   ],
+   "name_zh_hans": "向日葵领带"
   },
   {
    "id": "XSNC04",
    "name_en": "Sunflowerskirt",
-   "name_zh": "",
+   "name_zh": "向日葵裙",
    "usd": null,
    "items": [
     "CharSkyKid_Body_SunflowerSkirt"
@@ -62,12 +72,16 @@
    "event": "",
    "year": "",
    "status": "game-only",
-   "note": ""
+   "note": "",
+   "aka": [
+    "向日葵"
+   ],
+   "name_zh_hans": "向日葵裙"
   },
   {
    "id": "SNC72",
    "name_en": "Flower + FlOw Pack",
-   "name_zh": "",
+   "name_zh": "花與 FlOw 禮包",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Horn_FlowerPS",
@@ -76,12 +90,17 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "Flow",
+    "花"
+   ],
+   "name_zh_hans": "花与 FlOw 礼包"
   },
   {
    "id": "SNC71",
    "name_en": "Transcendent Journey Pack",
-   "name_zh": "",
+   "name_zh": "超越旅程禮包",
    "usd": 24.99,
    "items": [
     "CharSkyKid_Hair_Traveler_02",
@@ -91,12 +110,18 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "旅程",
+    "風之旅人",
+    "风之旅人"
+   ],
+   "name_zh_hans": "超越旅程礼包"
   },
   {
    "id": "SNC70",
    "name_en": "Journey Pack",
-   "name_zh": "",
+   "name_zh": "旅程禮包",
    "usd": 24.99,
    "items": [
     "CharSkyKid_Hair_Traveler_01",
@@ -106,12 +131,18 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "風之旅人",
+    "Journey",
+    "风之旅人"
+   ],
+   "name_zh_hans": "旅程礼包"
   },
   {
    "id": "SNC32",
    "name_en": "Little Prince Asteroid Jacket",
-   "name_zh": "",
+   "name_zh": "小王子星球外套",
    "usd": 24.99,
    "items": [
     "CharSkyKid_Wing_AP11GreenCoat_01"
@@ -119,12 +150,19 @@
    "event": "season_11",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "星球斗",
+    "星球夾克",
+    "王子",
+    "星球夹克"
+   ],
+   "name_zh_hans": "小王子星球外套"
   },
   {
    "id": "SNC29",
    "name_en": "Little Prince Scarf Cape",
-   "name_zh": "",
+   "name_zh": "小王子圍巾斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_AP11Scarf_01"
@@ -132,12 +170,19 @@
    "event": "season_11",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "圍巾斗",
+    "王子圍巾斗",
+    "围巾斗",
+    "王子围巾斗"
+   ],
+   "name_zh_hans": "小王子围巾斗篷"
   },
   {
    "id": "SNC30",
    "name_en": "Little Prince Fox",
-   "name_zh": "",
+   "name_zh": "小王子狐狸",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Prop_AP11Fox_01"
@@ -145,12 +190,17 @@
    "event": "season_11",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "小狐狸",
+    "王子小狐狸"
+   ],
+   "name_zh_hans": "小王子狐狸"
   },
   {
    "id": "SNC68",
    "name_en": "Wings of AURORA",
-   "name_zh": "",
+   "name_zh": "歐若拉之翼",
    "usd": 24.99,
    "items": [
     "CharSkyKid_Wing_AP16ButterflyYellow"
@@ -158,12 +208,19 @@
    "event": "season_16",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "金翅膀",
+    "蝴蝶翅膀",
+    "極光金翅膀",
+    "极光金翅膀"
+   ],
+   "name_zh_hans": "欧若拉之翼"
   },
   {
    "id": "SNC65",
    "name_en": "Voice of AURORA",
-   "name_zh": "",
+   "name_zh": "歐若拉之聲",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Prop_AP16Microphone"
@@ -171,12 +228,19 @@
    "event": "season_16",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "擬人聲樂器",
+    "麥克風",
+    "拟人声乐器",
+    "麦克风"
+   ],
+   "name_zh_hans": "欧若拉之声"
   },
   {
    "id": "SNC67",
    "name_en": "Giving In Cape",
-   "name_zh": "",
+   "name_zh": "臣服斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_AP16OrangeLove"
@@ -184,12 +248,18 @@
    "event": "season_16",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "臣服斗",
+    "歐若拉斗",
+    "欧若拉斗"
+   ],
+   "name_zh_hans": "臣服斗篷"
   },
   {
    "id": "SNC66",
    "name_en": "To the Love Outfit",
-   "name_zh": "",
+   "name_zh": "致愛裝扮",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Body_AP16OrangeLove"
@@ -197,12 +267,17 @@
    "event": "season_16",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "致愛",
+    "致爱"
+   ],
+   "name_zh_hans": "致爱装扮"
   },
   {
    "id": "SNC88",
    "name_en": "Musical Voyage Sneakers",
-   "name_zh": "",
+   "name_zh": "音樂之旅球鞋",
    "usd": 6.99,
    "items": [
     "CharSkyKid_Feet_AuroraSneakers"
@@ -210,12 +285,18 @@
    "event": "gamescom_23",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "歐若拉小白鞋",
+    "小白鞋",
+    "欧若拉小白鞋"
+   ],
+   "name_zh_hans": "音乐之旅球鞋"
   },
   {
    "id": "SNC63",
    "name_en": "Tiara We Can Touch",
-   "name_zh": "",
+   "name_zh": "觸手可及的頭冠",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Horn_AP16MoonStar"
@@ -223,12 +304,19 @@
    "event": "season_16",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "星月頭冠",
+    "歐若拉頭冠",
+    "星月头冠",
+    "欧若拉头冠"
+   ],
+   "name_zh_hans": "触手可及的头冠"
   },
   {
    "id": "SNC69",
    "name_en": "Runaway Outfit",
-   "name_zh": "",
+   "name_zh": "奔離遠行服裝",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Body_AP16SlateRunaway"
@@ -236,12 +324,19 @@
    "event": "season_16",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "奔離褲",
+    "極光奔離褲",
+    "奔离裤",
+    "极光奔离裤"
+   ],
+   "name_zh_hans": "奔离远行服装"
   },
   {
    "id": "SNC64",
    "name_en": "Runaway Hairstyle",
-   "name_zh": "",
+   "name_zh": "奔離遠行髮型",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Hair_AP16RunawayBob"
@@ -249,12 +344,19 @@
    "event": "season_16",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "歐若拉頭髮",
+    "鮑伯頭",
+    "欧若拉头发",
+    "鲍伯头"
+   ],
+   "name_zh_hans": "奔离远行发型"
   },
   {
    "id": "SNC107",
    "name_en": "Gift of the Nine-Colored Deer",
-   "name_zh": "",
+   "name_zh": "九色鹿之禮",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Mask_AP21Crescent",
@@ -263,12 +365,17 @@
    "event": "season_21",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "九色鹿鹿角",
+    "鹿角面具"
+   ],
+   "name_zh_hans": "九色鹿之礼"
   },
   {
    "id": "SNC108",
    "name_en": "Radiance of the Nine-Colored Deer",
-   "name_zh": "",
+   "name_zh": "九色鹿之光斗篷",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Wing_AP21Deer"
@@ -276,12 +383,16 @@
    "event": "season_21",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "九色鹿斗"
+   ],
+   "name_zh_hans": "九色鹿之光斗篷"
   },
   {
    "id": "SNC130",
    "name_en": "Moominmamma's Masterpiece",
-   "name_zh": "",
+   "name_zh": "姆明媽媽的傑作",
    "usd": 24.99,
    "items": [
     "CharSkyKid_Wing_AP24Bell"
@@ -289,12 +400,18 @@
    "event": "season_24",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "鈴鐺斗篷",
+    "姆明斗",
+    "铃铛斗篷"
+   ],
+   "name_zh_hans": "姆明妈妈的杰作"
   },
   {
    "id": "SNC131",
    "name_en": "Moomintroll Accessory Set",
-   "name_zh": "",
+   "name_zh": "姆明耳朵尾巴組",
    "usd": 11.99,
    "items": [
     "CharSkyKid_Hat_AP24ClassicEars",
@@ -303,12 +420,19 @@
    "event": "season_24",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "姆明耳套裝",
+    "姆明耳",
+    "姆明耳尾",
+    "姆明耳套装"
+   ],
+   "name_zh_hans": "姆明耳朵尾巴组"
   },
   {
    "id": "SNC132",
    "name_en": "Roving Snufkin Robe Set",
-   "name_zh": "",
+   "name_zh": "阿金流浪長袍組",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Neck_AP24TriangleScarf",
@@ -317,12 +441,17 @@
    "event": "season_24",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "史力奇",
+    "Snufkin"
+   ],
+   "name_zh_hans": "阿金流浪长袍组"
   },
   {
    "id": "SNC133",
    "name_en": "Pointed Snufkin Hat",
-   "name_zh": "",
+   "name_zh": "阿金尖帽",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Hat_AP24TriangleHat"
@@ -330,12 +459,17 @@
    "event": "season_24",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "史力奇",
+    "Snufkin"
+   ],
+   "name_zh_hans": "阿金尖帽"
   },
   {
    "id": "SNC134",
    "name_en": "Hattifattener Shoulder Buddy",
-   "name_zh": "",
+   "name_zh": "嘿噗肩上夥伴",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Neck_AP24Arms"
@@ -343,12 +477,16 @@
    "event": "season_24",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "Hattifattener"
+   ],
+   "name_zh_hans": "嘿噗肩上伙伴"
   },
   {
    "id": "SNC153",
    "name_en": "Butterfly Blossom Memento",
-   "name_zh": "",
+   "name_zh": "蝴蝶花記憶頭飾",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Hat_AP27MemoryFlowers"
@@ -356,12 +494,17 @@
    "event": "season_27",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "雙星",
+    "双星"
+   ],
+   "name_zh_hans": "蝴蝶花记忆头饰"
   },
   {
    "id": "SNC154",
    "name_en": "Cloak of Darkness",
-   "name_zh": "",
+   "name_zh": "黑暗斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_AP27Darkness"
@@ -369,12 +512,19 @@
    "event": "season_27",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "雙星",
+    "冥龍斗",
+    "双星",
+    "冥龙斗"
+   ],
+   "name_zh_hans": "黑暗斗篷"
   },
   {
    "id": "SNC155",
    "name_en": "Mini Manatee Accessory",
-   "name_zh": "",
+   "name_zh": "迷你海牛頭飾",
    "usd": 3.99,
    "items": [
     "CharSkyKid_Hat_AP27ManateeChibi"
@@ -382,12 +532,16 @@
    "event": "season_27",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "海牛"
+   ],
+   "name_zh_hans": "迷你海牛头饰"
   },
   {
    "id": "SNC156",
    "name_en": "Manatee Plush",
-   "name_zh": "",
+   "name_zh": "海牛玩偶",
    "usd": 6.99,
    "items": [
     "CharSkyKid_Prop_AP27ManateePlush"
@@ -395,12 +549,16 @@
    "event": "season_27",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "海牛"
+   ],
+   "name_zh_hans": "海牛玩偶"
   },
   {
    "id": "SNC157",
    "name_en": "Spirited Manatee Ensemble",
-   "name_zh": "",
+   "name_zh": "海牛尾鰭組",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Tail_AP27ManateeTail",
@@ -409,12 +567,16 @@
    "event": "season_27",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "海牛"
+   ],
+   "name_zh_hans": "海牛尾鳍组"
   },
   {
    "id": "SNC158",
    "name_en": "Vestige of Dark Dragons",
-   "name_zh": "",
+   "name_zh": "冥龍遺跡（尾巴與角）",
    "usd": 11.99,
    "items": [
     "CharSkyKid_Tail_AP27KrillTail",
@@ -423,12 +585,17 @@
    "event": "season_27",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "冥龍",
+    "冥龙"
+   ],
+   "name_zh_hans": "冥龙遗迹（尾巴与角）"
   },
   {
    "id": "SNC159",
    "name_en": "Projector of Memories",
-   "name_zh": "",
+   "name_zh": "記憶投影機",
    "usd": 24.99,
    "items": [
     "CharSkyKid_Prop_AP27Projector"
@@ -436,12 +603,17 @@
    "event": "season_27",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "投影機",
+    "投影机"
+   ],
+   "name_zh_hans": "记忆投影机"
   },
   {
    "id": "SNC206",
    "name_en": "Starry Night's Visage",
-   "name_zh": "",
+   "name_zh": "星月夜面具",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Mask_AP31Starry"
@@ -449,12 +621,16 @@
    "event": "season_31",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "梵谷"
+   ],
+   "name_zh_hans": "星月夜面具"
   },
   {
    "id": "SNC207",
    "name_en": "Starry Night's Kiss",
-   "name_zh": "",
+   "name_zh": "星月夜耳環",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Horn_AP31StarryEarring"
@@ -462,12 +638,16 @@
    "event": "season_31",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "梵谷"
+   ],
+   "name_zh_hans": "星月夜耳环"
   },
   {
    "id": "SNC208",
    "name_en": "Wheatfield Cape",
-   "name_zh": "",
+   "name_zh": "麥田斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_AP31Wheat"
@@ -475,12 +655,18 @@
    "event": "season_31",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "麥田",
+    "梵谷",
+    "麦田"
+   ],
+   "name_zh_hans": "麦田斗篷"
   },
   {
    "id": "SNC209",
    "name_en": "Starry Night's Mantle",
-   "name_zh": "",
+   "name_zh": "星月夜斗篷",
    "usd": 24.99,
    "items": [
     "CharSkyKid_Neck_AP31Starry",
@@ -489,12 +675,16 @@
    "event": "season_31",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "梵谷"
+   ],
+   "name_zh_hans": "星月夜斗篷"
   },
   {
    "id": "SNC210",
    "name_en": "Starry Night's Canopy",
-   "name_zh": "",
+   "name_zh": "星月夜傘",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Prop_AP31StarryUmbrella"
@@ -502,7 +692,11 @@
    "event": "season_31",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "梵谷"
+   ],
+   "name_zh_hans": "星月夜伞"
   },
   {
    "id": "SNC218",
@@ -533,7 +727,7 @@
   {
    "id": "SNC112",
    "name_en": "Cinnamoroll Pop-Up Cafe Combo",
-   "name_zh": "",
+   "name_zh": "大耳狗咖啡廳髮型組",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Hair_PastryShort",
@@ -542,12 +736,18 @@
    "event": "sanrio_24",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "大耳狗",
+    "Cinnamoroll",
+    "玉桂狗"
+   ],
+   "name_zh_hans": "玉桂狗咖啡厅发型组"
   },
   {
    "id": "SNC113",
    "name_en": "Cinnamoroll Pop-Up Cafe Plushie",
-   "name_zh": "",
+   "name_zh": "大耳狗玩偶",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Prop_PastryPlush"
@@ -555,12 +755,17 @@
    "event": "sanrio_24",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "大耳狗",
+    "玉桂狗"
+   ],
+   "name_zh_hans": "玉桂狗玩偶"
   },
   {
    "id": "SNC114",
    "name_en": "Cinnamoroll Pop-Up Cafe Mini Companion",
-   "name_zh": "",
+   "name_zh": "迷你大耳狗頭飾",
    "usd": 6.99,
    "items": [
     "CharSkyKid_Horn_PastryMini"
@@ -568,12 +773,17 @@
    "event": "sanrio_24",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "大耳狗",
+    "玉桂狗"
+   ],
+   "name_zh_hans": "迷你玉桂狗头饰"
   },
   {
    "id": "SNC115",
    "name_en": "Cinnamoroll Pop-Up Cafe Bowtie and Cloud Cape Pack",
-   "name_zh": "",
+   "name_zh": "大耳狗領結雲朵斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Neck_PastryBow",
@@ -582,7 +792,14 @@
    "event": "sanrio_24",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "大耳狗",
+    "雲朵斗",
+    "玉桂狗",
+    "云朵斗"
+   ],
+   "name_zh_hans": "玉桂狗领结云朵斗篷"
   },
   {
    "id": "SNC175",
@@ -628,7 +845,7 @@
   {
    "id": "SNC12",
    "name_en": "Kizuna AI Pack",
-   "name_zh": "",
+   "name_zh": "絆愛禮包",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Horn_KizunaAi",
@@ -638,12 +855,20 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "絆愛",
+    "絆愛三件套",
+    "Kizuna",
+    "绊爱",
+    "绊爱三件套"
+   ],
+   "name_zh_hans": "绊爱礼包"
   },
   {
    "id": "SNC215",
    "name_en": "Mischief Impish Wings",
-   "name_zh": "",
+   "name_zh": "小惡魔翅膀",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_MischiefBatWing"
@@ -651,12 +876,18 @@
    "event": "mischief_26",
    "year": "",
    "status": "confirmed",
-   "note": "game name Mischief Batwingcape; wiki name per 2026-11 re-release table"
+   "note": "game name Mischief Batwingcape; wiki name per 2026-11 re-release table",
+   "aka": [
+    "蝙蝠翅膀斗",
+    "惡魔翅膀",
+    "恶魔翅膀"
+   ],
+   "name_zh_hans": "小恶魔翅膀"
   },
   {
    "id": "SNC216",
    "name_en": "Mischief Magical Hat",
-   "name_zh": "",
+   "name_zh": "魔法帽",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Hat_MischiefMagicHat"
@@ -664,12 +895,17 @@
    "event": "mischief_26",
    "year": "",
    "status": "confirmed",
-   "note": "game name Mischief Magichat; wiki name per 2026-11 re-release table"
+   "note": "game name Mischief Magichat; wiki name per 2026-11 re-release table",
+   "aka": [
+    "巫師帽",
+    "巫师帽"
+   ],
+   "name_zh_hans": "魔法帽"
   },
   {
    "id": "SNC217",
    "name_en": "Mischief Feline Friend",
-   "name_zh": "",
+   "name_zh": "黑貓肩上夥伴",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Neck_MischiefCat"
@@ -677,12 +913,17 @@
    "event": "mischief_26",
    "year": "",
    "status": "confirmed",
-   "note": "game name Mischief Catbuddy; wiki name per 2026-11 re-release table"
+   "note": "game name Mischief Catbuddy; wiki name per 2026-11 re-release table",
+   "aka": [
+    "黑貓",
+    "黑猫"
+   ],
+   "name_zh_hans": "黑猫肩上伙伴"
   },
   {
    "id": "SNC170",
    "name_en": "Mischief Feline Accessory Duo",
-   "name_zh": "",
+   "name_zh": "貓耳貓尾組",
    "usd": 11.99,
    "items": [
     "CharSkyKid_Tail_MischiefCat",
@@ -691,12 +932,19 @@
    "event": "mischief_25",
    "year": "",
    "status": "confirmed",
-   "note": "game name Mischief Cattail; wiki name per 2026-11 re-release table"
+   "note": "game name Mischief Cattail; wiki name per 2026-11 re-release table",
+   "aka": [
+    "貓咪耳尾",
+    "貓耳",
+    "猫咪耳尾",
+    "猫耳"
+   ],
+   "name_zh_hans": "猫耳猫尾组"
   },
   {
    "id": "SNC171",
    "name_en": "Mischief Puzzlewright's Brimmed Hat",
-   "name_zh": "",
+   "name_zh": "謎題師寬簷帽",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Hair_MischiefFeatherHat"
@@ -704,12 +952,16 @@
    "event": "mischief_25",
    "year": "",
    "status": "confirmed",
-   "note": "game name Mischief Featherhat; wiki name per 2026-11 re-release table"
+   "note": "game name Mischief Featherhat; wiki name per 2026-11 re-release table",
+   "aka": [
+    "羽毛帽"
+   ],
+   "name_zh_hans": "谜题师宽檐帽"
   },
   {
    "id": "SNC128",
    "name_en": "Mischief Withered Broom",
-   "name_zh": "",
+   "name_zh": "枯枝掃帚",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_MischiefBroom"
@@ -717,12 +969,17 @@
    "event": "mischief_24",
    "year": "",
    "status": "confirmed",
-   "note": "game name Mischief Broomprop; wiki name per 2026-11 re-release table"
+   "note": "game name Mischief Broomprop; wiki name per 2026-11 re-release table",
+   "aka": [
+    "掃帚",
+    "扫帚"
+   ],
+   "name_zh_hans": "枯枝扫帚"
   },
   {
    "id": "SNC129",
    "name_en": "Mischief Raven-Feathered Cloak",
-   "name_zh": "",
+   "name_zh": "渡鴉羽毛斗篷",
    "usd": 17.99,
    "items": [
     "CharSkyKid_Wing_Raven"
@@ -730,12 +987,19 @@
    "event": "mischief_24",
    "year": "",
    "status": "confirmed",
-   "note": "game name Mischief Ravencape; wiki name per 2026-11 re-release table"
+   "note": "game name Mischief Ravencape; wiki name per 2026-11 re-release table",
+   "aka": [
+    "烏鴉斗",
+    "渡鴉斗",
+    "乌鸦斗",
+    "渡鸦斗"
+   ],
+   "name_zh_hans": "渡鸦羽毛斗篷"
   },
   {
    "id": "SNC36",
    "name_en": "Mischief Withered Antlers",
-   "name_zh": "",
+   "name_zh": "枯萎鹿角",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Horn_Withered_01"
@@ -743,12 +1007,16 @@
    "event": "mischief_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "鹿角"
+   ],
+   "name_zh_hans": "枯萎鹿角"
   },
   {
    "id": "SNC37",
    "name_en": "Mischief Witch Jumper Pack",
-   "name_zh": "",
+   "name_zh": "巫師連身裝",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Feet_Witch",
@@ -757,12 +1025,19 @@
    "event": "mischief_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "巫師服",
+    "巫師",
+    "巫师服",
+    "巫师"
+   ],
+   "name_zh_hans": "巫师连身装"
   },
   {
    "id": "SNC38",
    "name_en": "Mischief Spider Quiff",
-   "name_zh": "",
+   "name_zh": "蜘蛛髮型",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Hair_Spider_01"
@@ -770,12 +1045,16 @@
    "event": "mischief_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "蜘蛛"
+   ],
+   "name_zh_hans": "蜘蛛发型"
   },
   {
    "id": "SNC39",
    "name_en": "Mischief Pumpkin Prop",
-   "name_zh": "",
+   "name_zh": "南瓜擺飾",
    "usd": 1.99,
    "items": [
     "CharSkyKid_Prop_MischiefPumpkin"
@@ -783,12 +1062,16 @@
    "event": "",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "南瓜"
+   ],
+   "name_zh_hans": "南瓜摆饰"
   },
   {
    "id": "SNC61",
    "name_en": "Cat Costume Pack",
-   "name_zh": "",
+   "name_zh": "貓咪裝扮組",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Mask_MischiefCat",
@@ -797,12 +1080,21 @@
    "event": "mischief_22",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "貓耳套裝",
+    "貓面具",
+    "貓斗",
+    "猫耳套装",
+    "猫面具",
+    "猫斗"
+   ],
+   "name_zh_hans": "猫咪装扮组"
   },
   {
    "id": "SNC62",
    "name_en": "Feline Familiar Prop",
-   "name_zh": "",
+   "name_zh": "黑貓擺飾",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Prop_MischiefCat"
@@ -810,12 +1102,17 @@
    "event": "",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "黑貓",
+    "黑猫"
+   ],
+   "name_zh_hans": "黑猫摆饰"
   },
   {
    "id": "SNC97",
    "name_en": "Mischief Crabula Mask",
-   "name_zh": "",
+   "name_zh": "螃蟹德古拉面具",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Mask_Crabula"
@@ -823,12 +1120,16 @@
    "event": "mischief_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "螃蟹"
+   ],
+   "name_zh_hans": "螃蟹德古拉面具"
   },
   {
    "id": "SNC98",
    "name_en": "Mischief Crabula Cloak",
-   "name_zh": "",
+   "name_zh": "螃蟹德古拉斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_Crabula"
@@ -836,12 +1137,16 @@
    "event": "mischief_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "螃蟹斗"
+   ],
+   "name_zh_hans": "螃蟹德古拉斗篷"
   },
   {
    "id": "SNC96",
    "name_en": "Mischief Gossamer Cape",
-   "name_zh": "",
+   "name_zh": "蛛絲斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_Cobweb"
@@ -849,12 +1154,17 @@
    "event": "mischief_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "蛛絲斗",
+    "蛛丝斗"
+   ],
+   "name_zh_hans": "蛛丝斗篷"
   },
   {
    "id": "SNC14",
    "name_en": "Mischief Witch Hat",
-   "name_zh": "",
+   "name_zh": "巫師帽",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Hair_WitchHat_01"
@@ -862,12 +1172,19 @@
    "event": "mischief_20",
    "year": "2020",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "巫師",
+    "巫師髮型",
+    "巫师",
+    "巫师发型"
+   ],
+   "name_zh_hans": "巫师帽"
   },
   {
    "id": "SNC15",
    "name_en": "Mischief Web Cape",
-   "name_zh": "",
+   "name_zh": "蜘蛛網斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_SpiderWeb_01"
@@ -875,12 +1192,17 @@
    "event": "mischief_20",
    "year": "2020",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "蛛網斗",
+    "蛛网斗"
+   ],
+   "name_zh_hans": "蜘蛛网斗篷"
   },
   {
    "id": "SNC06",
    "name_en": "Hungry Pumpkin Hat (2020 re-release)",
-   "name_zh": "",
+   "name_zh": "飢餓南瓜帽",
    "usd": 11.99,
    "items": [
     "CharSkyKid_Hair_AP04Pumpkin_01"
@@ -888,12 +1210,16 @@
    "event": "mischief_19",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "南瓜帽"
+   ],
+   "name_zh_hans": "饥饿南瓜帽"
   },
   {
    "id": "SNC05",
    "name_en": "Spooky Bat Cape",
-   "name_zh": "",
+   "name_zh": "蝙蝠斗篷",
    "usd": 17.99,
    "items": [
     "CharSkyKid_Wing_Bat"
@@ -901,12 +1227,17 @@
    "event": "mischief_19",
    "year": "2020",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "蝙蝠斗",
+    "鬼蝠斗"
+   ],
+   "name_zh_hans": "蝙蝠斗篷"
   },
   {
    "id": "SNC136",
    "name_en": "Music Marching Uniform Outfit",
-   "name_zh": "",
+   "name_zh": "樂隊制服",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Body_BandUniform"
@@ -914,12 +1245,17 @@
    "event": "music_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "樂隊",
+    "乐队"
+   ],
+   "name_zh_hans": "乐队制服"
   },
   {
    "id": "SNC135",
    "name_en": "Fledgling Upright Piano",
-   "name_zh": "",
+   "name_zh": "直立鋼琴",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Prop_PianoUpright"
@@ -927,12 +1263,17 @@
    "event": "music_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "鋼琴",
+    "钢琴"
+   ],
+   "name_zh_hans": "直立钢琴"
   },
   {
    "id": "SNC86",
    "name_en": "Triumph Violin",
-   "name_zh": "",
+   "name_zh": "小提琴",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_Violin"
@@ -940,12 +1281,14 @@
    "event": "",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "小提琴"
   },
   {
    "id": "SNC57",
    "name_en": "Fledgling Harp",
-   "name_zh": "",
+   "name_zh": "豎琴",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Prop_Harp_02"
@@ -953,12 +1296,14 @@
    "event": "",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "竖琴"
   },
   {
    "id": "SNC56",
    "name_en": "Rhythm Guitar",
-   "name_zh": "",
+   "name_zh": "吉他",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Prop_AP04Guitar_02"
@@ -966,12 +1311,17 @@
    "event": "",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "音韻吉他",
+    "音韵吉他"
+   ],
+   "name_zh_hans": "吉他"
   },
   {
    "id": "SNC51",
    "name_en": "Triumph Handpan",
-   "name_zh": "",
+   "name_zh": "手碟",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_AP07HandPan_02"
@@ -979,12 +1329,14 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "手碟"
   },
   {
    "id": "SNC172",
    "name_en": "Winter Scarf Cape",
-   "name_zh": "",
+   "name_zh": "冬日圍巾斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_FeastScarf"
@@ -992,12 +1344,17 @@
    "event": "feast_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "圍巾斗",
+    "围巾斗"
+   ],
+   "name_zh_hans": "冬日围巾斗篷"
   },
   {
    "id": "SNC173",
    "name_en": "Fluffy Winter Wear Bundle",
-   "name_zh": "",
+   "name_zh": "毛絨保暖組",
    "usd": 6.99,
    "items": [
     "CharSkyKid_Feet_FeastLegWarmers",
@@ -1006,12 +1363,17 @@
    "event": "feast_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "毛帽",
+    "腿套"
+   ],
+   "name_zh_hans": "毛绒保暖组"
   },
   {
    "id": "SNC174",
    "name_en": "Snowkid Accessory",
-   "name_zh": "",
+   "name_zh": "雪人頭飾",
    "usd": 1.99,
    "items": [
     "CharSkyKid_Hat_FeastSnowman"
@@ -1019,12 +1381,16 @@
    "event": "feast_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "雪人"
+   ],
+   "name_zh_hans": "雪人头饰"
   },
   {
    "id": "SNC138",
    "name_en": "Wonderland Cafe Corridor",
-   "name_zh": "",
+   "name_zh": "仙境咖啡廳走廊",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_CrabbitPortal"
@@ -1032,12 +1398,17 @@
    "event": "feast_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "愛麗絲",
+    "爱丽丝"
+   ],
+   "name_zh_hans": "仙境咖啡厅走廊"
   },
   {
    "id": "SNC137",
    "name_en": "Wonderland Primrose Pinafore Set",
-   "name_zh": "",
+   "name_zh": "仙境圍裙洋裝組",
    "usd": 11.99,
    "items": [
     "CharSkyKid_Hat_BlueBow",
@@ -1046,12 +1417,19 @@
    "event": "feast_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "愛麗絲裙",
+    "愛麗絲",
+    "爱丽丝裙",
+    "爱丽丝"
+   ],
+   "name_zh_hans": "仙境围裙洋装组"
   },
   {
    "id": "SNC101",
    "name_en": "Cozy Hermit Boots",
-   "name_zh": "",
+   "name_zh": "雪怪毛靴",
    "usd": 6.99,
    "items": [
     "CharSkyKid_Feet_YetiBoots"
@@ -1059,12 +1437,17 @@
    "event": "feast_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "雪人靴",
+    "毛靴"
+   ],
+   "name_zh_hans": "雪怪毛靴"
   },
   {
    "id": "SNC102",
    "name_en": "Winter Quilted Cape",
-   "name_zh": "",
+   "name_zh": "冬季鋪棉斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_WinterPuffer"
@@ -1072,12 +1455,17 @@
    "event": "feast_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "羽絨斗",
+    "羽绒斗"
+   ],
+   "name_zh_hans": "冬季铺棉斗篷"
   },
   {
    "id": "SNC73",
    "name_en": "Tournament Skyball Set",
-   "name_zh": "",
+   "name_zh": "天空球組",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Prop_SkyBallGoals"
@@ -1085,12 +1473,16 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "天空球"
+   ],
+   "name_zh_hans": "天空球组"
   },
   {
    "id": "SNC76",
    "name_en": "Cozy Hermit Cape",
-   "name_zh": "",
+   "name_zh": "雪怪毛斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_YetiFur"
@@ -1098,12 +1490,16 @@
    "event": "feast_22",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "毛斗"
+   ],
+   "name_zh_hans": "雪怪毛斗篷"
   },
   {
    "id": "SNC40",
    "name_en": "Winter Feast Snowglobe",
-   "name_zh": "",
+   "name_zh": "雪花水晶球",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Prop_SnowGlobe"
@@ -1111,12 +1507,16 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "水晶球"
+   ],
+   "name_zh_hans": "雪花水晶球"
   },
   {
    "id": "SNC41",
    "name_en": "Winter Ancestor Cape",
-   "name_zh": "",
+   "name_zh": "冬日先祖斗篷",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Wing_WinterElder_01"
@@ -1124,12 +1524,14 @@
    "event": "feast_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "冬日先祖斗篷"
   },
   {
    "id": "SNC42",
    "name_en": "Snowflake Hair Accessory",
-   "name_zh": "",
+   "name_zh": "雪花髮飾",
    "usd": 1.99,
    "items": [
     "CharSkyKid_Horn_Snowflake_01"
@@ -1137,12 +1539,16 @@
    "event": "feast_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "雪花"
+   ],
+   "name_zh_hans": "雪花发饰"
   },
   {
    "id": "SNC17",
    "name_en": "Days of Feast Horns",
-   "name_zh": "",
+   "name_zh": "聖誕鹿角",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Horn_Elk"
@@ -1150,12 +1556,16 @@
    "event": "feast_20",
    "year": "2020",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "鹿角"
+   ],
+   "name_zh_hans": "圣诞鹿角"
   },
   {
    "id": "SNC18",
    "name_en": "Snowflake Cape",
-   "name_zh": "",
+   "name_zh": "雪花斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_Snowflake"
@@ -1163,12 +1573,16 @@
    "event": "feast_20",
    "year": "2020",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "雪花斗"
+   ],
+   "name_zh_hans": "雪花斗篷"
   },
   {
    "id": "SNC03",
    "name_en": "Days of Feast Pack",
-   "name_zh": "",
+   "name_zh": "盛宴節髮型",
    "usd": 6.99,
    "items": [
     "CharSkyKid_Hair_Xmas"
@@ -1176,12 +1590,17 @@
    "event": "feast_19",
    "year": "2019",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "聖誕髮型",
+    "圣诞发型"
+   ],
+   "name_zh_hans": "盛宴节发型"
   },
   {
    "id": "SNC184",
    "name_en": "Blue Pinned Cap",
-   "name_zh": "",
+   "name_zh": "藍色護士帽",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Hat_PersonalityNurseCap"
@@ -1189,12 +1608,17 @@
    "event": "personality_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "性格測驗",
+    "性格测验"
+   ],
+   "name_zh_hans": "蓝色护士帽"
   },
   {
    "id": "SNC185",
    "name_en": "Purple Spectacles",
-   "name_zh": "",
+   "name_zh": "紫色眼鏡",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Face_PersonalityPurpleGlasses"
@@ -1202,12 +1626,17 @@
    "event": "personality_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "性格測驗",
+    "性格测验"
+   ],
+   "name_zh_hans": "紫色眼镜"
   },
   {
    "id": "SNC186",
    "name_en": "Green Folded Ears",
-   "name_zh": "",
+   "name_zh": "綠色垂耳",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Hat_PersonalityPuppyEars"
@@ -1215,12 +1644,19 @@
    "event": "personality_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "小狗耳",
+    "mbti小狗耳",
+    "性格測驗",
+    "性格测验"
+   ],
+   "name_zh_hans": "绿色垂耳"
   },
   {
    "id": "SNC187",
    "name_en": "Yellow Paintbrush",
-   "name_zh": "",
+   "name_zh": "黃色畫筆頭飾",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Hat_PersonalityPaintbrush"
@@ -1228,12 +1664,19 @@
    "event": "personality_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "畫筆",
+    "性格測驗",
+    "画笔",
+    "性格测验"
+   ],
+   "name_zh_hans": "黄色画笔头饰"
   },
   {
    "id": "SNC183",
    "name_en": "Fortune Plush Mount Bundle",
-   "name_zh": "",
+   "name_zh": "小馬玩偶坐騎組",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_FortunePony"
@@ -1241,12 +1684,19 @@
    "event": "fortune_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "小馬",
+    "坐騎",
+    "小马",
+    "坐骑"
+   ],
+   "name_zh_hans": "小马玩偶坐骑组"
   },
   {
    "id": "SNC182",
    "name_en": "Fortune Pleated Dress",
-   "name_zh": "",
+   "name_zh": "百褶洋裝",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Body_FortunePanelDress"
@@ -1254,12 +1704,17 @@
    "event": "fortune_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "馬年",
+    "马年"
+   ],
+   "name_zh_hans": "百褶洋装"
   },
   {
    "id": "SNC181",
    "name_en": "Fortune Ribboned Ponytail",
-   "name_zh": "",
+   "name_zh": "緞帶馬尾",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Hair_FortunePonytail"
@@ -1267,12 +1722,17 @@
    "event": "fortune_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "馬尾",
+    "马尾"
+   ],
+   "name_zh_hans": "缎带马尾"
   },
   {
    "id": "SNC180",
    "name_en": "Fortune Token Glasses",
-   "name_zh": "",
+   "name_zh": "金幣眼鏡",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Horn_FortuneGlasses"
@@ -1280,12 +1740,14 @@
    "event": "fortune_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "金币眼镜"
   },
   {
    "id": "SNC139",
    "name_en": "Fortune Snake Coif and Cloak",
-   "name_zh": "",
+   "name_zh": "蛇年頭巾斗篷組",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Hair_FortuneSnake",
@@ -1294,12 +1756,17 @@
    "event": "fortune_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "蛇斗",
+    "蛇"
+   ],
+   "name_zh_hans": "蛇年头巾斗篷组"
   },
   {
    "id": "SNC140",
    "name_en": "Fortune Hand Fan",
-   "name_zh": "",
+   "name_zh": "新年手扇",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Prop_FortuneFan"
@@ -1307,12 +1774,17 @@
    "event": "fortune_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "手扇",
+    "扇子"
+   ],
+   "name_zh_hans": "新年手扇"
   },
   {
    "id": "SNC103",
    "name_en": "Days of Fortune Dragon Vestment",
-   "name_zh": "",
+   "name_zh": "龍紋長袍",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Body_FortuneDragonRobe"
@@ -1320,12 +1792,17 @@
    "event": "fortune_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "龍袍",
+    "龙袍"
+   ],
+   "name_zh_hans": "龙纹长袍"
   },
   {
    "id": "SNC104",
    "name_en": "Days of Fortune Dragon Stole",
-   "name_zh": "",
+   "name_zh": "龍紋披肩斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_FortuneDragon"
@@ -1333,12 +1810,17 @@
    "event": "fortune_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "龍斗",
+    "龙斗"
+   ],
+   "name_zh_hans": "龙纹披肩斗篷"
   },
   {
    "id": "SNC105",
    "name_en": "Days of Fortune Dragon Bangles",
-   "name_zh": "",
+   "name_zh": "龍鱗耳環",
    "usd": 1.99,
    "items": [
     "CharSkyKid_Horn_DragonEarring"
@@ -1346,12 +1828,17 @@
    "event": "fortune_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "龍鱗耳墜",
+    "龙鳞耳坠"
+   ],
+   "name_zh_hans": "龙鳞耳环"
   },
   {
    "id": "SNC19",
    "name_en": "Days of Fortune Orange",
-   "name_zh": "",
+   "name_zh": "橘子頭飾",
    "usd": 0.99,
    "items": [
     "CharSkyKid_Horn_Orange"
@@ -1359,12 +1846,16 @@
    "event": "fortune_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "橘子"
+   ],
+   "name_zh_hans": "橘子头饰"
   },
   {
    "id": "SNC21",
    "name_en": "Days of Fortune Pack",
-   "name_zh": "",
+   "name_zh": "新春禮包",
    "usd": 24.99,
    "items": [
     "CharSkyKid_Mask_RedFace",
@@ -1374,12 +1865,20 @@
    "event": "fortune_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "福娃套裝",
+    "福娃",
+    "紅臉",
+    "福娃套装",
+    "红脸"
+   ],
+   "name_zh_hans": "新春礼包"
   },
   {
    "id": "SNC20",
    "name_en": "Days of Fortune Wool Hat",
-   "name_zh": "",
+   "name_zh": "新春毛帽",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Hair_WoolHat"
@@ -1387,12 +1886,16 @@
    "event": "fortune_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "毛帽"
+   ],
+   "name_zh_hans": "新春毛帽"
   },
   {
    "id": "SNC43",
    "name_en": "Days of Fortune Fish Accessory",
-   "name_zh": "",
+   "name_zh": "錦鯉頭飾",
    "usd": 1.99,
    "items": [
     "CharSkyKid_Horn_Fish_01"
@@ -1400,12 +1903,19 @@
    "event": "fortune_22",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "錦鯉",
+    "魚",
+    "锦鲤",
+    "鱼"
+   ],
+   "name_zh_hans": "锦鲤头饰"
   },
   {
    "id": "SNC44",
    "name_en": "Days of Fortune Fish Pack",
-   "name_zh": "",
+   "name_zh": "錦鯉髮型斗篷組",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Hair_Fish_01",
@@ -1414,12 +1924,19 @@
    "event": "fortune_22",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "錦鯉",
+    "魚斗",
+    "锦鲤",
+    "鱼斗"
+   ],
+   "name_zh_hans": "锦鲤发型斗篷组"
   },
   {
    "id": "SNC74",
    "name_en": "Days of Fortune Enchanted Umbrella",
-   "name_zh": "",
+   "name_zh": "新年紙傘",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Prop_FortuneUmbrella"
@@ -1427,12 +1944,19 @@
    "event": "fortune_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "紙傘",
+    "紫傘",
+    "纸伞",
+    "紫伞"
+   ],
+   "name_zh_hans": "新年纸伞"
   },
   {
    "id": "SNC75",
    "name_en": "Days of Fortune Muralist's Smock",
-   "name_zh": "",
+   "name_zh": "畫家罩衫",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Body_FortuneMuralist"
@@ -1440,12 +1964,14 @@
    "event": "fortune_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "画家罩衫"
   },
   {
    "id": "SNC141",
    "name_en": "Days of Love Amethyst-Tipped Tails",
-   "name_zh": "",
+   "name_zh": "紫晶雙馬尾",
    "usd": 6.99,
    "items": [
     "CharSkyKid_Hair_MeteorPigtails"
@@ -1453,12 +1979,17 @@
    "event": "love_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "雙馬尾",
+    "双马尾"
+   ],
+   "name_zh_hans": "紫晶双马尾"
   },
   {
    "id": "SNC142",
    "name_en": "Days of Love Amethyst Accessory",
-   "name_zh": "",
+   "name_zh": "紫晶愛心頭飾",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Hat_CrystalHearts"
@@ -1466,12 +1997,17 @@
    "event": "love_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "愛心",
+    "爱心"
+   ],
+   "name_zh_hans": "紫晶爱心头饰"
   },
   {
    "id": "SNC106",
    "name_en": "Days of Love Meteor Mantle",
-   "name_zh": "",
+   "name_zh": "流星斗篷",
    "usd": 17.99,
    "items": [
     "CharSkyKid_Wing_Meteor"
@@ -1479,12 +2015,16 @@
    "event": "love_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "流星斗"
+   ],
+   "name_zh_hans": "流星斗篷"
   },
   {
    "id": "SNC22",
    "name_en": "Days of Love Seesaw Pack",
-   "name_zh": "",
+   "name_zh": "蹺蹺板",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_Seesaw"
@@ -1492,12 +2032,14 @@
    "event": "",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "跷跷板"
   },
   {
    "id": "SNC08",
    "name_en": "Days of Love Swing Pack",
-   "name_zh": "",
+   "name_zh": "情人節鞦韆",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_Swing"
@@ -1505,12 +2047,17 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": "game name Love Swing; wiki name per 2026-11 re-release table"
+   "note": "game name Love Swing; wiki name per 2026-11 re-release table",
+   "aka": [
+    "鞦韆",
+    "秋千"
+   ],
+   "name_zh_hans": "情人节秋千"
   },
   {
    "id": "SNC45",
    "name_en": "Days of Love Gondola Pack",
-   "name_zh": "",
+   "name_zh": "情人節貢多拉船",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_LoveBoat"
@@ -1518,12 +2065,18 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": "game name Love Gondola; wiki name per 2026-11 re-release table"
+   "note": "game name Love Gondola; wiki name per 2026-11 re-release table",
+   "aka": [
+    "船",
+    "貢多拉",
+    "贡多拉"
+   ],
+   "name_zh_hans": "情人节贡多拉船"
   },
   {
    "id": "SNC77",
    "name_en": "Days of Love Serendipitous Scepter",
-   "name_zh": "",
+   "name_zh": "愛心煙火權杖",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Prop_HeartFirework"
@@ -1531,12 +2084,17 @@
    "event": "love_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "權杖",
+    "权杖"
+   ],
+   "name_zh_hans": "爱心烟火权杖"
   },
   {
    "id": "SNC79",
    "name_en": "Days of Love Classy Cravat",
-   "name_zh": "",
+   "name_zh": "紳士領結",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Neck_Bow"
@@ -1544,12 +2102,19 @@
    "event": "love_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "蝴蝶結",
+    "情人節蝴蝶結",
+    "蝴蝶结",
+    "情人节蝴蝶结"
+   ],
+   "name_zh_hans": "绅士领结"
   },
   {
    "id": "SNC194",
    "name_en": "Treasure Coin Cape",
-   "name_zh": "",
+   "name_zh": "金幣斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_TreasureCoin"
@@ -1557,12 +2122,17 @@
    "event": "treasure_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "寶藏斗",
+    "宝藏斗"
+   ],
+   "name_zh_hans": "金币斗篷"
   },
   {
    "id": "SNC195",
    "name_en": "Treasure Seeker’s Hat",
-   "name_zh": "",
+   "name_zh": "海盜帽",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Hat_TreasurePirate"
@@ -1570,12 +2140,17 @@
    "event": "treasure_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "海盜",
+    "海盗"
+   ],
+   "name_zh_hans": "海盗帽"
   },
   {
    "id": "SNC196",
    "name_en": "Treasure Mate Companion",
-   "name_zh": "",
+   "name_zh": "螃蟹頭巾夥伴",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Neck_CrabBandana"
@@ -1583,12 +2158,16 @@
    "event": "treasure_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "螃蟹"
+   ],
+   "name_zh_hans": "螃蟹头巾伙伴"
   },
   {
    "id": "SNC143",
    "name_en": "Treasure Seeker's Bounty",
-   "name_zh": "",
+   "name_zh": "海盜褲與眼罩",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Body_TreasurePants",
@@ -1597,12 +2176,17 @@
    "event": "treasure_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "海盜",
+    "海盗"
+   ],
+   "name_zh_hans": "海盗裤与眼罩"
   },
   {
    "id": "SNC188",
    "name_en": "Bloom Sunflower Sundress",
-   "name_zh": "",
+   "name_zh": "向日葵洋裝",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Body_BloomSunflowerDress"
@@ -1610,12 +2194,16 @@
    "event": "bloom_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "向日葵"
+   ],
+   "name_zh_hans": "向日葵洋装"
   },
   {
    "id": "SNC189",
    "name_en": "Bloom Sunflower Umbrella",
-   "name_zh": "",
+   "name_zh": "向日葵傘",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Prop_BloomSunflowerUmbrella"
@@ -1623,12 +2211,16 @@
    "event": "bloom_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "向日葵"
+   ],
+   "name_zh_hans": "向日葵伞"
   },
   {
    "id": "SNC190",
    "name_en": "Bloom Sunflower Studs",
-   "name_zh": "",
+   "name_zh": "向日葵耳環",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Horn_BloomSunflowerEarring"
@@ -1636,12 +2228,16 @@
    "event": "bloom_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "向日葵"
+   ],
+   "name_zh_hans": "向日葵耳环"
   },
   {
    "id": "SNC144",
    "name_en": "Bloom Rose-Embroidered Cape",
-   "name_zh": "",
+   "name_zh": "玫瑰刺繡斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_RosePattern"
@@ -1649,12 +2245,16 @@
    "event": "bloom_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "玫瑰斗"
+   ],
+   "name_zh_hans": "玫瑰刺绣斗篷"
   },
   {
    "id": "SNC109",
    "name_en": "Bloom Lilypad Umbrella",
-   "name_zh": "",
+   "name_zh": "荷葉傘",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Prop_LilyUmbrella"
@@ -1662,12 +2262,14 @@
    "event": "bloom_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "荷叶伞"
   },
   {
    "id": "SNC23",
    "name_en": "Bloom Teaset Pack",
-   "name_zh": "",
+   "name_zh": "花季茶几",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_TeaTable"
@@ -1675,12 +2277,18 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": "game name Bloom Teatable; wiki name per 2026-11 re-release table"
+   "note": "game name Bloom Teatable; wiki name per 2026-11 re-release table",
+   "aka": [
+    "茶几",
+    "雙人茶几",
+    "双人茶几"
+   ],
+   "name_zh_hans": "花季茶几"
   },
   {
    "id": "SNC46",
    "name_en": "Purple Bloom Teaset Pack",
-   "name_zh": "",
+   "name_zh": "紫藤茶几",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_WisteriaTeaTable"
@@ -1688,12 +2296,16 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": "game name Bloom Wisteriatable; wiki name per 2026-11 re-release table"
+   "note": "game name Bloom Wisteriatable; wiki name per 2026-11 re-release table",
+   "aka": [
+    "茶几"
+   ],
+   "name_zh_hans": "紫藤茶几"
   },
   {
    "id": "SNC80",
    "name_en": "Bloom Picnic Basket Pack",
-   "name_zh": "",
+   "name_zh": "野餐墊",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_PicnicBlanket"
@@ -1701,12 +2313,16 @@
    "event": "",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "野餐"
+   ],
+   "name_zh_hans": "野餐垫"
   },
   {
    "id": "SNC81",
    "name_en": "Bloom Gardening Tunic",
-   "name_zh": "",
+   "name_zh": "園丁褲",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Body_Gardener"
@@ -1714,12 +2330,17 @@
    "event": "bloom_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "花日園丁褲",
+    "花日园丁裤"
+   ],
+   "name_zh_hans": "园丁裤"
   },
   {
    "id": "SNC192",
    "name_en": "Ocean Veil Pack",
-   "name_zh": "",
+   "name_zh": "海洋頭紗",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Hat_NatureWaterVeil"
@@ -1727,12 +2348,14 @@
    "event": "nature_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "海洋头纱"
   },
   {
    "id": "SNC193",
    "name_en": "Charming Creature Pack",
-   "name_zh": "",
+   "name_zh": "海洋精靈洋裝組",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Horn_NatureFins",
@@ -1741,12 +2364,14 @@
    "event": "nature_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "海洋精灵洋装组"
   },
   {
    "id": "SNC145",
    "name_en": "Ocean Waves Mask",
-   "name_zh": "",
+   "name_zh": "海浪面具",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Mask_OceanWaves"
@@ -1754,12 +2379,14 @@
    "event": "nature_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "海浪面具"
   },
   {
    "id": "SNC146",
    "name_en": "Ocean Sea Foam Set",
-   "name_zh": "",
+   "name_zh": "浪花斗篷與鞋",
    "usd": 24.99,
    "items": [
     "CharSkyKid_Feet_SeaFoam",
@@ -1768,12 +2395,16 @@
    "event": "nature_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "浪花斗"
+   ],
+   "name_zh_hans": "浪花斗篷与鞋"
   },
   {
    "id": "SNC110",
    "name_en": "Nature Wave Pack",
-   "name_zh": "",
+   "name_zh": "海浪斗篷",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Wing_WaterWave"
@@ -1781,12 +2412,16 @@
    "event": "nature_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "海浪斗"
+   ],
+   "name_zh_hans": "海浪斗篷"
   },
   {
    "id": "SNC111",
    "name_en": "Nature Wave-Touched Hair",
-   "name_zh": "",
+   "name_zh": "浪花髮型",
    "usd": 6.99,
    "items": [
     "CharSkyKid_Hair_NatureWater"
@@ -1794,12 +2429,14 @@
    "event": "nature_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "浪花发型"
   },
   {
    "id": "SNC82",
    "name_en": "Nature Glasses Pack",
-   "name_zh": "",
+   "name_zh": "藍色墨鏡",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Mask_BlueSunglasses"
@@ -1807,12 +2444,17 @@
    "event": "nature_21",
    "year": "",
    "status": "confirmed",
-   "note": "game name Nature Bluesunglasses; wiki name per 2026-11 re-release table"
+   "note": "game name Nature Bluesunglasses; wiki name per 2026-11 re-release table",
+   "aka": [
+    "墨鏡",
+    "墨镜"
+   ],
+   "name_zh_hans": "蓝色墨镜"
   },
   {
    "id": "SNC83",
    "name_en": "Nature Sonorous Seashell Prop",
-   "name_zh": "",
+   "name_zh": "海螺樂器",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Prop_MusicShell"
@@ -1820,12 +2462,16 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "海螺"
+   ],
+   "name_zh_hans": "海螺乐器"
   },
   {
    "id": "SNC47",
    "name_en": "Nature Turtle Pack",
-   "name_zh": "",
+   "name_zh": "海龜肩上夥伴",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Neck_SeaTurtle_01"
@@ -1833,12 +2479,17 @@
    "event": "nature_22",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "海龜",
+    "海龟"
+   ],
+   "name_zh_hans": "海龟肩上伙伴"
   },
   {
    "id": "SNC48",
    "name_en": "Nature Turtle Cape",
-   "name_zh": "",
+   "name_zh": "海龜斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_SeaTurtle_01"
@@ -1846,12 +2497,17 @@
    "event": "nature_22",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "海龜斗",
+    "海龟斗"
+   ],
+   "name_zh_hans": "海龟斗篷"
   },
   {
    "id": "SNC24",
    "name_en": "Ocean Necklace",
-   "name_zh": "",
+   "name_zh": "海洋項鍊",
    "usd": 1.99,
    "items": [
     "CharSkyKid_Neck_Ocean_01"
@@ -1859,12 +2515,17 @@
    "event": "nature_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "海螺項鍊",
+    "海螺项链"
+   ],
+   "name_zh_hans": "海洋项链"
   },
   {
    "id": "SNC25",
    "name_en": "Ocean Cape",
-   "name_zh": "",
+   "name_zh": "海洋斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_Ocean_01"
@@ -1872,12 +2533,16 @@
    "event": "nature_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "海洋斗"
+   ],
+   "name_zh_hans": "海洋斗篷"
   },
   {
    "id": "SNC09",
    "name_en": "Earth Cape",
-   "name_zh": "",
+   "name_zh": "地球斗篷",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Wing_ClassicOne_EarthDay"
@@ -1885,12 +2550,18 @@
    "event": "nature_20",
    "year": "2020",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "綠芽斗",
+    "地球斗",
+    "绿芽斗"
+   ],
+   "name_zh_hans": "地球斗篷"
   },
   {
    "id": "SNC197",
    "name_en": "Rainbow Beret",
-   "name_zh": "",
+   "name_zh": "彩虹貝雷帽",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Hat_ColorBeret"
@@ -1898,12 +2569,14 @@
    "event": "color_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "彩虹贝雷帽"
   },
   {
    "id": "SNC198",
    "name_en": "Rainbow Tied Jumpsuit",
-   "name_zh": "",
+   "name_zh": "彩虹綁帶連身褲",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Body_ColorTiedJumpsuit"
@@ -1911,12 +2584,14 @@
    "event": "color_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "彩虹绑带连身裤"
   },
   {
    "id": "SNC199",
    "name_en": "Rainbow Mask",
-   "name_zh": "",
+   "name_zh": "彩虹面具",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Mask_ColorSleek"
@@ -1924,12 +2599,14 @@
    "event": "color_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "彩虹面具"
   },
   {
    "id": "SNC147",
    "name_en": "Rainbow Facepaint",
-   "name_zh": "",
+   "name_zh": "彩虹臉彩",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Mask_ColorFacepaint"
@@ -1937,12 +2614,14 @@
    "event": "color_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "彩虹脸彩"
   },
   {
    "id": "SNC148",
    "name_en": "Rainbow Shawl",
-   "name_zh": "",
+   "name_zh": "彩虹披肩斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_ColorShawl"
@@ -1950,12 +2629,16 @@
    "event": "color_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "彩虹斗"
+   ],
+   "name_zh_hans": "彩虹披肩斗篷"
   },
   {
    "id": "SNC116",
    "name_en": "Dark Rainbow Loafers",
-   "name_zh": "",
+   "name_zh": "暗彩樂福鞋",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Feet_RainbowDarkLoafers"
@@ -1963,12 +2646,14 @@
    "event": "color_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "暗彩乐福鞋"
   },
   {
    "id": "SNC117",
    "name_en": "Color Bubble Machine",
-   "name_zh": "",
+   "name_zh": "泡泡機",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Prop_JarBubbleMachine"
@@ -1976,12 +2661,14 @@
    "event": "",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "泡泡机"
   },
   {
    "id": "SNC27",
    "name_en": "Rainbow Pack",
-   "name_zh": "",
+   "name_zh": "彩虹花",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Horn_RainbowPoppy_01"
@@ -1989,12 +2676,14 @@
    "event": "color_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "彩虹花"
   },
   {
    "id": "SNC28",
    "name_en": "Rainbow Hat",
-   "name_zh": "",
+   "name_zh": "彩虹帽",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Hair_RainbowHat_01"
@@ -2002,12 +2691,14 @@
    "event": "color_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "彩虹帽"
   },
   {
    "id": "SNC49",
    "name_en": "Rainbow Earring",
-   "name_zh": "",
+   "name_zh": "彩虹耳墜",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Horn_RainbowEarring_01"
@@ -2015,12 +2706,17 @@
    "event": "color_22",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "彩虹耳釘",
+    "彩虹耳钉"
+   ],
+   "name_zh_hans": "彩虹耳坠"
   },
   {
    "id": "SNC55",
    "name_en": "Double Rainbow Pack",
-   "name_zh": "",
+   "name_zh": "雙彩虹花",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Horn_RainbowPoppy_02"
@@ -2028,12 +2724,14 @@
    "event": "color_22",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "双彩虹花"
   },
   {
    "id": "SNC58",
    "name_en": "Rainbow Headphones",
-   "name_zh": "",
+   "name_zh": "彩虹耳機",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Horn_RainbowHeadphones_01"
@@ -2041,12 +2739,14 @@
    "event": "color_22",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "彩虹耳机"
   },
   {
    "id": "SNC84",
    "name_en": "Dark Rainbow Pack",
-   "name_zh": "",
+   "name_zh": "暗彩耳環",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Horn_DarkRainbowEarring"
@@ -2054,12 +2754,14 @@
    "event": "color_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "暗彩耳环"
   },
   {
    "id": "SNC85",
    "name_en": "Dark Rainbow Tunic",
-   "name_zh": "",
+   "name_zh": "暗彩武士服",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Body_DarkRainbow"
@@ -2067,12 +2769,21 @@
    "event": "rainbow_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "彩武",
+    "彩虹武士褲",
+    "武士褲",
+    "暗彩",
+    "彩虹武士裤",
+    "武士裤"
+   ],
+   "name_zh_hans": "暗彩武士服"
   },
   {
    "id": "SNC200",
    "name_en": "Black and Blue Swag Hoodie",
-   "name_zh": "",
+   "name_zh": "黑藍連帽斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_TGCBlackHoodie"
@@ -2080,12 +2791,16 @@
    "event": "anniv_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "帽T斗"
+   ],
+   "name_zh_hans": "黑蓝连帽斗篷"
   },
   {
    "id": "SNC201",
    "name_en": "Oreo Slippers",
-   "name_zh": "",
+   "name_zh": "奧利奧拖鞋",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Feet_OreoSlipper"
@@ -2093,12 +2808,17 @@
    "event": "anniv_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "奧利奧",
+    "奥利奥"
+   ],
+   "name_zh_hans": "奥利奥拖鞋"
   },
   {
    "id": "SNC202",
    "name_en": "Moth Plush",
-   "name_zh": "",
+   "name_zh": "小飛蛾玩偶",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Prop_SkykidPlushie"
@@ -2106,12 +2826,14 @@
    "event": "anniv_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "小飞蛾玩偶"
   },
   {
    "id": "SNC152",
    "name_en": "Anniversary Gown Ensemble",
-   "name_zh": "",
+   "name_zh": "周年禮服組",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Feet_AnnivButterfly",
@@ -2120,12 +2842,14 @@
    "event": "anniv_25",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "周年礼服组"
   },
   {
    "id": "SNC151",
    "name_en": "Anniversary Tuxedo Cape",
-   "name_zh": "",
+   "name_zh": "燕尾服斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_AnnivTuxedo"
@@ -2133,12 +2857,14 @@
    "event": "anniv_25",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "燕尾服斗篷"
   },
   {
    "id": "SNC149",
    "name_en": "Anniversary Cinema Set",
-   "name_zh": "",
+   "name_zh": "電影院組",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Prop_AnniversaryPopcorn",
@@ -2147,12 +2873,18 @@
    "event": "anniv_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "爆米花",
+    "3D眼鏡",
+    "3D眼镜"
+   ],
+   "name_zh_hans": "电影院组"
   },
   {
    "id": "SNC118",
    "name_en": "Oreo Headband",
-   "name_zh": "",
+   "name_zh": "奧利奧頭飾",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Horn_OreoHeadband"
@@ -2160,12 +2892,17 @@
    "event": "anniv_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "奧利奧",
+    "奥利奥"
+   ],
+   "name_zh_hans": "奥利奥头饰"
   },
   {
    "id": "SNC87",
    "name_en": "Anniversary Plush",
-   "name_zh": "",
+   "name_zh": "奧利奧生日玩偶",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Prop_BirthdayOreo"
@@ -2173,12 +2910,17 @@
    "event": "",
    "year": "2023",
    "status": "confirmed",
-   "note": "wiki 'Anniversary Plush' ($9.99, 2023) is probably this Oreo plush"
+   "note": "wiki 'Anniversary Plush' ($9.99, 2023) is probably this Oreo plush",
+   "aka": [
+    "奧利奧",
+    "奥利奥"
+   ],
+   "name_zh_hans": "奥利奥生日玩偶"
   },
   {
    "id": "SNC150",
    "name_en": "TGC Wireframe Cape",
-   "name_zh": "",
+   "name_zh": "TGC 線框斗篷（2025）",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Wing_TGCWireframeEvergreen"
@@ -2186,12 +2928,18 @@
    "event": "anniv_25",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "TGC斗",
+    "線框斗",
+    "线框斗"
+   ],
+   "name_zh_hans": "TGC 线框斗篷（2025）"
   },
   {
    "id": "SNC178",
    "name_en": "Tournament Crystalline Cape",
-   "name_zh": "",
+   "name_zh": "冰晶斗篷",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Wing_TriumphIce"
@@ -2199,12 +2947,16 @@
    "event": "tot_25",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "冰斗"
+   ],
+   "name_zh_hans": "冰晶斗篷"
   },
   {
    "id": "SNC179",
    "name_en": "Tournament Sleek Skating Set",
-   "name_zh": "",
+   "name_zh": "溜冰服組",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Feet_TriumphIceSkates",
@@ -2213,12 +2965,16 @@
    "event": "tot_25",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "溜冰"
+   ],
+   "name_zh_hans": "溜冰服组"
   },
   {
    "id": "SNC120",
    "name_en": "Tournament Tunic",
-   "name_zh": "",
+   "name_zh": "運動會長袍",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Body_GreekRobe"
@@ -2226,12 +2982,14 @@
    "event": "tot_24",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "运动会长袍"
   },
   {
    "id": "SNC121",
    "name_en": "Tournament Golden Garland",
-   "name_zh": "",
+   "name_zh": "金色月桂冠",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Horn_Laurel"
@@ -2239,12 +2997,17 @@
    "event": "tot_24",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "花環",
+    "花环"
+   ],
+   "name_zh_hans": "金色月桂冠"
   },
   {
    "id": "SNC203",
    "name_en": "Sunlight Diver Duo",
-   "name_zh": "",
+   "name_zh": "潛水服與蛙鞋",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Feet_SunlightDuckFlippers",
@@ -2253,12 +3016,17 @@
    "event": "sunlight_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "潛水",
+    "潜水"
+   ],
+   "name_zh_hans": "潜水服与蛙鞋"
   },
   {
    "id": "SNC204",
    "name_en": "Sunlight Crab Float",
-   "name_zh": "",
+   "name_zh": "螃蟹泳圈",
    "usd": 3.99,
    "items": [
     "CharSkyKid_Prop_CrabFloat"
@@ -2266,12 +3034,16 @@
    "event": "sunlight_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "泳圈"
+   ],
+   "name_zh_hans": "螃蟹泳圈"
   },
   {
    "id": "SNC205",
    "name_en": "Sunlight Sporty Sunglasses",
-   "name_zh": "",
+   "name_zh": "運動墨鏡",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Hat_SunlightSunglasses"
@@ -2279,12 +3051,17 @@
    "event": "sunlight_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "墨鏡",
+    "墨镜"
+   ],
+   "name_zh_hans": "运动墨镜"
   },
   {
    "id": "SNC161",
    "name_en": "Sunlight Bonnet Bundle",
-   "name_zh": "",
+   "name_zh": "水母遮陽帽洋裝組",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Body_SunlightDress",
@@ -2293,12 +3070,16 @@
    "event": "sunlight_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "水母"
+   ],
+   "name_zh_hans": "水母遮阳帽洋装组"
   },
   {
    "id": "SNC127",
    "name_en": "Sunlight Woven Wrap",
-   "name_zh": "",
+   "name_zh": "編織披肩斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_LinenCover"
@@ -2306,12 +3087,14 @@
    "event": "sunlight_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "编织披肩斗篷"
   },
   {
    "id": "SNC126",
    "name_en": "Sunlight Helios Hoops",
-   "name_zh": "",
+   "name_zh": "太陽耳環",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Horn_SunnyEarring"
@@ -2319,12 +3102,14 @@
    "event": "sunlight_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "太阳耳环"
   },
   {
    "id": "SNC89",
    "name_en": "Sunlight Surfboard",
-   "name_zh": "",
+   "name_zh": "衝浪板",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Prop_Surfboard"
@@ -2332,12 +3117,14 @@
    "event": "",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "冲浪板"
   },
   {
    "id": "SNC90",
    "name_en": "Sunlight Chunky Sandals",
-   "name_zh": "",
+   "name_zh": "厚底涼鞋",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Feet_SunlightSandals"
@@ -2345,12 +3132,14 @@
    "event": "sunlight_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "厚底凉鞋"
   },
   {
    "id": "SNC59",
    "name_en": "Sunlight Campfire Snack Kit Pack",
-   "name_zh": "",
+   "name_zh": "烤棉花糖組",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_MarshmallowSet"
@@ -2358,12 +3147,16 @@
    "event": "sunlight_22",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "棉花糖"
+   ],
+   "name_zh_hans": "烤棉花糖组"
   },
   {
    "id": "SNC60",
    "name_en": "Sunlight Jelly Shoulder Buddy",
-   "name_zh": "",
+   "name_zh": "水母肩上夥伴",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Neck_Jellyfish_01"
@@ -2371,12 +3164,16 @@
    "event": "sunlight_22",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "水母"
+   ],
+   "name_zh_hans": "水母肩上伙伴"
   },
   {
    "id": "SNC34",
    "name_en": "Summer Seashell Hairpin",
-   "name_zh": "",
+   "name_zh": "貝殼髮夾",
    "usd": 0.99,
    "items": [
     "CharSkyKid_Horn_Shell_01"
@@ -2384,12 +3181,17 @@
    "event": "summer_21",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "貝殼頭飾",
+    "贝壳头饰"
+   ],
+   "name_zh_hans": "贝壳发夹"
   },
   {
    "id": "SNC33",
    "name_en": "Summer Parasol Pack",
-   "name_zh": "",
+   "name_zh": "夏日陽傘",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_SummerUmbrella_01"
@@ -2397,12 +3199,17 @@
    "event": "summer_21",
    "year": "",
    "status": "confirmed",
-   "note": "game name Summer Umbrella Pack; wiki name per 2026-11 re-release table"
+   "note": "game name Summer Umbrella Pack; wiki name per 2026-11 re-release table",
+   "aka": [
+    "陽傘",
+    "阳伞"
+   ],
+   "name_zh_hans": "夏日阳伞"
   },
   {
    "id": "SNC211",
    "name_en": "Feathery Lash Mask",
-   "name_zh": "",
+   "name_zh": "羽睫面具",
    "usd": 1.99,
    "items": [
     "CharSkyKid_Mask_ChildrenWhiteEyelash"
@@ -2410,12 +3217,16 @@
    "event": "camping_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "童真"
+   ],
+   "name_zh_hans": "羽睫面具"
   },
   {
    "id": "SNC212",
    "name_en": "Moonlight Lute",
-   "name_zh": "",
+   "name_zh": "月光琵琶",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Prop_MoonlightLute"
@@ -2423,12 +3234,16 @@
    "event": "moonlight_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "琵琶"
+   ],
+   "name_zh_hans": "月光琵琶"
   },
   {
    "id": "SNC213",
    "name_en": "Moonlight Nimbus",
-   "name_zh": "",
+   "name_zh": "月光光環",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Hat_MoonlightHalo"
@@ -2436,12 +3251,17 @@
    "event": "moonlight_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "光環",
+    "光环"
+   ],
+   "name_zh_hans": "月光光环"
   },
   {
    "id": "SNC214",
    "name_en": "Moonlight Veil",
-   "name_zh": "",
+   "name_zh": "月光面紗",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Mask_MoonlightVeil"
@@ -2449,12 +3269,14 @@
    "event": "moonlight_26",
    "year": "2026",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "月光面纱"
   },
   {
    "id": "SNC162",
    "name_en": "Moonlight Garland Cape",
-   "name_zh": "",
+   "name_zh": "月光花環斗篷",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Wing_Moonlight"
@@ -2462,12 +3284,14 @@
    "event": "moonlight_25",
    "year": "2025",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "月光花环斗篷"
   },
   {
    "id": "SNC124",
    "name_en": "Moonlight Frock and Updo",
-   "name_zh": "",
+   "name_zh": "月光洋裝與盤髮",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Hair_MoonlightUpdo",
@@ -2476,12 +3300,14 @@
    "event": "moonlight_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "月光洋装与盘发"
   },
   {
    "id": "SNC123",
    "name_en": "Moonlight Earring",
-   "name_zh": "",
+   "name_zh": "月光耳環",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Horn_MoonEarring"
@@ -2489,12 +3315,17 @@
    "event": "moonlight_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "月光耳墜",
+    "月光耳坠"
+   ],
+   "name_zh_hans": "月光耳环"
   },
   {
    "id": "SNC13",
    "name_en": "Moonlight Lantern Pack",
-   "name_zh": "",
+   "name_zh": "月光燈籠",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Prop_Lantern"
@@ -2502,12 +3333,17 @@
    "event": "summer_20",
    "year": "2020",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "燈籠",
+    "灯笼"
+   ],
+   "name_zh_hans": "月光灯笼"
   },
   {
    "id": "SNC35",
    "name_en": "Moonlight Bunny Accessory",
-   "name_zh": "",
+   "name_zh": "玉兔頭飾",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Horn_Bunny_01"
@@ -2515,12 +3351,19 @@
    "event": "summer_21",
    "year": "2021",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "兔兔頭飾",
+    "兔子頭飾",
+    "兔兔头饰",
+    "兔子头饰"
+   ],
+   "name_zh_hans": "玉兔头饰"
   },
   {
    "id": "SNC95",
    "name_en": "Moonlight Bunny Slippers",
-   "name_zh": "",
+   "name_zh": "兔兔拖鞋",
    "usd": 6.99,
    "items": [
     "CharSkyKid_Feet_BunnySlippers"
@@ -2528,12 +3371,16 @@
    "event": "style_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "兔子拖鞋"
+   ],
+   "name_zh_hans": "兔兔拖鞋"
   },
   {
    "id": "SNC125",
    "name_en": "Style Dapper Trio",
-   "name_zh": "",
+   "name_zh": "紳士三件套",
    "usd": 14.99,
    "items": [
     "CharSkyKid_Face_Monocle",
@@ -2543,12 +3390,17 @@
    "event": "style_24",
    "year": "2024",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "單片眼鏡",
+    "单片眼镜"
+   ],
+   "name_zh_hans": "绅士三件套"
   },
   {
    "id": "SNC91",
    "name_en": "Style Wide-Leg Jeans",
-   "name_zh": "",
+   "name_zh": "寬版牛仔褲",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Body_FashionJeans"
@@ -2556,12 +3408,19 @@
    "event": "style_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "牛仔褲",
+    "時尚日牛仔褲",
+    "牛仔裤",
+    "时尚日牛仔裤"
+   ],
+   "name_zh_hans": "宽版牛仔裤"
   },
   {
    "id": "SNC92",
    "name_en": "Style Flame Sunglasses",
-   "name_zh": "",
+   "name_zh": "火焰墨鏡",
    "usd": 2.99,
    "items": [
     "CharSkyKid_Horn_FlameSunglasses"
@@ -2569,12 +3428,17 @@
    "event": "style_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "墨鏡",
+    "墨镜"
+   ],
+   "name_zh_hans": "火焰墨镜"
   },
   {
    "id": "SNC93",
    "name_en": "Style Heart Sunglasses",
-   "name_zh": "",
+   "name_zh": "愛心墨鏡",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Horn_HeartSunglasses"
@@ -2582,12 +3446,17 @@
    "event": "style_23",
    "year": "2023",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "墨鏡",
+    "墨镜"
+   ],
+   "name_zh_hans": "爱心墨镜"
   },
   {
    "id": "SNC26",
    "name_en": "Red & Blue Starter Pack",
-   "name_zh": "",
+   "name_zh": "紅藍新手包（Switch）",
    "usd": 29.99,
    "items": [
     "CharSkyKid_Wing_SwitchRed_01",
@@ -2598,12 +3467,19 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "林克",
+    "陶笛",
+    "精靈",
+    "精灵"
+   ],
+   "name_zh_hans": "红蓝新手包（Switch）"
   },
   {
    "id": "SNC99",
    "name_en": "Moth Appreciation Pack",
-   "name_zh": "",
+   "name_zh": "小飛蛾感謝包",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Horn_MothAntenna",
@@ -2612,12 +3488,14 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "小飞蛾感谢包"
   },
   {
    "id": "SNC100",
    "name_en": "Sparrow Appreciation Pack",
-   "name_zh": "",
+   "name_zh": "麻雀感謝包",
    "usd": 9.99,
    "items": [
     "CharSkyKid_Mask_SparrowCheeks",
@@ -2626,12 +3504,14 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [],
+   "name_zh_hans": "麻雀感谢包"
   },
   {
    "id": "SNC00",
    "name_en": "Starter Pack",
-   "name_zh": "",
+   "name_zh": "新手包",
    "usd": 4.99,
    "items": [
     "CharSkyKid_Wing_ClassicOne_Orange"
@@ -2639,12 +3519,17 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "新手橘斗",
+    "橘斗"
+   ],
+   "name_zh_hans": "新手包"
   },
   {
    "id": "SNC10",
    "name_en": "Healing Pack",
-   "name_zh": "",
+   "name_zh": "療癒禮包",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Horn_FlowerPoppy_01"
@@ -2652,12 +3537,16 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "小白花"
+   ],
+   "name_zh_hans": "疗愈礼包"
   },
   {
    "id": "SNC01",
    "name_en": "Founder's Pack",
-   "name_zh": "",
+   "name_zh": "創始者禮包",
    "usd": 29.99,
    "items": [
     "CharSkyKid_Wing_ClassicOne_TGCBlue$"
@@ -2665,12 +3554,19 @@
    "event": "",
    "year": "",
    "status": "confirmed",
-   "note": "game name Founder Pack; wiki name per 2026-11 re-release table"
+   "note": "game name Founder Pack; wiki name per 2026-11 re-release table",
+   "aka": [
+    "創始斗",
+    "藍斗",
+    "创始斗",
+    "蓝斗"
+   ],
+   "name_zh_hans": "创始者礼包"
   },
   {
    "id": "SNC54",
    "name_en": "TGC Guitar Pack",
-   "name_zh": "",
+   "name_zh": "TGC 吉他",
    "usd": 29.99,
    "items": [
     "CharSkyKid_Prop_AP14Guitar_02"
@@ -2678,12 +3574,16 @@
    "event": "",
    "year": "2022",
    "status": "confirmed",
-   "note": ""
+   "note": "",
+   "aka": [
+    "吉他"
+   ],
+   "name_zh_hans": "TGC 吉他"
   },
   {
    "id": "wiki:skyfest-wireframe",
    "name_en": "SkyFest Wireframe Cape",
-   "name_zh": "",
+   "name_zh": "五週年線框斗篷",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Wing_TGCWireframe"
@@ -2691,12 +3591,19 @@
    "event": "anniv_24",
    "year": "2024",
    "status": "wiki-only",
-   "note": "retired; items mapped by hand"
+   "note": "retired; items mapped by hand",
+   "aka": [
+    "五週年斗",
+    "線框斗",
+    "五周年斗",
+    "线框斗"
+   ],
+   "name_zh_hans": "五周年线框斗篷"
   },
   {
    "id": "wiki:winter-musician",
    "name_en": "Winter Musician Pack (2019-2020)",
-   "name_zh": "",
+   "name_zh": "冬日樂手禮包",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Hair_APMusician_01",
@@ -2705,12 +3612,17 @@
    "event": "season_05",
    "year": "2019",
    "status": "wiki-only",
-   "note": "retired; items mapped by hand"
+   "note": "retired; items mapped by hand",
+   "aka": [
+    "音韻",
+    "音韵"
+   ],
+   "name_zh_hans": "冬日乐手礼包"
   },
   {
    "id": "wiki:gratitude-fur",
    "name_en": "Gratitude Fur Pack (2020)",
-   "name_zh": "",
+   "name_zh": "感恩季毛斗篷",
    "usd": 19.99,
    "items": [
     "CharSkyKid_Wing_AP02Fur_01"
@@ -2718,7 +3630,11 @@
    "event": "season_02",
    "year": "2020",
    "status": "wiki-only",
-   "note": "retired; items mapped by hand"
+   "note": "retired; items mapped by hand",
+   "aka": [
+    "毛斗"
+   ],
+   "name_zh_hans": "感恩季毛斗篷"
   }
  ]
 }

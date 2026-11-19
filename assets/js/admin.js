@@ -163,7 +163,7 @@
   const sortedSeasons = () => W.seasons.slice().sort((a, b) => b.code.localeCompare(a.code));
 
   // ── change list ──────────────────────────────────────────────────────────
-  const FIELD_ZH = { code: '季號', id: 'ID', zh: '繁中名', zh_hans: '簡中名', en: '英文名', start: '開始', end: '結束', note: '備註', ultimates: '畢業禮', name_zh: '繁中名', name_en: '英文名', group: '分類', season: '季節', hidden: '隱藏', unconfirmed: '待確認', usd: '價格', items: '內容物', event: '活動', year: '年份', status: '狀態', source: '來源', confidence: '可信度' };
+  const FIELD_ZH = { code: '季號', id: 'ID', zh: '繁中名', zh_hans: '簡中名', en: '英文名', start: '開始', end: '結束', note: '備註', ultimates: '畢業禮', name_zh: '繁中名', name_en: '英文名', name_zh_hans: '簡中名', aka: '別稱', group: '分類', season: '季節', hidden: '隱藏', unconfirmed: '待確認', usd: '價格', items: '內容物', event: '活動', year: '年份', status: '狀態', source: '來源', confidence: '可信度' };
   const changedFields = (a, b) => Object.keys({ ...a, ...b }).filter(k => !same(a[k], b[k])).map(k => FIELD_ZH[k] || k).join('、');
   function diff() {
     const out = { seasons: [], items: [], packs: [] };
@@ -402,6 +402,8 @@
         <label class="field"><span>ID</span><input class="input" data-p="id" value="${esc(p.id)}" ${orig ? 'readonly' : ''}><span class="hint">${orig ? '遊戲內購 ID，不能改。' : '遊戲內購 ID；已下架、只在 wiki 上的用 wiki: 開頭。'}</span></label>
         <div class="pair"><label class="field"><span>繁中名</span><input class="input" data-p="name_zh" value="${esc(p.name_zh || '')}" placeholder="例如 蝙蝠斗篷"></label>
           <label class="field"><span>英文名</span><input class="input" data-p="name_en" value="${esc(p.name_en || '')}"></label></div>
+        <div class="pair"><label class="field"><span>簡中名</span><input class="input" data-p="name_zh_hans" value="${esc(p.name_zh_hans || '')}" placeholder="例如 蝙蝠斗篷"></label>
+          <label class="field"><span>別稱 <span class="hint">搜尋用，用、分隔</span></span><input class="input" data-p="aka" value="${esc((p.aka || []).join('、'))}" placeholder="例如 蝙蝠斗、鬼蝠斗"></label></div>
         <div class="pair"><label class="field"><span>價格（美金）</span><input class="input" data-p="usd" inputmode="decimal" value="${p.usd == null ? '' : esc(p.usd)}" placeholder="未知"></label>
           <label class="field"><span>年份</span><input class="input" data-p="year" inputmode="numeric" value="${esc(p.year || '')}" maxlength="4"></label></div>
         <div class="pair"><label class="field"><span>季節 / 活動</span><input class="input" data-p="event" value="${esc(p.event || '')}" placeholder="season_31、mischief_26…"></label>
@@ -455,6 +457,7 @@
       const p = W.packs.find(x => x.id === selKey()), k = el.dataset.p;
       if (k === 'id' || k === 'status') return;
       if (k === 'usd') { const v = el.value.trim(); if (v === '') p.usd = null; else if (!isNaN(parseFloat(v)) && isFinite(v)) p.usd = parseFloat(v); }
+      else if (k === 'aka') { const a = el.value.split(/[、,，;；]/).map(x => x.trim()).filter(Boolean); if (a.length) p.aka = [...new Set(a)]; else delete p.aka; }
       else p[k] = el.value;
       changed(true); return;
     }
