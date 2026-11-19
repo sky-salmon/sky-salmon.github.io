@@ -11,6 +11,7 @@
   const TIER_RANK = { C: 0, B: 1, A: 2, S: 3 };
   // looked up by value below, listed here for the translation build:
   // t('無斷') t('偽無斷') t('微斷') t('斷季') t('大斷') t('簡號') t('綁定全可換') t('1 個綁定不能出') t('2 個以上綁定不能出')
+  // t('五週年斗') t('小白花')
   // t('傘') t('篝火') t('白鳥') t('耳墜') t('阿努') t('不死鳥') t('玫瑰') t('羽毛') t('白梟') t('眼鏡')
 
   let model = null, modelP = null, items = null, timer = 0;
@@ -26,7 +27,7 @@
 
   // what the card says about the account
   function analyse(cardItems) {
-    const seasons = new Set(), ults = new Set();
+    const seasons = new Set(), ults = new Set(), names = new Set();
     const packOf = new Map();
     D.packs().forEach(p => p.items.forEach(path => {
       const tier = model.pack_tiers[p.id] || 'C', cur = packOf.get(path);
@@ -39,10 +40,12 @@
       const i = D.parsePath(it.p);
       if (i.season && (i.cat === 'pass' || i.ult)) seasons.add(i.season);
       if (i.ult) ults.add(i.name);
+      names.add(i.name);
       const p = packOf.get(it.p);
       if (p) packs.set(p.id, p);
     }));
-    return { seasons, ults, packs: [...packs.values()] };
+    const badges = ((cardItems || {}).pin || []).length;   // 徽章 (traders call them 數據)
+    return { seasons, ults, names, badges, packs: [...packs.values()] };
   }
 
   // best reading of the season history, the way a seller would title it ("歐若拉偽無斷", "聖島微斷", ...)
@@ -51,7 +54,7 @@
     const owned = codes.filter(c => seasons.has(c));
     if (!owned.length) return null;
     const need = s => codes.filter(c => c >= s && c < cur);   // the running season may not be on the card yet
-    let best = null;
+    let best = null, title = null;
     const offer = (value, start, kind, missing, older) => {
       if (!best || value > best.value) best = { value, start, kind, missing, older };
     };
@@ -62,7 +65,10 @@
       else if (answers.fake && miss <= Math.max(2, span.length * 0.3)) kind = '偽無斷';
       else if (miss <= 2) kind = '微斷';
       else if (miss <= Math.max(2, span.length * 0.3)) kind = '斷季';
-      if (kind) offer(B[s] * model.streak[kind], s, kind, miss, 0);
+      if (kind) {
+        offer(B[s] * model.streak[kind], s, kind, miss, 0);
+        if (!title) title = { start: s, kind, missing: miss, older: 0 };   // sellers name the account from its oldest season
+      }
     });
     // an unbroken run up to now, plus older seasons owned before it
     let run = null;
@@ -80,7 +86,8 @@
       const kind = span.length && (span.length - miss) / span.length < 0.3 ? '簡號' : '大斷';
       offer(B[s] * model.streak[kind], s, kind, miss, 0);
     }
-    return best;
+    // the price takes the best reading; the label keeps the seller's way of naming it when there is one
+    return title ? Object.assign({}, best, title) : best;
   }
 
   function estimate(cardItems) {
@@ -89,14 +96,19 @@
     const hot = [...a.ults].map(n => model.hot_ultimates[n]).filter(Boolean)
       .sort((x, y) => (x.season || '').localeCompare(y.season || ''));
     const ultVal = hot.reduce((v, u) => v + u.twd, 0);        // traders price these as items of their own
+    const items = [...a.names].map(n => (model.hot_items || {})[n]).filter(Boolean);
+    const itemVal = items.reduce((v, u) => v + u.twd, 0);
+    const badgeVal = a.badges * (model.badge_twd || 0);
     const tierCount = { S: 0, A: 0, B: 0, C: 0 };
     const packVal = a.packs.reduce((v, p) => { tierCount[p.tier]++; return v + model.pack_value[p.tier]; }, 0);
     let mult = model.binding[answers.binding] || 1;
     if (answers.dirty) mult *= model.dirty;
-    const center = (h.value + ultVal + packVal) * mult;     // TWD, Taiwan market; money() moves it to the chosen market
+    const center = (h.value + ultVal + itemVal + badgeVal + packVal) * mult;   // TWD, Taiwan market; money() converts
     const near = model.comparables.filter(c => Math.abs(+c.start - +h.start) <= 2);
-    return { h, hot, ultVal, tierCount, packVal, mult, center, low: center * model.spread.low, high: center * model.spread.high,
-      near, nSeasons: a.seasons.size };
+    const rg = model.range || { low: 0.75, high: 1.3 };
+    return { h, hot, ultVal, items, itemVal, badges: a.badges, badgeVal, tierCount, packVal, mult, center,
+      rangeLow: center * rg.low, rangeHigh: center * rg.high,          // where half of real asks for such accounts fall
+      quick: center * model.spread.low, patient: center * model.spread.high, near, nSeasons: a.seasons.size };
   }
 
   function money(twd) {
@@ -117,13 +129,16 @@
       why.innerHTML = ''; basis.textContent = '';
       return;
     }
-    range.innerHTML = `<span class="val-lo"><small>${t('低值')}</small>${money(e.low)}</span><span class="val-dash" aria-hidden="true">–</span><span class="val-hi"><small>${t('高值')}</small>${money(e.high)}</span>`;
+    range.innerHTML = `<small class="val-cap">${t('常見行情')}</small><span class="val-band">${money(e.rangeLow)}<span class="val-dash" aria-hidden="true">–</span>${money(e.rangeHigh)}</span>
+      <span class="val-points"><span class="val-pt"><small>${t('快出價')}</small><b>${money(e.quick)}</b></span><span class="val-pt is-hi"><small>${t('耐心價')}</small><b>${money(e.patient)}</b></span></span>`;
     const h = e.h, lines = [];
     const kind = h.kind === '無斷' && h.older ? t('{season}起無斷，另有 {n} 個更早的季節', { season: seasonName(h.start), n: h.older })
       : h.missing ? t('{season}起{kind}（缺 {n} 季）', { season: seasonName(h.start), kind: t(h.kind), n: h.missing })
         : t('{season}起{kind}', { season: seasonName(h.start), kind: t(h.kind) });
     lines.push([t('季節'), kind, '']);
     if (e.hot.length) lines.push([t('老畢業禮'), e.hot.map(u => t(u.nick)).join('、'), '+' + money(e.ultVal)]);
+    if (e.items.length) lines.push([t('熱門物品'), e.items.map(u => t(u.nick)).join('、'), '+' + money(e.itemVal)]);
+    if (e.badges) lines.push([t('徽章'), t('{n} 個', { n: e.badges }), '+' + money(e.badgeVal)]);
     const tc = e.tierCount, nPacks = tc.S + tc.A + tc.B + tc.C;
     if (nPacks) lines.push([t('禮包'), t('絕版 {s}・少見 {ab}・常見 {c}', { s: tc.S, ab: tc.A + tc.B, c: tc.C }), '+' + money(e.packVal)]);
     const adj = [];
@@ -132,8 +147,11 @@
     if (adj.length) lines.push([t('調整'), adj.join('、'), '×' + e.mult.toFixed(2)]);
     why.innerHTML = lines.map(([k, v, x]) => `<li><span class="k">${k}</span><span class="v">${v}</span><span class="x mono">${x}</span></li>`).join('');
     const n = e.near.length, level = n >= 5 ? t('中') : n >= 2 ? t('偏低') : t('很低');
-    basis.textContent = t('可信度：{level}。相近起點的參考貼文 {n} 筆（{from}～{to}，公開社團）。', {
-      level, n, from: model.basis.from, to: model.basis.to });
+    const err = Math.round((model.typical_error || 0.35) * 100);
+    let txt = t('可信度：{level}。相近起點的參考貼文 {n} 筆（{from}～{to}，公開社團）。同類帳號的實際開價常差 ±{err}%：衣櫃、徽章、蠟燭這些名片外的東西影響很大。', {
+      level, n, from: model.basis.from, to: model.basis.to, err });
+    if (h.start >= '16' && h.start <= '24') txt += ' ' + t('這段季節起的號，模型平均估得偏低約一成半，可以往常見行情的上緣看。');
+    basis.textContent = txt;
   }
 
   function refresh(cardItems) {
