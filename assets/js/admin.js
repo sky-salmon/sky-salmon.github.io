@@ -247,14 +247,18 @@
     $('#n-items').textContent = ITEMS.length;
     $('#n-packs').textContent = W.packs.length;
     document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === ui.tab)));
-    $('main.work').classList.toggle('is-update', ui.tab === 'update');
+    $('main.work').classList.toggle('is-update', ['update', 'access', 'feedback'].includes(ui.tab));
     if (ui.tab === 'update') { renderUpdate(); return; }
+    if (ui.tab === 'access') { renderAccess(); return; }
+    if (ui.tab === 'feedback') { renderFeedback(); return; }
     renderList();
     renderEditor();
   }
   function renderList() {
     const focus = document.activeElement && document.activeElement.id === 'q', pos = focus ? document.activeElement.selectionStart : 0;
     if (ui.tab === 'update') { renderUpdate(); return; }
+    if (ui.tab === 'access') { renderAccess(); return; }
+    if (ui.tab === 'feedback') { renderFeedback(); return; }
     const d = diff()[ui.tab];
     if (ui.tab === 'seasons') renderSeasons(d); else if (ui.tab === 'items') renderItems(d); else renderPacks(d);
     if (focus) { const q = $('#q'); q.focus(); q.setSelectionRange(pos, pos); }
@@ -458,6 +462,7 @@
     if (el.dataset.pick) showResults(el);
   }
   function onChange(e) {
+    if (e.target.dataset && (e.target.dataset.feat || e.target.dataset.acc === 'perm' || e.target.id === 'model-file')) { onFirestoreChange(e.target); return; }
     const el = e.target;
     if (!W) return;
     if (el.id === 'f-group') { ui.group = el.value; ui.limit = 200; renderList(); return; }
@@ -496,7 +501,8 @@
     if (t.id === 'logout') { logout(); return; }
     if (t.id === 'settings') { openSettings(); return; }
     if (!W) return;   // nothing else works before the data is in
-    if (ds.tab) { ui.tab = ds.tab; ui.sel = null; ui.q = ''; ui.confirmDel = false; render(); return; }
+    if (ds.tab) { ui.tab = ds.tab; ui.sel = null; ui.q = ''; ui.confirmDel = false; if (ds.tab === 'access' || ds.tab === 'feedback') { ACC = null; FBK = null; } render(); return; }
+    if (ds.acc || ds.fbk || ds.feat || ds.accOnly || ds.fbkOnly || t.id === 'model-pick') { onFirestoreClick(t); return; }
     if (ds.season) { ui.sel = 'S:' + ds.season; ui.confirmDel = false; render(); return; }
     if (ds.item) { ui.sel = 'I:' + ds.item; ui.confirmDel = false; render(); return; }
     if (ds.pack) { ui.sel = 'P:' + ds.pack; ui.confirmDel = false; render(); return; }
@@ -679,6 +685,7 @@
       } catch { W = clone(ORIG); }
       ui.sel = 'S:' + W.seasons.map(s => s.code).sort().pop();
       render();
+      if (mode === 'google' && fb && guser) { loadAccess().catch(() => {}); loadFeedback().catch(() => {}); }
       if (restored) toast(`已還原上次未儲存的 ${restored} 筆變更`, 4000);
     } catch (e) {
       $('#rows').innerHTML = `<p class="empty"><b>載入失敗</b>${esc(e.message)}</p>`;
@@ -1006,6 +1013,140 @@
     tokenLink();
     gateShow('#g-setup'); $('#g-alt').hidden = true;
   });
+
+  // ── 權限 + 回饋 (Google mode): restricted features, account requests, feedback inbox ─────────────────────
+  // access/{uid} {label, status pending|approved|denied, perms {feature: true}}; config/features {public {feature: true}};
+  // gated/{feature} {data, version} (what a restricted feature reads); feedback/{id} {kind, msg, page, contact, status}.
+  const FEATURES = [['value', '估價分頁', '名片產生器的「估價」。核准並勾選的帳號才讀得到估價模型（gated/value）。']];
+  const FB_KIND = { bug: '問題回報', data: '資料有誤', idea: '建議', other: '其他' };
+  let ACC = null, FBK = null;
+  const needGoogle = () => { if (mode === 'google' && fb && guser) return false;
+    $('#filters').innerHTML = ''; $('#rows').innerHTML = '<p class="empty"><b>要用 Google 登入</b>權限和回饋存在 Firebase，請用管理員的 Google 帳號登入這一頁。</p>'; return true; };
+  const when = ts => { const d = ts && ts.toDate ? ts.toDate() : null; return d ? d.toLocaleString('zh-TW', { hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''; };
+  async function loadAccess() {
+    const [rq, ft, gv] = await Promise.all([fb.getDocs(fb.collection(fdb, 'access')), fb.getDoc(cfgRef('features')), fb.getDoc(fb.doc(fdb, 'gated', 'value')).catch(() => null)]);
+    ACC = {
+      rows: rq.docs.map(d => Object.assign({ uid: d.id }, d.data())).sort((a, b) => ((b.createdAt && b.createdAt.seconds) || 0) - ((a.createdAt && a.createdAt.seconds) || 0)),
+      pub: (ft.exists() && ft.data().public) || {},
+      model: gv && gv.exists() ? { version: gv.data().version, updatedAt: gv.data().updatedAt, size: (gv.data().data || '').length } : null
+    };
+    $('#n-access').textContent = ACC.rows.filter(r => r.status === 'pending').length || '';
+  }
+  async function loadFeedback() {
+    const q = await fb.getDocs(fb.collection(fdb, 'feedback'));
+    FBK = q.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => ((b.createdAt && b.createdAt.seconds) || 0) - ((a.createdAt && a.createdAt.seconds) || 0));
+    $('#n-feedback').textContent = FBK.filter(f => f.status === 'new').length || '';
+  }
+  async function renderAccess() {
+    if (needGoogle()) return;
+    if (!ACC) {
+      $('#filters').innerHTML = ''; $('#rows').innerHTML = '<p class="loading">讀取中…</p>';
+      try { await loadAccess(); } catch (e) { $('#rows').innerHTML = `<p class="empty"><b>讀取失敗</b>${esc(e.code || e.message)}：Firestore 規則可能還沒更新，請把 firebase/firestore.rules 貼到 Firebase 控制台發布。</p>`; return; }
+      if (ui.tab !== 'access') return;
+    }
+    const only = ui.accOnly || 'pending';
+    const counts = { pending: 0, approved: 0, denied: 0 };
+    ACC.rows.forEach(r => { counts[r.status] = (counts[r.status] || 0) + 1; });
+    $('#filters').innerHTML = [['pending', `待審核 ${counts.pending}`], ['approved', `已核准 ${counts.approved}`], ['denied', `已拒絕 ${counts.denied}`], ['all', `全部 ${ACC.rows.length}`]]
+      .map(([k, z]) => `<button type="button" class="chip" data-acc-only="${k}" aria-pressed="${only === k}">${z}</button>`).join('') + '<button type="button" class="btn ghost small" data-acc="reload">重新整理</button>';
+    const list = ACC.rows.filter(r => only === 'all' || r.status === only);
+    const m = ACC.model;
+    const features = FEATURES.map(([k, z, why]) => `<div class="acc-feat">
+        <div class="acc-feat-main"><b>${esc(z)}</b><span class="note">${esc(why)}</span>
+          ${k === 'value' ? `<span class="note">模型：${m ? `v${esc(m.version)} · ${esc(when(m.updatedAt))} 上傳 · ${(m.size / 1024).toFixed(1)} KB` : '<b class="warn">還沒上傳</b>，核准的帳號會看到「估價資料還沒上傳」'}</span>` : ''}</div>
+        <label class="acc-switch"><input type="checkbox" data-feat="${k}"${ACC.pub[k] ? ' checked' : ''}><span>開放給所有人</span></label>
+        ${k === 'value' ? '<button type="button" class="btn small" id="model-pick">上傳估價模型…</button><input type="file" id="model-file" accept=".json,application/json" hidden>' : ''}
+      </div>`).join('');
+    const status = { pending: '<span class="tag gold">待審核</span>', approved: '<span class="tag new">已核准</span>', denied: '<span class="tag del">已拒絕</span>' };
+    $('#rows').innerHTML = `<div class="acc">
+      <div class="file"><div class="file-head"><span class="fn">需要核准的功能</span></div>${features}
+        <p class="note pad">沒開放給所有人的功能，只有下面核准、而且勾了那項功能的帳號能用。改變會立刻生效（對方重新整理或按「重新檢查」）。</p></div>
+      <div class="file"><div class="file-head"><span class="fn">申請的帳號</span><span class="tag">${list.length}</span></div>
+        ${list.map(r => `<div class="acc-row" data-uid="${esc(r.uid)}">
+          <div class="acc-who"><b>${esc(r.label || '（沒有 Email）')}</b><span class="note">${esc(when(r.createdAt))} 申請${r.updatedAt && r.status !== 'pending' ? ' · ' + esc(when(r.updatedAt)) + ' 更新' : ''} · <span class="mono-s">${esc(r.uid.slice(0, 8))}</span></span></div>
+          <div class="acc-perms">${status[r.status] || esc(r.status)}${FEATURES.map(([k, z]) => `<label class="acc-perm"><input type="checkbox" data-acc="perm" data-k="${k}"${(r.perms || {})[k] ? ' checked' : ''}><span>${esc(z)}</span></label>`).join('')}</div>
+          <div class="acc-acts">${r.status !== 'approved' ? '<button type="button" class="btn small" data-acc="approve">核准</button>' : ''}${r.status !== 'denied' ? '<button type="button" class="btn ghost small" data-acc="deny">拒絕</button>' : ''}<button type="button" class="btn ghost small" data-acc="delete">刪除</button></div>
+        </div>`).join('') || `<p class="empty pad">${only === 'pending' ? '沒有待審核的申請。有人在名片產生器的「估價」用 Google 登入申請後，會出現在這裡。' : '沒有符合的帳號。'}</p>`}
+      </div></div>`;
+  }
+  async function renderFeedback() {
+    if (needGoogle()) return;
+    if (!FBK) {
+      $('#filters').innerHTML = ''; $('#rows').innerHTML = '<p class="loading">讀取中…</p>';
+      try { await loadFeedback(); } catch (e) { $('#rows').innerHTML = `<p class="empty"><b>讀取失敗</b>${esc(e.code || e.message)}：Firestore 規則可能還沒更新。</p>`; return; }
+      if (ui.tab !== 'feedback') return;
+    }
+    const only = ui.fbkOnly || 'new';
+    const list = FBK.filter(f => only === 'all' || f.status === only);
+    $('#filters').innerHTML = [['new', `未處理 ${FBK.filter(f => f.status === 'new').length}`], ['done', `已處理 ${FBK.filter(f => f.status === 'done').length}`], ['all', `全部 ${FBK.length}`]]
+      .map(([k, z]) => `<button type="button" class="chip" data-fbk-only="${k}" aria-pressed="${only === k}">${z}</button>`).join('') + '<button type="button" class="btn ghost small" data-fbk="reload">重新整理</button>';
+    $('#rows').innerHTML = `<div class="acc">${list.map(f => `<div class="fbk" data-id="${esc(f.id)}">
+        <div class="fbk-head"><span class="tag ${f.kind === 'bug' ? 'del' : f.kind === 'data' ? 'gold' : f.kind === 'idea' ? 'new' : ''}">${esc(FB_KIND[f.kind] || f.kind)}</span><span class="note">${esc(when(f.createdAt))} · ${esc(f.page || '')}${f.lang ? ' · ' + esc(f.lang) : ''}</span>
+          <span class="spacer"></span>${f.status === 'new' ? '<button type="button" class="btn small" data-fbk="done">標記已處理</button>' : '<button type="button" class="btn ghost small" data-fbk="undo">改回未處理</button>'}<button type="button" class="btn ghost small" data-fbk="delete">刪除</button></div>
+        <p class="fbk-msg">${esc(f.msg)}</p>${f.contact ? `<p class="note">聯絡方式：${esc(f.contact)}</p>` : ''}
+      </div>`).join('') || `<p class="empty">${only === 'new' ? '沒有未處理的回饋。' : '沒有回饋。'}</p>`}</div>`;
+  }
+  async function onFirestoreClick(t) {
+    const ds = t.dataset;
+    if (ds.accOnly) { ui.accOnly = ds.accOnly; renderAccess(); return; }
+    if (ds.fbkOnly) { ui.fbkOnly = ds.fbkOnly; renderFeedback(); return; }
+    if (t.id === 'model-pick') { $('#model-file').click(); return; }
+    if (ds.feat) return;   // checkbox: handled on change
+    if (ds.acc === 'reload') { ACC = null; renderAccess(); return; }
+    if (ds.fbk === 'reload') { FBK = null; renderFeedback(); return; }
+    if (ds.acc === 'perm') return;   // checkbox: handled on change
+    t.disabled = true;
+    try {
+      if (ds.acc) {
+        const uid = t.closest('[data-uid]').dataset.uid, r = ACC.rows.find(x => x.uid === uid), ref = fb.doc(fdb, 'access', uid);
+        if (ds.acc === 'delete') {
+          if (!confirm(`刪除 ${r.label} 的申請？刪掉後對方可以重新申請。`)) { t.disabled = false; return; }
+          await fb.deleteDoc(ref); ACC.rows = ACC.rows.filter(x => x.uid !== uid); toast('已刪除');
+        } else {
+          const perms = Object.assign({}, r.perms || {});
+          const row = t.closest('.acc-row');
+          row.querySelectorAll('[data-acc="perm"]').forEach(c => { if (c.checked) perms[c.dataset.k] = true; else delete perms[c.dataset.k]; });
+          if (ds.acc === 'approve' && !Object.keys(perms).length) FEATURES.forEach(([k]) => { perms[k] = true; });   // nothing ticked: all of them
+          const status = ds.acc === 'approve' ? 'approved' : 'denied';
+          await fb.setDoc(ref, { label: r.label, status, perms, createdAt: r.createdAt, updatedAt: fb.serverTimestamp() });
+          Object.assign(r, { status, perms, updatedAt: { toDate: () => new Date() } });
+          toast(status === 'approved' ? `已核准 ${esc(r.label)}` : `已拒絕 ${esc(r.label)}`);
+        }
+        $('#n-access').textContent = ACC.rows.filter(x => x.status === 'pending').length || '';
+        renderAccess();
+      } else if (ds.fbk) {
+        const id = t.closest('[data-id]').dataset.id, f = FBK.find(x => x.id === id), ref = fb.doc(fdb, 'feedback', id);
+        if (ds.fbk === 'delete') { if (!confirm('刪除這則回饋？')) { t.disabled = false; return; } await fb.deleteDoc(ref); FBK = FBK.filter(x => x.id !== id); }
+        else { const status = ds.fbk === 'done' ? 'done' : 'new'; await fb.setDoc(ref, { status }, { merge: true }); f.status = status; }
+        $('#n-feedback').textContent = FBK.filter(x => x.status === 'new').length || '';
+        renderFeedback();
+      }
+    } catch (e) { toast('操作失敗：' + esc(e.code || e.message), 6000); t.disabled = false; }
+  }
+  async function onFirestoreChange(el) {
+    try {
+      if (el.dataset.feat) {
+        const pub = Object.assign({}, ACC.pub); if (el.checked) pub[el.dataset.feat] = true; else delete pub[el.dataset.feat];
+        await fb.setDoc(cfgRef('features'), { public: pub, updatedAt: fb.serverTimestamp() });
+        ACC.pub = pub; toast(el.checked ? '已開放給所有人' : '已改回需要核准');
+      } else if (el.dataset.acc === 'perm') {
+        const uid = el.closest('[data-uid]').dataset.uid, r = ACC.rows.find(x => x.uid === uid);
+        if (r.status !== 'approved') return;   // pending/denied: saved when approving
+        const perms = Object.assign({}, r.perms || {}); if (el.checked) perms[el.dataset.k] = true; else delete perms[el.dataset.k];
+        await fb.setDoc(fb.doc(fdb, 'access', uid), { label: r.label, status: r.status, perms, createdAt: r.createdAt, updatedAt: fb.serverTimestamp() });
+        r.perms = perms; toast('已更新');
+      } else if (el.id === 'model-file' && el.files[0]) {
+        const text = await el.files[0].text(); el.value = '';
+        let m; try { m = JSON.parse(text); } catch { toast('不是 JSON 檔'); return; }
+        if (!m || !m.version || !m.base || !m.streak || !m.hot_ultimates) { toast('這不是估價模型（缺 version、base、streak 或 hot_ultimates）', 6000); return; }
+        const data = JSON.stringify(m);
+        if (data.length > 990000) { toast('模型太大（超過 1 MB）'); return; }
+        await fb.setDoc(fb.doc(fdb, 'gated', 'value'), { data, version: String(m.version), updatedAt: fb.serverTimestamp() });
+        ACC.model = { version: String(m.version), updatedAt: { toDate: () => new Date() }, size: data.length };
+        toast(`已上傳估價模型 v${esc(m.version)}`); renderAccess();
+      }
+    } catch (e) { toast('操作失敗：' + esc(e.code || e.message), 6000); if (el.type === 'checkbox') el.checked = !el.checked; }
+  }
 
   // ── settings (Google mode): repository, token, admin accounts, access requests ──
   async function openSettings() {

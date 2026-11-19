@@ -1,4 +1,4 @@
-# Firebase (card cloud save + admin sign-in)
+# Firebase (card cloud save, admin sign-in, feature access, feedback)
 
 `card.html` can save a signed-in user's card to the cloud, and `admin.html` uses the same Google sign-in to decide
 who may manage the site. Both use Firebase Authentication (Google) and Cloud Firestore on the free Spark plan; no
@@ -7,8 +7,10 @@ server code. Share links do not use Firebase: the card travels inside the link (
 | File | What |
 |---|---|
 | `assets/js/firebase-config.js` | The project's web config (public identifiers, not secrets). `null` hides the cloud buttons. |
-| `assets/js/cloud.js` | Card editor: sign-in, sync, share links. |
-| `assets/js/admin.js` | Admin page: sign-in gate, admin list, the GitHub token it saves with. |
+| `assets/js/cloud.js` | Card editor: sign-in, sync, share links; the account and access requests for restricted features. |
+| `assets/js/card-value.js` | The 估價 tab: reads `gated/value`, or shows sign-in / request / pending. |
+| `assets/js/site.js` | Every page: the feedback form (its own Firebase app, no sign-in). |
+| `assets/js/admin.js` | Admin page: sign-in gate, admin list, the GitHub token it saves with; 權限 (features, model upload, requests) and 回饋 (feedback inbox). |
 | `assets/js/vendor/firebase.js` | Firebase JS SDK (app, auth, firestore/lite), bundled with esbuild; loaded only when needed. |
 | `firebase/firestore.rules` | Security rules: who can read and write what. Paste into the console (or `firebase deploy --only firestore:rules`). |
 
@@ -24,6 +26,19 @@ server code. Share links do not use Firebase: the card travels inside the link (
 - `requests/{uid}`: an access request from a signed-in account that is not an admin yet; its `label` must be that
   account's own email. Admins approve or dismiss it in admin.html → 設定.
 - `admin/{uid}`: legacy (a token per account, before `config/github`); only read once to migrate, then deleted.
+- `access/{uid}`: `{ label, status, perms, createdAt, updatedAt }` — an account's request for restricted features. The
+  account creates it (pending, no features, labelled with its own verified email) from the card editor's 估價 tab;
+  only admins change it (admin.html → 權限: approve / deny, tick features) or delete it (the account may then ask again).
+- `config/features`: `{ public: { feature: true } }` — restricted features an admin opened to everyone. Anyone can read it.
+- `gated/{feature}`: `{ data, version, updatedAt }` — the data a restricted feature needs. `gated/value` is the
+  account-value model (JSON string): readable by admins, by accounts approved with `perms.value`, or by everyone when
+  `config/features.public.value` is on. Uploaded in admin.html → 權限 → 上傳估價模型.
+- `feedback/{id}`: `{ kind, msg, page, contact, lang, status, createdAt }` — the site-wide feedback form (site.js). Anyone
+  can create one well-formed message, nothing in it names an account; admins read, mark done and delete them in
+  admin.html → 回饋.
+
+After changing `firestore.rules`, paste it into the Firebase console (Firestore Database → Rules → Publish) or run
+`firebase deploy --only firestore:rules`; the site's new features need the new rules to work.
 
 ## Setting up a project
 

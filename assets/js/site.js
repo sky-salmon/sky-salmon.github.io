@@ -40,6 +40,7 @@
     { id: 'gallery', href: pageHref('gallery.html'), label: t('相簿') }
   ];
 
+  const HERE = document.currentScript ? document.currentScript.src : location.href;
   const MARK = `<svg viewBox="0 0 36 36" aria-hidden="true">
     <circle cx="18" cy="13" r="11" fill="#f6d68f" opacity=".45"/>
     <path d="M18 4c3.2 4.6 5.2 7.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0C12.8 11.6 14.8 8.6 18 4z" fill="#f0a24a" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
@@ -62,10 +63,15 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
       </button>
     </div>
-    <nav class="mobile-menu" id="mobile-menu" aria-label="${t('行動版選單')}">${links()}</nav>`;
+    <nav class="mobile-menu" id="mobile-menu" aria-label="${t('行動版選單')}">${links()}<button type="button" class="mm-fb" data-feedback>${t('意見箱')}</button></nav>`;
     document.body.prepend(header);
     // language picker, on pages that load assets/js/i18n.js
     if (window.I18N) header.querySelector('.nav-toggle').before(window.I18N.switcher());
+    const fbBtn = document.createElement('button');
+    fbBtn.type = 'button'; fbBtn.className = 'fb-open'; fbBtn.dataset.feedback = '';
+    fbBtn.setAttribute('aria-label', t('意見箱')); fbBtn.title = t('意見箱');
+    fbBtn.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 4.5h13a1 1 0 0 1 1 1v7.5a1 1 0 0 1-1 1H9l-3.8 3v-3H3.5a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1z"/><path d="M6.5 8.3h7M6.5 11h4.5" stroke-linecap="round"/></svg>';
+    header.querySelector('.nav-toggle').before(fbBtn);
 
     const toggle = header.querySelector('.nav-toggle'), menu = header.querySelector('.mobile-menu');
     toggle.addEventListener('click', () => {
@@ -78,7 +84,7 @@
     footer.className = 'site-footer';
     footer.innerHTML = `<div class="wrap">
       <div class="hand">Made with ♡ for every child of the light</div>
-      <div>sky-salmon · ${t('粉絲自製工具，與 thatgamecompany 無關')} · <a href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a></div>
+      <div>sky-salmon · ${t('粉絲自製工具，與 thatgamecompany 無關')} · <a href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a> · <button type="button" class="link-btn" data-feedback>${t('意見箱')}</button></div>
     </div>`;
     document.body.append(footer);
 
@@ -160,7 +166,76 @@
     els.forEach(el => el.addEventListener('transitionend', settle));
   }
 
-  window.Site = { store, toast, readFileAsDataURL, loadImage, bindDropzone, PAGES, pageURL: () => location.origin + prettyPath(location.pathname) };
+  // ── feedback: anyone can send a note; it lands in Firestore feedback/, which only admins can read ─────────
+  const FB_KINDS = [['bug', t('問題回報')], ['data', t('資料有誤')], ['idea', t('建議')], ['other', t('其他')]];
+  const FB_WAIT = 60000, FB_LAST = 'candle.feedback.last';
+  let fbDialog = null, fbDb = null;
+  function fbScript(src) {
+    return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.append(s); });
+  }
+  async function feedbackDb() {   // its own Firebase app, no sign-in: works on every page, beside the card's cloud save
+    if (fbDb) return fbDb;
+    if (!window.FIREBASE_CONFIG) await fbScript(new URL('firebase-config.js', HERE).href);
+    const CFG = window.FIREBASE_CONFIG;
+    if (!CFG || !CFG.projectId) throw new Error('not configured');
+    const m = await import(new URL('vendor/firebase.js', HERE).href);
+    const app = m.initializeApp(CFG, 'feedback');
+    fbDb = { m, db: m.getFirestore(app) };
+    if (window.FIREBASE_EMULATOR) m.connectFirestoreEmulator(fbDb.db, '127.0.0.1', 8080);   // test harness only
+    return fbDb;
+  }
+  function openFeedback(opener) {
+    if (!fbDialog) {
+      fbDialog = document.createElement('dialog');
+      fbDialog.className = 'fb-dialog';
+      fbDialog.setAttribute('aria-labelledby', 'fb-title');
+      fbDialog.innerHTML = `<form method="dialog" class="fb-form" novalidate>
+        <div class="fb-head"><h2 id="fb-title">${t('意見箱')}</h2>
+          <button type="button" class="fb-x" data-fb-close aria-label="${t('關閉')}"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button></div>
+        <p class="fb-sub">${t('發現問題、資料錯誤或有想法，都可以直接寫給站長。')}</p>
+        <div class="fb-kinds" role="radiogroup" aria-label="${t('意見類型')}">${FB_KINDS.map(([k, z], i) => `<label class="fb-kind"><input type="radio" name="fb-kind" value="${k}"${i === 0 ? ' checked' : ''}><span>${z}</span></label>`).join('')}</div>
+        <label class="fb-field"><span>${t('內容')}</span><textarea id="fb-msg" maxlength="2000" rows="5" required placeholder="${t('例如：名片產生器的 IAP 裡找不到某個禮包；估價的結果跟行情差很多…')}"></textarea><small class="fb-count" id="fb-count">0 / 2000</small></label>
+        <label class="fb-field"><span>${t('聯絡方式（選填）')}</span><input id="fb-contact" maxlength="200" autocomplete="email" placeholder="${t('想收到回覆再留，例如 Email 或 Discord')}"></label>
+        <p class="fb-note">${t('只有站長看得到。請不要寫密碼或帳號登入資料。')}</p>
+        <p class="fb-err" id="fb-err" role="alert" hidden></p>
+        <div class="fb-foot"><button type="button" class="btn" data-fb-close>${t('取消')}</button><button type="submit" class="btn btn-primary" id="fb-send">${t('送出')}</button></div>
+      </form>`;
+      document.body.append(fbDialog);
+      const msg = fbDialog.querySelector('#fb-msg'), err = fbDialog.querySelector('#fb-err'), send = fbDialog.querySelector('#fb-send');
+      msg.addEventListener('input', () => { fbDialog.querySelector('#fb-count').textContent = `${msg.value.length} / 2000`; });
+      fbDialog.addEventListener('click', e => { if (e.target.closest('[data-fb-close]') || e.target === fbDialog) fbDialog.close(); });
+      fbDialog.querySelector('form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const text = msg.value.trim();
+        err.hidden = true;
+        if (!text) { err.textContent = t('請先寫下內容。'); err.hidden = false; msg.focus(); return; }
+        const last = store.get(FB_LAST, 0);
+        if (Date.now() - last < FB_WAIT) { err.textContent = t('剛剛才送過，請過一分鐘再試。'); err.hidden = false; return; }
+        send.disabled = true; send.textContent = t('送出中…');
+        try {
+          const { m, db } = await feedbackDb();
+          await m.setDoc(m.doc(m.collection(db, 'feedback')), {
+            kind: (fbDialog.querySelector('input[name="fb-kind"]:checked') || {}).value || 'other', msg: text.slice(0, 2000),
+            page: (location.pathname + location.search).slice(0, 300), contact: fbDialog.querySelector('#fb-contact').value.trim().slice(0, 200),
+            lang: (document.documentElement.lang || '').slice(0, 20), status: 'new', createdAt: m.serverTimestamp()
+          });
+          store.set(FB_LAST, Date.now());
+          msg.value = ''; fbDialog.querySelector('#fb-contact').value = ''; fbDialog.querySelector('#fb-count').textContent = '0 / 2000';
+          fbDialog.close(); toast(t('已送出，謝謝你的意見！'), 2800);
+        } catch (ex) {
+          console.warn('feedback', ex);
+          err.textContent = t('送不出去：可能是網路連不到 Google 服務，請稍後再試。'); err.hidden = false;
+        } finally { send.disabled = false; send.textContent = t('送出'); }
+      });
+      fbDialog.addEventListener('close', () => { if (fbDialog.opener && document.contains(fbDialog.opener)) fbDialog.opener.focus(); });
+    }
+    fbDialog.opener = opener || document.activeElement;
+    fbDialog.showModal();
+    fbDialog.querySelector('#fb-msg').focus();
+  }
+  document.addEventListener('click', e => { const b = e.target.closest('[data-feedback]'); if (b) { e.preventDefault(); openFeedback(b); } });
+
+  window.Site = { store, toast, readFileAsDataURL, loadImage, bindDropzone, PAGES, openFeedback, pageURL: () => location.origin + prettyPath(location.pathname) };
   renderChrome();
   rise();
 })();

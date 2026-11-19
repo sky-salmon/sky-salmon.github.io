@@ -943,3 +943,10 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 .val-field .select { width: auto; min-width: 150px; padding: 7px 30px 7px 10px; font-size: 13.5px; }
 .val-basis { margin: 0 0 6px; }
 .val-note { margin: 0; font-size: 12px; opacity: .85; }
+
+.val-gate { display: grid; gap: 10px; justify-items: start; padding: 16px; margin: 4px 0 14px; border: 1px dashed var(--line-strong); border-radius: 16px; background: rgba(255, 255, 255, .02); font-size: 14px; line-height: 1.6; color: var(--ink); }
+.val-gate[hidden] { display: none; }
+.val-gate p { margin: 0; }
+.val-gate b { color: var(--accent); font-weight: 600; word-break: break-all; }
+.val-lock { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: rgba(243, 199, 122, .14); color: var(--accent); }
+.val-lock svg { width: 18px; height: 18px; }

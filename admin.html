@@ -8,7 +8,7 @@
 <!-- The GitHub token lives in this page, so nothing from other sites may run here: no inline scripts, and the only
      third-party code is Google's sign-in helper (apis.google.com, required by Firebase's popup sign-in). The token is only
      sent to api.github.com; Firebase (Google sign-in + Firestore) keeps it for the owner's Google account. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://apis.google.com; style-src 'self'; img-src 'self' data: blob:; worker-src 'self'; connect-src 'self' https://api.github.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com; frame-src https://github-pages-de8f7.firebaseapp.com https://accounts.google.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://apis.google.com; style-src 'self'; img-src 'self' data: blob:; worker-src 'self'; connect-src 'self' https://api.github.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com; frame-src https://sky-salmon.firebaseapp.com https://accounts.google.com; base-uri 'none'; form-action 'none'">
 <meta name="theme-color" content="#101211">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/css/admin.css">
@@ -66,6 +66,8 @@
       <button class="tab" role="tab" data-tab="items" aria-selected="false">物品<span class="n" id="n-items"></span></button>
       <button class="tab" role="tab" data-tab="packs" aria-selected="false">禮包<span class="n" id="n-packs"></span></button>
       <button class="tab" role="tab" data-tab="update" aria-selected="false">遊戲更新</button>
+      <button class="tab" role="tab" data-tab="access" aria-selected="false">權限<span class="n" id="n-access"></span></button>
+      <button class="tab" role="tab" data-tab="feedback" aria-selected="false">回饋<span class="n" id="n-feedback"></span></button>
     </nav>
     <span class="spacer"></span>
     <span class="who" id="who"></span>
