@@ -364,6 +364,7 @@
         <div class="field"><span>畢業禮 <span class="hint">${(s.ultimates || []).length} 件 · 從這季的物品裡加</span></span>
           <div class="mini">${(s.ultimates || []).map(n => miniItem(n, 'ult')).join('') || '<span class="hint">還沒有畢業禮</span>'}</div>
           ${itemPicker('ult', '加入畢業禮：搜尋這季的物品')}</div>
+        <label class="field"><span>別稱 <span class="hint">搜尋用，用、分隔，例如 阿努、耳墜</span></span><input class="input" data-s="aka" value="${esc((s.aka || []).join('、'))}"></label>
         <label class="field"><span>備註</span><textarea data-s="note">${esc(s.note || '')}</textarea></label>
         <div class="actions">${orig ? '' : '<span class="tag new">新季節</span>'}${delBlock('這個季節')}</div>
       </div>`;
@@ -451,7 +452,10 @@
     if (!ui.sel) { if (el.dataset.pick) showResults(el); return; }
     if (el.dataset.s) {
       if (el.dataset.s === 'code') return;
-      seasonByCode(selKey())[el.dataset.s] = el.value; changed(true); return;
+      const se = seasonByCode(selKey());
+      if (el.dataset.s === 'aka') { const a = el.value.split(/[、,，;；]/).map(x => x.trim()).filter(Boolean); if (a.length) se.aka = [...new Set(a)]; else delete se.aka; }
+      else se[el.dataset.s] = el.value;
+      changed(true); return;
     }
     if (el.dataset.p) {
       const p = W.packs.find(x => x.id === selKey()), k = el.dataset.p;

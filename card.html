@@ -261,7 +261,6 @@
         <span class="picker-count"><b id="picker-status" aria-live="polite">已選 0 個</b><button type="button" class="text-link" id="picker-clear">全部取消</button></span>
         <div class="picker-tray" id="picker-tray" aria-label="已選的物品"></div>
       </div>
-      <label class="picker-price" id="picker-price" hidden><span>新加入的標價</span><select class="select" id="price-select" aria-label="新加入物品的標價"></select></label>
       <button type="button" class="btn btn-primary picker-done" id="picker-ok">完成</button>
     </div>
     <!-- leaving with picks that are not on the card yet -->
@@ -282,13 +281,6 @@
     <span class="pop-titles"><b id="pop-name">物品</b><small id="pop-sub"></small></span>
     <button type="button" class="row-btn" id="pop-close" aria-label="關閉"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg></button>
   </div>
-  <label class="pop-field" id="pop-price-row">
-    <span>價格</span>
-    <span class="pop-price">
-      <select class="select" id="pop-currency" aria-label="幣別"><option>US$</option><option>NT$</option><option>HK$</option><option>RM</option><option>¥</option><option>€</option></select>
-      <input class="input" id="pop-price" type="text" inputmode="decimal" maxlength="9" placeholder="不標價" aria-label="價格">
-    </span>
-  </label>
   <div class="pop-field" id="pop-count-row">
     <span>數量</span>
     <span class="stepper"><button type="button" id="pop-minus" aria-label="減少">−</button><input class="input" id="pop-count" type="text" inputmode="numeric" maxlength="4" aria-label="數量"><button type="button" id="pop-plus" aria-label="增加">＋</button></span>
