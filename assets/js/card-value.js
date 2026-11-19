@@ -15,7 +15,15 @@
   // t('五週年斗') t('小白花')
   // t('傘') t('篝火') t('白鳥') t('耳墜') t('阿努') t('不死鳥') t('玫瑰') t('羽毛') t('白梟') t('眼鏡')
 
-  let model = null, modelP = null, items = null, timer = 0, gate = null, busy = false;
+  // how close the model came on accounts it had not seen (leave-one-out over the posts it was fitted on), for models
+  // uploaded before they carried their own `accuracy`. in_range: share of asking prices inside the 常見行情 band.
+  const ACCURACY = {
+    '0.4': { n: 85, in_range: 0.49, within30: 0.53, median_miss: 0.25, segments: [
+      { from: '00', to: '06', n: 15, in_range: 0.67, bias: -0.01 }, { from: '07', to: '15', n: 34, in_range: 0.53, bias: -0.07 },
+      { from: '16', to: '24', n: 15, in_range: 0.33, bias: 0.14 }, { from: '25', to: '99', n: 21, in_range: 0.43, bias: 0.03 }] }
+  };
+  const SG_KEY = 'candle.card.value.sent';
+  let model = null, modelP = null, items = null, profileCur = null, timer = 0, gate = null, busy = false, last = null;
   const answers = Object.assign({ fake: false, binding: 'unknown', dirty: false, cur: 'TWD' }, read());
 
   function read() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
@@ -164,7 +172,7 @@
     $('#val-fake-row').hidden = e.empty || !e.h.missing;
     if (e.empty) {
       range.innerHTML = `<span class="val-empty">${t('先在名片的 PASS 區加入季卡和畢業禮，就能估價。')}</span>`;
-      why.innerHTML = ''; basis.textContent = '';
+      why.innerHTML = ''; basis.textContent = ''; $('#val-acc').hidden = true; $('#val-sg').hidden = true; last = null;
       return;
     }
     range.innerHTML = `<small class="val-cap">${t('常見行情')}</small><span class="val-band">${money(e.rangeLow)}<span class="val-dash" aria-hidden="true">–</span>${money(e.rangeHigh)}</span>
@@ -185,15 +193,71 @@
     if (adj.length) lines.push([t('調整'), adj.join('、'), '×' + e.mult.toFixed(2)]);
     why.innerHTML = lines.map(([k, v, x]) => `<li><span class="k">${k}</span><span class="v">${v}</span><span class="x mono">${x}</span></li>`).join('');
     const n = e.near.length, level = n >= 5 ? t('中') : n >= 2 ? t('偏低') : t('很低');
-    const err = Math.round((model.typical_error || 0.35) * 100);
-    let txt = t('可信度：{level}。相近起點的參考貼文 {n} 筆（{from}～{to}，公開社團）。同類帳號的實際開價常差 ±{err}%：衣櫃、徽章、蠟燭這些名片外的東西影響很大。', {
-      level, n, from: model.basis.from, to: model.basis.to, err });
-    if (h.start >= '16' && h.start <= '24') txt += ' ' + t('這段季節起的號，模型平均估得偏低約一成半，可以往常見行情的上緣看。');
-    basis.textContent = txt;
+    basis.textContent = t('可信度：{level}。相近起點的參考貼文 {n} 筆（{from}～{to}，公開社團）。衣櫃、蠟燭和名片上沒放的東西都會讓實際價格差很多。', {
+      level, n, from: model.basis.from, to: model.basis.to });
+    renderAccuracy(h.start);
+    last = e; $('#val-sg').hidden = false;
+    $('#val-sg-cur').textContent = CUR[answers.cur].trim();
+  }
+  const pct = x => Math.round(x * 100) + '%';
+  function renderAccuracy(start) {
+    const A = model.accuracy || ACCURACY[model.version], box = $('#val-acc');
+    if (!A) { box.hidden = true; return; }
+    const seg = (A.segments || []).find(g => start >= g.from && start <= g.to);
+    const segName = seg && (seg.from <= '02' ? t('{to}以前起', { to: seasonName(seg.to) }) : seg.to >= '90' ? t('{from}以後起', { from: seasonName(seg.from) })
+      : t('{from}～{to}起', { from: seasonName(seg.from), to: seasonName(seg.to) }));
+    const lean = !seg ? '' : seg.bias > 0.05 ? t('實際開價平均比估價高約 {p}，可以往上緣看。', { p: pct(seg.bias) })
+      : seg.bias < -0.05 ? t('實際開價平均比估價低約 {p}。', { p: pct(-seg.bias) }) : t('沒有明顯估高或估低。');
+    box.hidden = false;
+    box.innerHTML = `<p class="val-acc-head">${t('準度參考')}<span class="hint">${t('v{v}・用 {n} 筆真實開價回測', { v: esc(model.version), n: A.n })}</span></p>
+      <div class="val-acc-grid">
+        <div><b>${pct(A.in_range)}</b><small>${t('開價落在常見行情內')}</small></div>
+        <div><b>${pct(A.within30)}</b><small>${t('誤差在 ±30% 內')}</small></div>
+        <div><b>±${pct(A.median_miss)}</b><small>${t('一般誤差（中位數）')}</small></div>
+      </div>
+      ${seg ? `<p class="hint">${t('你這類帳號（{name}，{n} 筆）：{p} 落在常見行情內。', { name: segName, n: seg.n, p: pct(seg.in_range) })}${lean}</p>` : ''}`;
   }
 
-  function refresh(cardItems) {
-    items = cardItems;
+  // ── "你認為值多少": a suggested price, with what the estimate saw, for refitting item values later ──
+  function snapshot() {
+    const a = analyse(items), h = last.h, names = new Set();
+    Object.entries(items || {}).forEach(([sec, list]) => (list || []).forEach(it => { if (it.k === 'c' && it.p && sec !== 'spells') names.add(D.parsePath(it.p).name); }));
+    const cur = {};
+    ['candle', 'ascended', 'heart', 'seasonCandle', 'seasonHeart', 'ticket'].forEach(k => { cur[k] = String((profileCur || {})[k] || '').slice(0, 12); });
+    return { start: h.start, kind: h.kind, missing: h.missing || 0, older: h.older || 0, seasons: [...a.seasons].sort().slice(0, 80),
+      ults: [...a.ults].slice(0, 200), items: [...names].slice(0, 3000), packs: a.packs.map(p => p.id).slice(0, 600), badges: a.badges,
+      currency: cur, binding: answers.binding, fake: !!answers.fake, dirty: !!answers.dirty };
+  }
+  const toTwd = (v, cur) => v / ((model.market || {})[cur] || 1) * (model.fx[cur] || 1);
+  async function sendSuggestion(ev) {
+    ev.preventDefault();
+    const msg = $('#val-sg-msg'), btn = $('#val-sg-send'), raw = $('#val-sg-price').value.replace(/[^\d.]/g, ''), price = Math.round(parseFloat(raw));
+    if (!model || !last || last.empty) return;
+    if (!(price > 0 && price < 10000000)) { msg.textContent = t('請填一個數字，例如 6500。'); $('#val-sg-price').focus(); return; }
+    let sent = {}; try { sent = JSON.parse(localStorage.getItem(SG_KEY)) || {}; } catch { /* private mode */ }
+    if (sent.at && Date.now() - sent.at < 60000) { msg.textContent = t('剛送過一筆，等一分鐘再送。'); return; }
+    btn.disabled = true; msg.textContent = t('送出中…');
+    try {
+      const { fb, db, user } = await window.Cloud.account();
+      const e = last, r = n => Math.round(n);
+      await fb.setDoc(fb.doc(fb.collection(db, 'valueSuggestions')), {   // auto id (the bundled SDK has no addDoc)
+        model: String(model.version), cur: answers.cur, price, priceTwd: r(toTwd(price, answers.cur)),
+        est: { center: r(e.center), low: r(e.rangeLow), high: r(e.rangeHigh), quick: r(e.quick), patient: r(e.patient) },
+        source: $('#val-sg-source').value, note: $('#val-sg-note').value.trim().slice(0, 500), acct: snapshot(),
+        uid: user ? user.uid : '', lang: (window.I18N && window.I18N.lang) || 'zh-Hant', status: 'new', createdAt: fb.serverTimestamp()
+      });
+      try { localStorage.setItem(SG_KEY, JSON.stringify({ at: Date.now() })); } catch { /* private mode */ }
+      $('#val-sg-price').value = ''; $('#val-sg-note').value = '';
+      msg.textContent = t('收到了，謝謝！累積夠多之後會拿來調整估價。');
+    } catch (err) {
+      console.warn('value suggestion', err);
+      msg.textContent = t('沒送出去：{why}', { why: err.code === 'permission-denied' ? t('這個帳號還不能使用估價') : t('連不到 Google 服務，請稍後再試') });
+    }
+    btn.disabled = false;
+  }
+
+  function refresh(cardItems, cur) {
+    items = cardItems; if (cur) profileCur = cur;
     clearTimeout(timer);
     if ($('#pane-value').hidden) return;   // nothing to fetch until the tab is open
     timer = setTimeout(() => loadModel().then(() => D.loadCatalog()).then(render).catch(() => render()), 120);
@@ -218,6 +282,8 @@
     };
     [fake, bind, dirty, cur].forEach(el => el.addEventListener('change', on));
     $('#val-gate').addEventListener('click', e => { const b = e.target.closest('[data-val]'); if (b && !busy) act(b.dataset.val); });
+    $('#val-sg').addEventListener('submit', sendSuggestion);
+    $('#val-sg-price').addEventListener('input', () => { $('#val-sg-msg').textContent = ''; });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
 

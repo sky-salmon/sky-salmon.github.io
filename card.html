@@ -213,7 +213,21 @@
                 </select></label>
               <label class="val-check"><input type="checkbox" id="val-dirty"><span>有刷退禮包或髒號紀錄</span></label>
             </div>
+            <div class="val-acc" id="val-acc"></div>
             <p class="hint val-basis" id="val-basis"></p>
+            <form class="val-sg" id="val-sg" novalidate>
+              <p class="pane-title">覺得估得不準？</p>
+              <p class="hint">填你認為這個號值多少，累積起來會用來重新計算每個季節、畢業禮和禮包的價值。</p>
+              <div class="val-sg-row">
+                <label class="val-sg-price"><span class="val-sg-cur" id="val-sg-cur">NT$</span><input class="input" id="val-sg-price" type="text" inputmode="numeric" maxlength="9" autocomplete="off" placeholder="例如 6500" aria-label="你認為的價格"></label>
+                <select class="select" id="val-sg-source" aria-label="這個數字是">
+                  <option value="sold">實際成交價</option><option value="ask">看到的開價</option><option value="own">我的號，想賣的價</option><option value="feel">憑感覺</option>
+                </select>
+              </div>
+              <textarea class="input val-sg-note" id="val-sg-note" maxlength="500" rows="2" placeholder="為什麼（選填）：例如有絕版禮包沒算到、這種號最近很搶手" aria-label="原因（選填）"></textarea>
+              <div class="val-sg-foot"><button type="submit" class="btn btn-primary btn-sm" id="val-sg-send">送出建議</button><span class="hint val-sg-msg" id="val-sg-msg" aria-live="polite"></span></div>
+              <p class="hint val-sg-privacy">會一起送出名片上的季節、物品、徽章數、蠟燭數和上面的選項；不含名字、頭像和備註。</p>
+            </form>
             </div>
             <p class="hint val-note">依公開交易社團的開價和已售貼文推估，只是行情參考，不是成交保證。帳號買賣違反官方服務條款，可能被原主找回或封號。</p>
           </div>
