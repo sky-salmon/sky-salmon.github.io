@@ -10,11 +10,11 @@
   const CUR = { TWD: 'NT$', CNY: 'RMB ', MYR: 'RM', HKD: 'HK$' };
   const TIER_RANK = { C: 0, B: 1, A: 2, S: 3 };
   // looked up by value below, listed here for the translation build:
-  // t('無斷') t('偽無斷') t('微斷') t('斷季') t('大斷') t('綁定全可換') t('1 個綁定不能出') t('2 個以上綁定不能出')
+  // t('無斷') t('偽無斷') t('微斷') t('斷季') t('大斷') t('簡號') t('綁定全可換') t('1 個綁定不能出') t('2 個以上綁定不能出')
   // t('傘') t('篝火') t('白鳥') t('耳墜') t('阿努') t('不死鳥') t('玫瑰') t('羽毛') t('白梟') t('眼鏡')
 
   let model = null, modelP = null, items = null, timer = 0;
-  const answers = Object.assign({ fake: false, binding: 'unknown', h0: false, dirty: false, cur: 'TWD' }, read());
+  const answers = Object.assign({ fake: false, binding: 'unknown', dirty: false, cur: 'TWD' }, read());
 
   function read() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
   function write() { try { localStorage.setItem(KEY, JSON.stringify(answers)); } catch { /* private mode */ } }
@@ -75,9 +75,10 @@
       }, 0);
       offer(B[run] * model.streak['無斷'] + extra, run, '無斷', 0, older.length);
     }
-    if (!best) {  // scattered seasons: an old-account floor from the oldest one
-      const s = owned[0];
-      offer(B[s] * 0.6, s, '大斷', need(s).filter(c => !seasons.has(c)).length, 0);
+    if (!best) {  // scattered seasons: a thin old account (簡號) or a mostly broken one, from the oldest season
+      const s = owned[0], span = need(s), miss = span.filter(c => !seasons.has(c)).length;
+      const kind = span.length && (span.length - miss) / span.length < 0.3 ? '簡號' : '大斷';
+      offer(B[s] * model.streak[kind], s, kind, miss, 0);
     }
     return best;
   }
@@ -87,20 +88,19 @@
     if (!h) return { empty: true };
     const hot = [...a.ults].map(n => model.hot_ultimates[n]).filter(Boolean)
       .sort((x, y) => (x.season || '').localeCompare(y.season || ''));
-    const ultMult = hot.reduce((m, u) => m * u.mult, 1);
+    const ultVal = hot.reduce((v, u) => v + u.twd, 0);        // traders price these as items of their own
     const tierCount = { S: 0, A: 0, B: 0, C: 0 };
-    const packVal = a.packs.reduce((v, p) => { tierCount[p.tier]++; return v + (p.usd || 10) * model.pack_rate[p.tier]; }, 0);
+    const packVal = a.packs.reduce((v, p) => { tierCount[p.tier]++; return v + model.pack_value[p.tier]; }, 0);
     let mult = model.binding[answers.binding] || 1;
-    if (answers.h0) mult *= model.height0;
     if (answers.dirty) mult *= model.dirty;
-    const center = (h.value * ultMult + packVal) * mult;
+    const center = (h.value + ultVal + packVal) * mult;     // TWD, Taiwan market; money() moves it to the chosen market
     const near = model.comparables.filter(c => Math.abs(+c.start - +h.start) <= 2);
-    return { h, hot, ultMult, tierCount, packVal, mult, center, low: center * model.spread.low, high: center * model.spread.high,
+    return { h, hot, ultVal, tierCount, packVal, mult, center, low: center * model.spread.low, high: center * model.spread.high,
       near, nSeasons: a.seasons.size };
   }
 
   function money(twd) {
-    const cur = answers.cur, v = twd / (model.fx[cur] || 1);
+    const cur = answers.cur, v = twd * ((model.market || {})[cur] || 1) / (model.fx[cur] || 1);
     const step = cur === 'TWD' ? 100 : 10;
     return CUR[cur] + (Math.round(v / step) * step).toLocaleString('en-US');
   }
@@ -123,17 +123,16 @@
       : h.missing ? t('{season}起{kind}（缺 {n} 季）', { season: seasonName(h.start), kind: t(h.kind), n: h.missing })
         : t('{season}起{kind}', { season: seasonName(h.start), kind: t(h.kind) });
     lines.push([t('季節'), kind, '']);
-    if (e.hot.length) lines.push([t('老畢業禮'), e.hot.map(u => t(u.nick)).join('、'), '×' + e.ultMult.toFixed(2)]);
+    if (e.hot.length) lines.push([t('老畢業禮'), e.hot.map(u => t(u.nick)).join('、'), '+' + money(e.ultVal)]);
     const tc = e.tierCount, nPacks = tc.S + tc.A + tc.B + tc.C;
     if (nPacks) lines.push([t('禮包'), t('絕版 {s}・少見 {ab}・常見 {c}', { s: tc.S, ab: tc.A + tc.B, c: tc.C }), '+' + money(e.packVal)]);
     const adj = [];
     if (answers.binding !== 'unknown') adj.push(t({ all_free: '綁定全可換', one_locked: '1 個綁定不能出', more_locked: '2 個以上綁定不能出' }[answers.binding]));
-    if (answers.h0) adj.push(t('0 號身高'));
     if (answers.dirty) adj.push(t('刷退或髒號'));
     if (adj.length) lines.push([t('調整'), adj.join('、'), '×' + e.mult.toFixed(2)]);
     why.innerHTML = lines.map(([k, v, x]) => `<li><span class="k">${k}</span><span class="v">${v}</span><span class="x mono">${x}</span></li>`).join('');
     const n = e.near.length, level = n >= 5 ? t('中') : n >= 2 ? t('偏低') : t('很低');
-    basis.textContent = t('可信度：{level}。相近起點的參考貼文 {n} 筆（{from}～{to}，公開社團開價）。', {
+    basis.textContent = t('可信度：{level}。相近起點的參考貼文 {n} 筆（{from}～{to}，公開社團）。', {
       level, n, from: model.basis.from, to: model.basis.to });
   }
 
@@ -144,14 +143,14 @@
   }
 
   function wire() {
-    const fake = $('#val-fake'), bind = $('#val-binding'), h0 = $('#val-h0'), dirty = $('#val-dirty'), cur = $('#val-cur');
+    const fake = $('#val-fake'), bind = $('#val-binding'), dirty = $('#val-dirty'), cur = $('#val-cur');
     if (!fake) return;
-    fake.checked = answers.fake; bind.value = answers.binding; h0.checked = answers.h0; dirty.checked = answers.dirty; cur.value = answers.cur;
+    fake.checked = answers.fake; bind.value = answers.binding; dirty.checked = answers.dirty; cur.value = answers.cur;
     const on = () => {
-      Object.assign(answers, { fake: fake.checked, binding: bind.value, h0: h0.checked, dirty: dirty.checked, cur: cur.value });
+      Object.assign(answers, { fake: fake.checked, binding: bind.value, dirty: dirty.checked, cur: cur.value });
       write(); render();
     };
-    [fake, bind, h0, dirty, cur].forEach(el => el.addEventListener('change', on));
+    [fake, bind, dirty, cur].forEach(el => el.addEventListener('change', on));
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
 

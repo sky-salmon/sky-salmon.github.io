@@ -1,13 +1,14 @@
 {
- "_about": "Account value estimate for the card maker. Beta: asking prices from public FB trading groups, hand-anchored per start season; low/high spread not yet calibrated on sales.",
- "version": "0.1",
+ "_about": "Account value estimate for the card maker. Beta. Fitted on asking prices (and asking prices of posts later marked sold) from public FB trading groups; value = market x (base(start season) x streak + old ultimates + packs) x binding x refunds.",
+ "version": "0.2",
  "updated": "2026-11-19",
  "beta": true,
  "basis": {
-  "posts": 110,
-  "accounts": 98,
-  "from": "2026-11-02",
-  "to": "2026-11-19"
+  "accounts": 73,
+  "sold": 13,
+  "from": "2026-06-14",
+  "to": "2026-11-19",
+  "fit_r2_log": 0.896
  },
  "current_season": "32",
  "fx": {
@@ -16,44 +17,52 @@
   "CNY": 4.94,
   "HKD": 3.94
  },
+ "market": {
+  "TWD": 1.0,
+  "MYR": 0.927,
+  "CNY": 1.042,
+  "HKD": 0.879
+ },
  "base": {
-  "02": 65000,
-  "03": 55000,
-  "04": 45000,
-  "05": 35000,
-  "06": 17000,
-  "07": 8000,
-  "08": 7500,
-  "09": 6000,
-  "10": 5500,
-  "11": 4800,
-  "12": 4500,
-  "13": 4300,
-  "14": 4000,
-  "15": 3900,
-  "16": 3800,
-  "17": 3600,
-  "18": 3500,
-  "19": 3400,
-  "20": 3300,
-  "21": 3200,
-  "22": 3000,
-  "23": 2900,
-  "24": 2800,
-  "25": 2600,
-  "26": 2400,
-  "27": 2200,
-  "28": 2000,
-  "29": 1900,
-  "30": 1700,
-  "31": 1500,
-  "32": 1300
+  "02": 49160,
+  "03": 42740,
+  "04": 37160,
+  "05": 32300,
+  "06": 17970,
+  "07": 5960,
+  "08": 5960,
+  "09": 5960,
+  "10": 4790,
+  "11": 3620,
+  "12": 3620,
+  "13": 3620,
+  "14": 3620,
+  "15": 3580,
+  "16": 3370,
+  "17": 3320,
+  "18": 3280,
+  "19": 3240,
+  "20": 3200,
+  "21": 3160,
+  "22": 3160,
+  "23": 3160,
+  "24": 3160,
+  "25": 3160,
+  "26": 3070,
+  "27": 2490,
+  "28": 2020,
+  "29": 1640,
+  "30": 1330,
+  "31": 1220,
+  "32": 1130
  },
  "streak": {
-  "無斷": 1.5,
-  "偽無斷": 1.3,
-  "微斷": 1.1,
-  "斷季": 1.0
+  "無斷": 1.452,
+  "偽無斷": 1.454,
+  "微斷": 1.15,
+  "斷季": 1.0,
+  "大斷": 0.728,
+  "簡號": 0.457
  },
  "older_season_share": 0.6,
  "hot_ultimates": {
@@ -61,68 +70,68 @@
    "zh": "追光季畢業禮 大傘",
    "nick": "傘",
    "season": "03",
-   "mult": 1.12
+   "twd": 14900
   },
   "CharSkyKid_Prop_AP04Bonfire": {
    "zh": "歸屬季畢業禮 篝火",
    "nick": "篝火",
    "season": "04",
-   "mult": 1.12
+   "twd": 14800
   },
   "CharSkyKid_Mask_APDefault": {
    "zh": "音韻季畢業禮 白鳥",
    "nick": "白鳥",
    "season": "05",
-   "mult": 1.12
+   "twd": 40900
   },
   "CharSkyKid_Horn_AP06Tassel": {
    "zh": "魔法季畢業禮 耳墜",
    "nick": "耳墜",
    "season": "06",
-   "mult": 1.12
+   "twd": 8300
   },
   "CharSkyKid_Mask_AP08Wolf": {
    "zh": "預言季畢業禮 阿努",
    "nick": "阿努",
    "season": "08",
-   "mult": 1.06
+   "twd": 4000
   },
   "CharSkyKid_Wing_AP09Phoenix_01": {
    "zh": "夢想季畢業禮 不死鳥斗篷",
    "nick": "不死鳥",
    "season": "09",
-   "mult": 1.06
+   "twd": 800
   },
   "CharSkyKid_Prop_AP11Rose_01": {
    "zh": "小王子季畢業禮 玫瑰",
    "nick": "玫瑰",
    "season": "11",
-   "mult": 1.06
+   "twd": 900
   },
   "CharSkyKid_Horn_AP12DeluxeFeather_01": {
    "zh": "飛翔季畢業禮 羽毛頭飾",
    "nick": "羽毛",
    "season": "12",
-   "mult": 1.06
+   "twd": 700
   },
   "CharSkyKid_Mask_AP14LongTufts_01": {
    "zh": "表演季畢業禮 白梟",
    "nick": "白梟",
    "season": "14",
-   "mult": 1.06
+   "twd": 1200
   },
   "CharSkyKid_Horn_AP19Glasses": {
    "zh": "拾光季畢業禮 眼鏡",
    "nick": "眼鏡",
    "season": "19",
-   "mult": 1.06
+   "twd": 600
   }
  },
- "pack_rate": {
-  "S": 12,
-  "A": 6,
-  "B": 3,
-  "C": 1
+ "pack_value": {
+  "S": 80,
+  "A": 40,
+  "B": 25,
+  "C": 12
  },
  "pack_tiers": {
   "XSNC01": "C",
@@ -332,16 +341,15 @@
   "wiki:gratitude-fur": "S"
  },
  "binding": {
-  "all_free": 1.05,
-  "one_locked": 0.92,
-  "more_locked": 0.85,
+  "all_free": 1.03,
+  "one_locked": 0.97,
+  "more_locked": 0.93,
   "unknown": 1.0
  },
- "height0": 1.05,
- "dirty": 0.5,
+ "dirty": 0.496,
  "spread": {
-  "low": 0.8,
-  "high": 1.15
+  "low": 0.83,
+  "high": 1.05
  },
  "comparables": [
   {
@@ -349,13 +357,13 @@
    "kind": "斷季",
    "ults": [
     "阿努",
-    "不死鳥斗篷",
+    "不死鳥",
     "玫瑰",
     "白梟",
     "眼鏡"
    ],
-   "packs": "",
-   "twd": 8500.0,
+   "twd": 8500,
+   "cur": "TWD",
    "date": "2026-11-19",
    "sold": false
   },
@@ -363,44 +371,121 @@
    "start": "30",
    "kind": "無斷",
    "ults": [],
-   "packs": 32,
-   "twd": 2400.0,
+   "twd": 2400,
+   "cur": "TWD",
    "date": "2026-11-19",
    "sold": false
   },
   {
+   "start": "20",
+   "kind": "未標",
+   "ults": [],
+   "twd": 1740,
+   "cur": "TWD",
+   "date": "2026-11-18",
+   "sold": false
+  },
+  {
+   "start": "23",
+   "kind": "未標",
+   "ults": [],
+   "twd": 5020,
+   "cur": "MYR",
+   "date": "2026-11-18",
+   "sold": false
+  },
+  {
+   "start": "32",
+   "kind": "未標",
+   "ults": [],
+   "twd": 1000,
+   "cur": "TWD",
+   "date": "2026-11-18",
+   "sold": false
+  },
+  {
    "start": "09",
-   "kind": "有斷",
+   "kind": "斷季",
    "ults": [
-    "不死鳥斗篷",
+    "不死鳥",
     "玫瑰",
-    "羽毛頭飾"
+    "羽毛"
    ],
-   "packs": 32,
-   "twd": 7000.0,
+   "twd": 7000,
+   "cur": "TWD",
    "date": "2026-11-17",
    "sold": false
   },
   {
    "start": "07",
-   "kind": "",
+   "kind": "未標",
    "ults": [
     "阿努",
-    "不死鳥斗篷",
+    "不死鳥",
     "白梟"
    ],
-   "packs": "中禮",
-   "twd": 8100.0,
+   "twd": 8100,
+   "cur": "MYR",
+   "date": "2026-11-17",
+   "sold": false
+  },
+  {
+   "start": "04",
+   "kind": "微斷",
+   "ults": [
+    "篝火",
+    "白鳥"
+   ],
+   "twd": 88000,
+   "cur": "TWD",
+   "date": "2026-11-17",
+   "sold": false
+  },
+  {
+   "start": "06",
+   "kind": "簡",
+   "ults": [
+    "耳墜"
+   ],
+   "twd": 10000,
+   "cur": "TWD",
    "date": "2026-11-17",
    "sold": false
   },
   {
    "start": "21",
-   "kind": "",
+   "kind": "未標",
    "ults": [],
-   "packs": "少禮",
-   "twd": 930.0,
+   "twd": 930,
+   "cur": "MYR",
    "date": "2026-11-17",
+   "sold": false
+  },
+  {
+   "start": "08",
+   "kind": "未標",
+   "ults": [
+    "阿努",
+    "玫瑰",
+    "羽毛",
+    "白梟"
+   ],
+   "twd": 10530,
+   "cur": "MYR",
+   "date": "2026-11-17",
+   "sold": false
+  },
+  {
+   "start": "08",
+   "kind": "未標",
+   "ults": [
+    "阿努",
+    "玫瑰",
+    "眼鏡"
+   ],
+   "twd": 14000,
+   "cur": "TWD",
+   "date": "2026-11-18",
    "sold": false
   },
   {
@@ -409,28 +494,49 @@
    "ults": [
     "眼鏡"
    ],
-   "packs": "微禮",
-   "twd": 4500.0,
+   "twd": 4500,
+   "cur": "TWD",
    "date": "2026-11-17",
    "sold": false
   },
   {
    "start": "14",
-   "kind": "",
+   "kind": "未標",
    "ults": [
     "白梟"
    ],
-   "packs": "多禮",
-   "twd": 7690.0,
+   "twd": 7700,
+   "cur": "MYR",
    "date": "2026-11-16",
+   "sold": false
+  },
+  {
+   "start": "14",
+   "kind": "未標",
+   "ults": [
+    "白梟",
+    "眼鏡"
+   ],
+   "twd": 2880,
+   "cur": "HKD",
+   "date": "2026-11-15",
    "sold": false
   },
   {
    "start": "06",
    "kind": "偽無斷",
    "ults": [],
-   "packs": "多禮",
-   "twd": 38000.0,
+   "twd": 38000,
+   "cur": "TWD",
+   "date": "2026-11-13",
+   "sold": false
+  },
+  {
+   "start": "24",
+   "kind": "未標",
+   "ults": [],
+   "twd": 5200,
+   "cur": "TWD",
    "date": "2026-11-13",
    "sold": false
   },
@@ -438,24 +544,33 @@
    "start": "16",
    "kind": "偽無斷",
    "ults": [],
-   "packs": "",
-   "twd": 5100.0,
+   "twd": 5100,
+   "cur": "MYR",
    "date": "2026-11-15",
    "sold": true
+  },
+  {
+   "start": "17",
+   "kind": "未標",
+   "ults": [],
+   "twd": 2000,
+   "cur": "TWD",
+   "date": "2026-11-11",
+   "sold": false
   },
   {
    "start": "11",
    "kind": "無斷",
    "ults": [
-    "大傘",
+    "傘",
     "篝火",
     "玫瑰",
-    "羽毛頭飾",
+    "羽毛",
     "白梟",
     "眼鏡"
    ],
-   "packs": "",
-   "twd": 46140.0,
+   "twd": 46170,
+   "cur": "MYR",
    "date": "2026-11-11",
    "sold": false
   },
@@ -463,34 +578,58 @@
    "start": "06",
    "kind": "斷季",
    "ults": [],
-   "packs": "",
-   "twd": 16000.0,
+   "twd": 16000,
+   "cur": "TWD",
    "date": "2026-11-10",
+   "sold": false
+  },
+  {
+   "start": "06",
+   "kind": "未標",
+   "ults": [
+    "耳墜",
+    "阿努",
+    "白梟"
+   ],
+   "twd": 15810,
+   "cur": "CNY",
+   "date": "2026-11-09",
    "sold": false
   },
   {
    "start": "25",
    "kind": "無斷",
    "ults": [],
-   "packs": 46,
-   "twd": 4900.0,
+   "twd": 4900,
+   "cur": "TWD",
    "date": "2026-11-08",
    "sold": false
   },
   {
+   "start": "08",
+   "kind": "簡",
+   "ults": [
+    "阿努"
+   ],
+   "twd": 5670,
+   "cur": "MYR",
+   "date": "2026-11-18",
+   "sold": false
+  },
+  {
    "start": "06",
-   "kind": "近無斷",
+   "kind": "偽無斷",
    "ults": [
     "耳墜",
     "阿努",
-    "不死鳥斗篷",
+    "不死鳥",
     "玫瑰",
-    "羽毛頭飾",
+    "羽毛",
     "白梟",
     "眼鏡"
    ],
-   "packs": "",
-   "twd": 32000.0,
+   "twd": 32000,
+   "cur": "TWD",
    "date": "2026-11-18",
    "sold": false
   },
@@ -501,8 +640,8 @@
     "白梟",
     "眼鏡"
    ],
-   "packs": "",
-   "twd": 5910.0,
+   "twd": 5910,
+   "cur": "MYR",
    "date": "2026-11-18",
    "sold": false
   },
@@ -510,8 +649,8 @@
    "start": "06",
    "kind": "無斷",
    "ults": [],
-   "packs": "",
-   "twd": 43000.0,
+   "twd": 43000,
+   "cur": "TWD",
    "date": "2026-11-18",
    "sold": false
   },
@@ -519,8 +658,8 @@
    "start": "30",
    "kind": "無斷",
    "ults": [],
-   "packs": "",
-   "twd": 2200.0,
+   "twd": 2200,
+   "cur": "TWD",
    "date": "2026-11-18",
    "sold": false
   },
@@ -528,43 +667,122 @@
    "start": "15",
    "kind": "無斷",
    "ults": [],
-   "packs": "",
-   "twd": 3640.0,
+   "twd": 3640,
+   "cur": "MYR",
    "date": "2026-11-17",
    "sold": false
   },
   {
    "start": "07",
-   "kind": "",
+   "kind": "簡",
    "ults": [
     "阿努",
-    "不死鳥斗篷"
+    "不死鳥"
    ],
-   "packs": "",
-   "twd": 5000.0,
+   "twd": 5000,
+   "cur": "TWD",
    "date": "2026-11-17",
    "sold": false
   },
   {
    "start": "31",
-   "kind": "",
+   "kind": "未標",
    "ults": [],
-   "packs": "",
-   "twd": 700.0,
+   "twd": 700,
+   "cur": "TWD",
+   "date": "2026-11-15",
+   "sold": false
+  },
+  {
+   "start": "11",
+   "kind": "未標",
+   "ults": [
+    "玫瑰",
+    "羽毛",
+    "白梟"
+   ],
+   "twd": 5000,
+   "cur": "TWD",
+   "date": "2026-11-15",
+   "sold": false
+  },
+  {
+   "start": "11",
+   "kind": "未標",
+   "ults": [
+    "玫瑰",
+    "羽毛",
+    "白梟"
+   ],
+   "twd": 5500,
+   "cur": "TWD",
+   "date": "2026-11-15",
+   "sold": false
+  },
+  {
+   "start": "08",
+   "kind": "未標",
+   "ults": [
+    "阿努",
+    "玫瑰",
+    "羽毛",
+    "眼鏡"
+   ],
+   "twd": 15000,
+   "cur": "TWD",
+   "date": "2026-11-15",
+   "sold": false
+  },
+  {
+   "start": "06",
+   "kind": "簡",
+   "ults": [
+    "耳墜",
+    "阿努"
+   ],
+   "twd": 23000,
+   "cur": "TWD",
    "date": "2026-11-15",
    "sold": false
   },
   {
    "start": "07",
-   "kind": "",
+   "kind": "未標",
    "ults": [
     "耳墜",
     "阿努",
     "玫瑰",
-    "羽毛頭飾"
+    "羽毛"
    ],
-   "packs": "",
-   "twd": 23000.0,
+   "twd": 23000,
+   "cur": "TWD",
+   "date": "2026-11-15",
+   "sold": false
+  },
+  {
+   "start": "06",
+   "kind": "未標",
+   "ults": [
+    "耳墜",
+    "阿努",
+    "玫瑰"
+   ],
+   "twd": 23000,
+   "cur": "TWD",
+   "date": "2026-11-15",
+   "sold": false
+  },
+  {
+   "start": "06",
+   "kind": "未標",
+   "ults": [
+    "耳墜",
+    "阿努",
+    "玫瑰",
+    "白梟"
+   ],
+   "twd": 28000,
+   "cur": "TWD",
    "date": "2026-11-15",
    "sold": false
   },
@@ -572,17 +790,43 @@
    "start": "06",
    "kind": "斷季",
    "ults": [],
-   "packs": "少禮",
-   "twd": 23000.0,
+   "twd": 23000,
+   "cur": "TWD",
    "date": "2026-11-14",
    "sold": false
   },
   {
+   "start": "11",
+   "kind": "未標",
+   "ults": [
+    "玫瑰",
+    "羽毛",
+    "白梟"
+   ],
+   "twd": 6500,
+   "cur": "TWD",
+   "date": "2026-11-10",
+   "sold": false
+  },
+  {
    "start": "30",
-   "kind": "",
+   "kind": "未標",
    "ults": [],
-   "packs": "簡復刻",
-   "twd": 1500.0,
+   "twd": 1500,
+   "cur": "TWD",
+   "date": "2026-11-09",
+   "sold": false
+  },
+  {
+   "start": "11",
+   "kind": "未標",
+   "ults": [
+    "玫瑰",
+    "羽毛",
+    "白梟"
+   ],
+   "twd": 4500,
+   "cur": "TWD",
    "date": "2026-11-09",
    "sold": false
   },
@@ -590,23 +834,36 @@
    "start": "15",
    "kind": "微斷",
    "ults": [],
-   "packs": "",
-   "twd": 4200.0,
+   "twd": 4200,
+   "cur": "TWD",
+   "date": "2026-11-09",
+   "sold": true
+  },
+  {
+   "start": "11",
+   "kind": "未標",
+   "ults": [
+    "玫瑰",
+    "羽毛",
+    "白梟"
+   ],
+   "twd": 5000,
+   "cur": "TWD",
    "date": "2026-11-09",
    "sold": true
   },
   {
    "start": "07",
-   "kind": "近無斷",
+   "kind": "偽無斷",
    "ults": [
-    "不死鳥斗篷",
+    "不死鳥",
     "玫瑰",
-    "羽毛頭飾",
+    "羽毛",
     "白梟",
     "眼鏡"
    ],
-   "packs": "",
-   "twd": 13500.0,
+   "twd": 13500,
+   "cur": "TWD",
    "date": "2026-11-13",
    "sold": false
   },
@@ -615,25 +872,25 @@
    "kind": "斷季",
    "ults": [
     "阿努",
-    "不死鳥斗篷",
+    "不死鳥",
     "玫瑰",
-    "羽毛頭飾",
+    "羽毛",
     "白梟",
     "眼鏡"
    ],
-   "packs": "",
-   "twd": 10400.0,
+   "twd": 10400,
+   "cur": "TWD",
    "date": "2026-11-15",
    "sold": false
   },
   {
    "start": "10",
-   "kind": "",
+   "kind": "未標",
    "ults": [
-    "不死鳥斗篷"
+    "不死鳥"
    ],
-   "packs": "",
-   "twd": 2500.0,
+   "twd": 2500,
+   "cur": "TWD",
    "date": "2026-11-15",
    "sold": false
   },
@@ -641,8 +898,8 @@
    "start": "11",
    "kind": "偽無斷",
    "ults": [],
-   "packs": 185,
-   "twd": 4300.0,
+   "twd": 4300,
+   "cur": "CNY",
    "date": "2026-11-15",
    "sold": false
   },
@@ -650,8 +907,8 @@
    "start": "12",
    "kind": "微斷",
    "ults": [],
-   "packs": "少禮",
-   "twd": 5500.0,
+   "twd": 5500,
+   "cur": "TWD",
    "date": "2026-11-13",
    "sold": false
   },
@@ -659,8 +916,8 @@
    "start": "21",
    "kind": "微斷",
    "ults": [],
-   "packs": "微禮",
-   "twd": 3200.0,
+   "twd": 3200,
+   "cur": "TWD",
    "date": "2026-11-13",
    "sold": false
   },
@@ -668,8 +925,8 @@
    "start": "14",
    "kind": "大斷",
    "ults": [],
-   "packs": "",
-   "twd": 2800.0,
+   "twd": 2800,
+   "cur": "TWD",
    "date": "2026-11-13",
    "sold": false
   },
@@ -677,17 +934,17 @@
    "start": "27",
    "kind": "無斷",
    "ults": [],
-   "packs": "少禮",
-   "twd": 3280.0,
+   "twd": 3280,
+   "cur": "MYR",
    "date": "2026-11-13",
    "sold": false
   },
   {
    "start": "08",
-   "kind": "半無斷",
+   "kind": "偽無斷",
    "ults": [],
-   "packs": "中禮",
-   "twd": 13340.0,
+   "twd": 13340,
+   "cur": "CNY",
    "date": "2026-11-13",
    "sold": false
   },
@@ -695,8 +952,8 @@
    "start": "21",
    "kind": "斷季",
    "ults": [],
-   "packs": "",
-   "twd": 4000.0,
+   "twd": 4000,
+   "cur": "TWD",
    "date": "2026-11-13",
    "sold": false
   },
@@ -704,8 +961,8 @@
    "start": "09",
    "kind": "斷季",
    "ults": [],
-   "packs": "中少禮",
-   "twd": 7800.0,
+   "twd": 7800,
+   "cur": "TWD",
    "date": "2026-11-09",
    "sold": false
   },
@@ -713,8 +970,8 @@
    "start": "14",
    "kind": "斷季",
    "ults": [],
-   "packs": "少禮",
-   "twd": 4000.0,
+   "twd": 4000,
+   "cur": "TWD",
    "date": "2026-11-09",
    "sold": false
   },
@@ -722,17 +979,17 @@
    "start": "07",
    "kind": "大斷",
    "ults": [],
-   "packs": "",
-   "twd": 1500.0,
+   "twd": 1500,
+   "cur": "TWD",
    "date": "2026-11-09",
    "sold": false
   },
   {
    "start": "25",
-   "kind": "半無斷",
+   "kind": "偽無斷",
    "ults": [],
-   "packs": "中禮",
-   "twd": 4000.0,
+   "twd": 4000,
+   "cur": "TWD",
    "date": "2026-11-09",
    "sold": false
   },
@@ -740,33 +997,33 @@
    "start": "26",
    "kind": "無斷",
    "ults": [],
-   "packs": "少禮",
-   "twd": 2400.0,
+   "twd": 2400,
+   "cur": "TWD",
    "date": "2026-11-11",
    "sold": false
   },
   {
    "start": "21",
-   "kind": "",
+   "kind": "未標",
    "ults": [],
-   "packs": "",
-   "twd": 3600.0,
+   "twd": 3600,
+   "cur": "TWD",
    "date": "2026-11-10",
    "sold": false
   },
   {
    "start": "05",
-   "kind": "近無斷",
+   "kind": "偽無斷",
    "ults": [
     "白鳥",
-    "不死鳥斗篷",
+    "不死鳥",
     "玫瑰",
-    "羽毛頭飾",
+    "羽毛",
     "白梟",
     "眼鏡"
    ],
-   "packs": 80,
-   "twd": 79000.0,
+   "twd": 79000,
+   "cur": "TWD",
    "date": "2026-11-09",
    "sold": false
   },
@@ -774,10 +1031,129 @@
    "start": "30",
    "kind": "無斷",
    "ults": [],
-   "packs": "",
-   "twd": 1170.0,
+   "twd": 1170,
+   "cur": "MYR",
    "date": "2026-11-09",
    "sold": false
+  },
+  {
+   "start": "06",
+   "kind": "未標",
+   "ults": [
+    "耳墜",
+    "阿努"
+   ],
+   "twd": 15390,
+   "cur": "MYR",
+   "date": "2026-11-09",
+   "sold": false
+  },
+  {
+   "start": "24",
+   "kind": "未標",
+   "ults": [],
+   "twd": 5000,
+   "cur": "TWD",
+   "date": "2026-11-16",
+   "sold": true
+  },
+  {
+   "start": "08",
+   "kind": "大斷",
+   "ults": [],
+   "twd": 6000,
+   "cur": "TWD",
+   "date": "2026-11-14",
+   "sold": true
+  },
+  {
+   "start": "09",
+   "kind": "無斷",
+   "ults": [],
+   "twd": 8100,
+   "cur": "MYR",
+   "date": "2026-11-07",
+   "sold": true
+  },
+  {
+   "start": "32",
+   "kind": "未標",
+   "ults": [
+    "耳墜",
+    "阿努"
+   ],
+   "twd": 21870,
+   "cur": "MYR",
+   "date": "2026-10-28",
+   "sold": true
+  },
+  {
+   "start": "24",
+   "kind": "未標",
+   "ults": [],
+   "twd": 2160,
+   "cur": "TWD",
+   "date": "2026-10-27",
+   "sold": true
+  },
+  {
+   "start": "32",
+   "kind": "未標",
+   "ults": [],
+   "twd": 700,
+   "cur": "TWD",
+   "date": "2026-10-26",
+   "sold": true
+  },
+  {
+   "start": "10",
+   "kind": "斷季",
+   "ults": [
+    "玫瑰",
+    "羽毛",
+    "白梟"
+   ],
+   "twd": 4200,
+   "cur": "TWD",
+   "date": "2026-10-24",
+   "sold": true
+  },
+  {
+   "start": "28",
+   "kind": "無斷",
+   "ults": [],
+   "twd": 3950,
+   "cur": "CNY",
+   "date": "2026-10-06",
+   "sold": true
+  },
+  {
+   "start": "06",
+   "kind": "斷季",
+   "ults": [
+    "耳墜",
+    "阿努",
+    "不死鳥",
+    "玫瑰",
+    "羽毛",
+    "白梟"
+   ],
+   "twd": 22000,
+   "cur": "TWD",
+   "date": "2026-09-20",
+   "sold": true
+  },
+  {
+   "start": "14",
+   "kind": "無斷",
+   "ults": [
+    "白梟",
+    "眼鏡"
+   ],
+   "twd": 4860,
+   "cur": "MYR",
+   "date": "2026-06-14",
+   "sold": true
   }
  ]
 }
