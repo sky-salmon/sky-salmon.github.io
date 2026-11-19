@@ -1,6 +1,7 @@
 // Account value estimate (beta) for the card maker. Reads the seasons, ultimate gifts and paid packs already on the
-// card, asks the few things a card can't show (binding, refunds, height) and prices it with data/value-model.json.
-// The model is anchored on asking prices from public trading groups; see the file's "_about" and "basis".
+// card, asks the few things a card can't show (binding, refunds) and prices it with the value model.
+// The model is a restricted feature: it lives in Firestore gated/value, readable by admins, by accounts an admin
+// approved for "value" (admin.html → 權限), or by everyone if the admins open the feature (firebase/firestore.rules).
 (function () {
   'use strict';
   const t = window.I18N ? window.I18N.t : (s, v) => (v ? s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
@@ -14,16 +15,51 @@
   // t('五週年斗') t('小白花')
   // t('傘') t('篝火') t('白鳥') t('耳墜') t('阿努') t('不死鳥') t('玫瑰') t('羽毛') t('白梟') t('眼鏡')
 
-  let model = null, modelP = null, items = null, timer = 0;
+  let model = null, modelP = null, items = null, timer = 0, gate = null, busy = false;
   const answers = Object.assign({ fake: false, binding: 'unknown', dirty: false, cur: 'TWD' }, read());
 
   function read() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
   function write() { try { localStorage.setItem(KEY, JSON.stringify(answers)); } catch { /* private mode */ } }
+  const fail = (code, email) => Object.assign(new Error(code), { code, email });
   function loadModel() {
-    if (!modelP) modelP = fetch('data/value-model.json', { cache: 'no-cache' }).then(r => (r.ok ? r.json() : null))
-      .then(m => (model = m)).catch(() => null);
+    if (model) return Promise.resolve(model);
+    if (!modelP) modelP = (async () => {
+      const C = window.Cloud;
+      if (!C || !C.account) throw fail('offline');
+      const { fb, db, user } = await C.account();
+      try {
+        const snap = await fb.getDoc(fb.doc(db, 'gated', 'value'));
+        if (!snap.exists()) throw fail('missing');
+        model = JSON.parse(snap.data().data); gate = null;
+        return model;
+      } catch (e) {
+        if (e.code !== 'permission-denied') throw e.code ? e : fail('offline');
+        if (!user) throw fail('signin');
+        const a = await C.accessStatus();
+        throw fail(!a ? 'apply' : a.status === 'denied' ? 'denied' : a.status === 'approved' ? 'noperm' : 'pending', user.email);
+      }
+    })().catch(e => { modelP = null; gate = { code: ['signin', 'apply', 'pending', 'denied', 'noperm', 'missing'].includes(e.code) ? e.code : 'offline', email: e.email || '' }; throw e; });
     return modelP;
   }
+  // what to show instead of the estimate, by where this visitor stands
+  function renderGate() {
+    const g = $('#val-gate'), code = gate ? gate.code : 'loading', who = gate && gate.email ? `<b>${esc(gate.email)}</b>` : '';
+    const btn = (act, label, primary) => `<button type="button" class="btn${primary ? ' btn-primary' : ''} btn-sm" data-val="${act}"${busy ? ' disabled' : ''}>${label}</button>`;
+    const html = {
+      loading: `<p class="hint">${t('載入中…')}</p>`,
+      offline: `<p>${t('連不到 Google 服務，估價暫時不能用。')}</p>${btn('retry', t('再試一次'))}`,
+      signin: `<p>${t('估價是需要站長核准的功能。用 Google 登入並送出申請，核准後就能使用。')}</p>${btn('signin', t('用 Google 登入'), true)}
+        <p class="hint">${t('登入後名片也會同步到雲端；站長會看到你的 Email，用來核准。')}</p>`,
+      apply: `<p>${t('這個帳號（{who}）還沒申請估價功能。', { who })}</p>${btn('apply', t('送出申請'), true)}`,
+      pending: `<p>${t('已送出申請（{who}），等站長核准。核准後按「重新檢查」就能使用。', { who })}</p>${btn('retry', t('重新檢查'))}`,
+      denied: `<p>${t('這個帳號（{who}）的申請沒有通過。', { who })}</p>`,
+      noperm: `<p>${t('這個帳號（{who}）已核准，但還沒開通估價功能。', { who })}</p>${btn('retry', t('重新檢查'))}`,
+      missing: `<p>${t('估價資料還沒上傳。')}</p>`,
+    }[code];
+    g.innerHTML = `<div class="val-lock"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="4" y="9" width="12" height="8.5" rx="2"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/></svg></div>${html}`;
+    g.hidden = false; $('#val-body').hidden = true;
+  }
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   // what the card says about the account
   function analyse(cardItems) {
@@ -120,7 +156,9 @@
 
   function render() {
     const pane = $('#pane-value');
-    if (!pane || !model || !items) return;
+    if (!pane || !items) return;
+    if (!model) { renderGate(); return; }
+    $('#val-gate').hidden = true; $('#val-body').hidden = false;
     const e = estimate(items);
     const range = $('#val-range'), why = $('#val-why'), basis = $('#val-basis');
     $('#val-fake-row').hidden = e.empty || !e.h.missing;
@@ -157,7 +195,17 @@
   function refresh(cardItems) {
     items = cardItems;
     clearTimeout(timer);
-    timer = setTimeout(() => loadModel().then(() => D.loadCatalog()).then(render).catch(() => {}), 120);
+    if ($('#pane-value').hidden) return;   // nothing to fetch until the tab is open
+    timer = setTimeout(() => loadModel().then(() => D.loadCatalog()).then(render).catch(() => render()), 120);
+  }
+  async function act(kind) {
+    busy = true; renderGate();
+    try {
+      if (kind === 'signin') { const ok = await window.Cloud.signIn(); if (!ok) { busy = false; renderGate(); return; } }
+      if (kind === 'apply') await window.Cloud.requestAccess();
+    } catch (e) { console.warn('value access', e); }
+    busy = false; modelP = null;
+    loadModel().then(() => D.loadCatalog()).then(render).catch(() => render());
   }
 
   function wire() {
@@ -169,8 +217,9 @@
       write(); render();
     };
     [fake, bind, dirty, cur].forEach(el => el.addEventListener('change', on));
+    $('#val-gate').addEventListener('click', e => { const b = e.target.closest('[data-val]'); if (b && !busy) act(b.dataset.val); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
 
-  window.CardValue = { refresh, estimate: c => (model ? estimate(c) : null), loadModel };
+  window.CardValue = { refresh, estimate: c => (model ? estimate(c) : null), loadModel, gate: () => gate && gate.code };
 })();

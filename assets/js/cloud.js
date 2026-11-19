@@ -7,6 +7,7 @@
  * Data (rules: firebase/firestore.rules)
  *   cards/{uid}   { v: 1, data: JSON string {state, assets, lib}, updatedAt }   private to that user
  *   shares/{uid}  older share links (card.html?s=<uid>): still readable, no longer written (the owner's is deleted)
+ *   access/{uid}  this account's request for restricted features (window.Cloud.requestAccess); admins decide
  * Share links now carry the card itself (#card=<deflate + base64url>), so nothing is stored anywhere.
  * Sync keeps one card per account. The hash of the last synced copy (per account) decides which side changed:
  * only this device → upload, only the cloud → download, both → ask. */
@@ -341,8 +342,25 @@
     }
   }
 
+  // ── the account, for restricted features (card-value.js) ──────────────────
+  async function account() {
+    if (!ENABLED) throw Object.assign(new Error('cloud disabled'), { code: 'offline' });
+    await loadSDK(); await authReady;
+    return { fb, db, user };
+  }
+  async function accountSignIn() { await loadSDK(); await authReady; return signIn(); }
+  const accessRef = () => fb.doc(db, 'access', user.uid);
+  async function accessStatus() {   // null = this account hasn't asked yet
+    const snap = await fb.getDoc(accessRef());
+    return snap.exists() ? snap.data() : null;
+  }
+  async function requestAccess() {  // pending until an admin approves it in admin.html → 權限
+    await fb.setDoc(accessRef(), { label: user.email || '', status: 'pending', perms: {}, createdAt: fb.serverTimestamp(), updatedAt: fb.serverTimestamp() });
+    return { status: 'pending', perms: {} };
+  }
+
   // ── start ─────────────────────────────────────────────────────────────────
-  window.Cloud = { changed };
+  window.Cloud = { changed, account, signIn: accountSignIn, accessStatus, requestAccess };
   if (window.FIREBASE_EMULATOR) {  // test harness only: the emulator accepts unsigned Google credentials, no popup needed
     window.__cloudTest = {
       signIn: async (sub, email) => {

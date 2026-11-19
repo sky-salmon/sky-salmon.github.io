@@ -200,3 +200,24 @@ progress.up-bar::-moz-progress-bar { background: var(--gold); border-radius: 99p
 .ok-line a { color: var(--gold); }
 @media (max-width: 860px) { .up-step { grid-template-columns: 80px minmax(0, 1fr); } .up-step .mono-s { grid-column: 2; text-align: left; } }
 .up > .btn, .up > button { justify-self: start; }
+
+/* 權限 + 回饋 */
+.acc { display: grid; gap: 14px; padding: 6px 4px 30px; max-width: 980px; }
+.acc .file { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.acc-feat { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 12px; border-top: 1px solid var(--line); }
+.acc-feat-main { display: grid; gap: 3px; }
+.acc-switch, .acc-perm { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-soft); white-space: nowrap; cursor: pointer; }
+.acc-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border-top: 1px solid var(--line); }
+.acc-who { display: grid; gap: 2px; min-width: 0; }
+.acc-who b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-perms { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.acc-acts { display: flex; gap: 6px; justify-content: flex-end; }
+.fbk { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 6px; }
+.fbk-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.fbk-msg { margin: 0; white-space: pre-wrap; line-height: 1.6; font-size: 14px; }
+.warn { color: var(--del); }
+.pad { padding: 10px 12px; }
+@media (max-width: 760px) {
+  .acc-feat, .acc-row { grid-template-columns: 1fr; }
+  .acc-acts { justify-content: flex-start; }
+}
