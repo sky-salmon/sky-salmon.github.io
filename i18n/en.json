@@ -381,7 +381,6 @@
  "選一種風格，直接點名片上的數字和文字修改，按 ＋ 放進你的季節物品、IAP、法術與綁定平台，再到設定面板調版面、尺寸和背景。": "Pick a style, then tap any number or text on the card to edit it. Use ＋ to add your season items, IAP, spells and linked platforms, and adjust layout, size and background in the settings panel.",
  "圖片": " image",
  "點名片上的數字和文字直接修改；按": "Tap any number or text on the card to edit it; press",
- "加入物品，點物品可以標價或移除；按": "to add items, tap an item to price or remove it; press",
  "拖曳排序（鍵盤用方向鍵，左右換欄）。空的區塊也會出現在圖片上，不需要就按眼睛隱藏。": "and drag to reorder (keyboard: arrow keys, left/right switches column). Empty sections still appear in the image, so hide the ones you don’t need with the eye button.",
  "讀服裝 QR，算完一鍵帶回名片": "Read your outfit QR, then bring the result back in one tap",
  "匯出設定：格式、解析度、檔名": "Export settings: format, resolution, file name",
@@ -521,5 +520,6 @@
  "已選 {n} 季": "{n} seasons picked",
  "{n} 季，新到舊": "{n} seasons, newest first",
  "找不到「{q}」。換個叫法試試，例如季節名、AP 編號或年份。": "Nothing matches “{q}”. Try a season name, an AP number or a year.",
- "幣別": "Currency"
+ "幣別": "Currency",
+ "加入物品，點物品可以改名、移動或移除；按": "to add items, tap an item to rename, move or remove it; press"
 }
