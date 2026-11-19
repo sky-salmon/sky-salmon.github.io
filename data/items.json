@@ -99,12 +99,16 @@
   "CharSkyKid_Prop_HangingMask": {
    "season": null,
    "unconfirmed": "no matching Nesting item on the wiki",
-   "note": "OutfitDefs 標為 season_22，wiki 沒列在該季"
+   "note": "測試、佔位（WIP）或同物品的替代版本",
+   "hidden": true,
+   "source": "站長確認（國際服沒有）2026-11-19"
   },
   "CharSkyKid_Prop_StoneMannequin": {
    "season": null,
    "unconfirmed": "dress mannequin; the Nesting ultimate Mini Figurine is MannequinFigurine",
-   "note": "OutfitDefs 標為 season_22，wiki 沒列在該季"
+   "note": "測試、佔位（WIP）或同物品的替代版本",
+   "hidden": true,
+   "source": "站長確認（國際服沒有）2026-11-19"
   },
   "CharSkyKid_Prop_AP23Bench": {
    "season": null,
@@ -154,42 +158,58 @@
   "CharSkyKid_Prop_AP24ClassicPlushAlt": {
    "season": null,
    "unconfirmed": "alternate of the Moomin plush; no separate wiki item",
-   "note": "OutfitDefs 標為 season_24，wiki 沒列在該季"
+   "note": "測試、佔位（WIP）或同物品的替代版本",
+   "hidden": true,
+   "source": "站長確認（國際服沒有）2026-11-19"
   },
   "CharSkyKid_Wing_MaskRampEffects": {
    "season": null,
    "unconfirmed": "technical entry (effect), no model file; not on the wiki",
-   "note": "OutfitDefs 標為 season_27，wiki 沒列在該季"
+   "note": "測試、佔位（WIP）或同物品的替代版本",
+   "hidden": true,
+   "source": "站長確認（國際服沒有）2026-11-19"
   },
   "CharSkyKid_Mask_AP27ManateeMask": {
    "season": null,
    "unconfirmed": "no matching Two Embers item on the wiki",
-   "note": "OutfitDefs 標為 season_27，wiki 沒列在該季"
+   "note": "測試、佔位（WIP）或同物品的替代版本",
+   "hidden": true,
+   "source": "站長確認（國際服沒有）2026-11-19"
   },
   "CharSkyKid_Prop_AP30ChallengeBouncePad_2": {
    "season": null,
    "unconfirmed": "upgrade tier of the Challenge Bounce Pad",
-   "note": "OutfitDefs 標為 season_30，wiki 沒列在該季"
+   "note": "測試、佔位（WIP）或同物品的替代版本",
+   "hidden": true,
+   "source": "站長確認（國際服沒有）2026-11-19"
   },
   "CharSkyKid_Prop_AP30ChallengeBouncePad_3": {
    "season": null,
    "unconfirmed": "upgrade tier of the Challenge Bounce Pad",
-   "note": "OutfitDefs 標為 season_30，wiki 沒列在該季"
+   "note": "測試、佔位（WIP）或同物品的替代版本",
+   "hidden": true,
+   "source": "站長確認（國際服沒有）2026-11-19"
   },
   "CharSkyKid_Neck_AP31StrawHat": {
    "season": null,
    "unconfirmed": "placeholder icon UiWip, no model: unfinished item",
-   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+   "note": "測試、佔位（WIP）或同物品的替代版本",
+   "hidden": true,
+   "source": "站長確認（國際服沒有）2026-11-19"
   },
   "CharSkyKid_Hat_AP07StrawHatNoCrab": {
    "season": null,
    "unconfirmed": "older Sanctuary asset, not on the Dear Van Gogh list",
-   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+   "note": "測試、佔位（WIP）或同物品的替代版本",
+   "hidden": true,
+   "source": "站長確認（國際服沒有）2026-11-19"
   },
   "CharSkyKid_Prop_AP31PaintBrush": {
    "season": null,
    "unconfirmed": "not on the Dear Van Gogh list",
-   "note": "OutfitDefs 標為 season_31，wiki 沒列在該季"
+   "note": "測試、佔位（WIP）或同物品的替代版本",
+   "hidden": true,
+   "source": "站長確認（國際服沒有）2026-11-19"
   },
   "CharSkyKid_Prop_AP31StarryUmbrella": {
    "season": null,
@@ -239,12 +259,556 @@
   "CharSkyKid_Hair_AP09BambooHat_01": {
    "season": null,
    "unconfirmed": "fan reports say it was only given out on the China (NetEase) server",
-   "note": "OutfitDefs 標為 season_09，wiki 沒列在該季"
+   "note": "測試、佔位（WIP）或同物品的替代版本",
+   "hidden": true,
+   "source": "站長確認（國際服沒有）2026-11-19"
   },
   "CharSkyKid_Prop_AP11Fox_02": {
    "season": null,
    "unconfirmed": "second copy of the Little Prince fox; one item on the wiki",
-   "note": "OutfitDefs 標為 season_11，wiki 沒列在該季"
+   "note": "測試、佔位（WIP）或同物品的替代版本",
+   "hidden": true,
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Wing_ClassicDiamonds": {
+   "hidden": true,
+   "note": "遊戲資料標 test/unused：測試或未上架",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Mask_BasicSleepy": {
+   "hidden": true,
+   "note": "遊戲資料標 test/unused：測試或未上架",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Hair_PonytailShaggy": {
+   "hidden": true,
+   "note": "遊戲資料標 test/unused：測試或未上架",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Hair_PonytailShort": {
+   "hidden": true,
+   "note": "遊戲資料標 test/unused：測試或未上架",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Hair_ShaggyShort": {
+   "hidden": true,
+   "note": "遊戲資料標 test/unused：測試或未上架",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Feet_FluffyMoth": {
+   "hidden": true,
+   "note": "遊戲資料標 test/unused：測試或未上架",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Face_AviatorMoth": {
+   "hidden": true,
+   "note": "遊戲資料標 test/unused：測試或未上架",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Prop_StupaBell": {
+   "hidden": true,
+   "note": "遊戲資料標 test/unused：測試或未上架",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitCapeAP32nRibbon": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitMaskAP13ScarA": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitMaskAthlete": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitMaskElderNight2": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitMaskElderSmoke2": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitHairDoubleTail": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitHairLeaves": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitHairShortPonytail": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitHairTwoTailsLong": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitBodyAP21SilkRaiment": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitBodyElderBro": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitBodyElderDawn": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitBodyElderDay": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitBodyElderDusk": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitBodyElderNight": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitBodyElderRain": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitBodyElderSis": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitHatAP32Seastar": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitHatAP32ShipHat": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitNeckAP19SkullJaw": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitNeckMedalBronze": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitNeckMedalGold": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitNeckMedalSilver": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitHornAP31AlmondBranch": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitHornBalloonLootbox": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitHornHeartpin": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitHornPastryRoll": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitHornSunflowerHat": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitFeetAP21Coat": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitFeetNone": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitFeetRibbonShoe": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitFeetSnowBoots": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitFaceAP30Goggles": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropAP24Books": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropAP24CandleHolder": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropAP30ChallengeFlag": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropAP32Portrait": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropAP32SpearShield": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropBirthdayCakeM": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropBirthdayCakeS": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropBloomTree": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropBouncePad": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropBouncePad_2": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropBouncePad_3": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropChairRocking01": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropComboLock": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropCompetitionHangingFlags": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropCompetitionPodium": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropCrabSeat": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropDOB23PicnicBlanket": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropDOL23CrabFireworks": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropDOL23JellyFireworks": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropDOL23MantaFireworks": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropDOS22FishingPole": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropDOW22SkyBallWood": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropFireLock": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropFirecracker": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropFood": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropFriendshipDuckSofa": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropHangingFlags": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropIvoryGardenPot": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropKeyholeLock": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropMessageInABottle": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropMoonlightMuralPeople01": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropMoonlightMuralPeople02": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropMoonlightMuralPeople03": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropMoonlightMuralPeople04": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropPersonalityCrystalBall": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropPianoXmas": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropPodium": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropPressureLock": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropPuzzleSkeletonKey": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropSpellWind": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropStoneKitchenSink": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropStoneOven": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropTarget": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropTeacup": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropWhiteDroneCamera": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropWoodenCabinet": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropWoodenDiningTable": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropWoodenShelf": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropWoodenSingleBed": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "UiOutfitPropWoodenTowelRack": {
+   "hidden": true,
+   "note": "只有圖示，遊戲裡沒有這件物品",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Wing_IvoryBow": {
+   "hidden": true,
+   "note": "大耳狗 Ivory 新禮包：已取消，國際服沒有",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Hair_IvoryHat": {
+   "hidden": true,
+   "note": "大耳狗 Ivory 新禮包：已取消，國際服沒有",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Hair_IvoryHatEars": {
+   "hidden": true,
+   "note": "大耳狗 Ivory 新禮包：已取消，國際服沒有",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Body_IvoryOveralls": {
+   "hidden": true,
+   "note": "大耳狗 Ivory 新禮包：已取消，國際服沒有",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Prop_IvorySwing": {
+   "hidden": true,
+   "note": "大耳狗 Ivory 新禮包：已取消，國際服沒有",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Wing_RibbonBow": {
+   "hidden": true,
+   "note": "絆愛 Twin Ribbon（2025）：國服限定",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Wing_RibbonDressCape": {
+   "hidden": true,
+   "note": "絆愛 Twin Ribbon（2025）：國服限定",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Mask_RibbonMask": {
+   "hidden": true,
+   "note": "絆愛 Twin Ribbon（2025）：國服限定",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Body_RibbonSkirt": {
+   "hidden": true,
+   "note": "絆愛 Twin Ribbon（2025）：國服限定",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Body_RibbonTieredDress": {
+   "hidden": true,
+   "note": "絆愛 Twin Ribbon（2025）：國服限定",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Prop_KizunaAiTVPillow": {
+   "hidden": true,
+   "note": "絆愛 Twin Ribbon（2025）：國服限定",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Prop_Microphone": {
+   "hidden": true,
+   "note": "絆愛 Twin Ribbon（2025）：國服限定",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Prop_RibbonHourglass": {
+   "hidden": true,
+   "note": "絆愛 Twin Ribbon（2025）：國服限定",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Prop_TwinRibbonOrnament": {
+   "hidden": true,
+   "note": "絆愛 Twin Ribbon（2025）：國服限定",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Prop_TwinRibbonPoster": {
+   "hidden": true,
+   "note": "絆愛 Twin Ribbon（2025）：國服限定",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Hat_Sprout": {
+   "hidden": true,
+   "note": "向日葵小物裡的帽子：國際服沒有",
+   "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Hat_SunflowerHat": {
+   "hidden": true,
+   "note": "向日葵小物裡的帽子：國際服沒有",
+   "source": "站長確認（國際服沒有）2026-11-19"
   }
  }
 }

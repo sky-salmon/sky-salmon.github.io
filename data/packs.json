@@ -642,7 +642,7 @@
   },
   {
    "id": "SNC215",
-   "name_en": "Mischief Batwingcape",
+   "name_en": "Mischief Impish Wings",
    "name_zh": "",
    "usd": 14.99,
    "items": [
@@ -650,12 +650,12 @@
    ],
    "event": "mischief_26",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Mischief Batwingcape; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC216",
-   "name_en": "Mischief Magichat",
+   "name_en": "Mischief Magical Hat",
    "name_zh": "",
    "usd": 9.99,
    "items": [
@@ -663,12 +663,12 @@
    ],
    "event": "mischief_26",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Mischief Magichat; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC217",
-   "name_en": "Mischief Catbuddy",
+   "name_en": "Mischief Feline Friend",
    "name_zh": "",
    "usd": 2.99,
    "items": [
@@ -676,12 +676,12 @@
    ],
    "event": "mischief_26",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Mischief Catbuddy; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC170",
-   "name_en": "Mischief Cattail",
+   "name_en": "Mischief Feline Accessory Duo",
    "name_zh": "",
    "usd": 11.99,
    "items": [
@@ -690,12 +690,12 @@
    ],
    "event": "mischief_25",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Mischief Cattail; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC171",
-   "name_en": "Mischief Featherhat",
+   "name_en": "Mischief Puzzlewright's Brimmed Hat",
    "name_zh": "",
    "usd": 4.99,
    "items": [
@@ -703,12 +703,12 @@
    ],
    "event": "mischief_25",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Mischief Featherhat; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC128",
-   "name_en": "Mischief Broomprop",
+   "name_en": "Mischief Withered Broom",
    "name_zh": "",
    "usd": 19.99,
    "items": [
@@ -716,12 +716,12 @@
    ],
    "event": "mischief_24",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Mischief Broomprop; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC129",
-   "name_en": "Mischief Ravencape",
+   "name_en": "Mischief Raven-Feathered Cloak",
    "name_zh": "",
    "usd": 17.99,
    "items": [
@@ -729,8 +729,8 @@
    ],
    "event": "mischief_24",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Mischief Ravencape; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC36",
@@ -1496,7 +1496,7 @@
   },
   {
    "id": "SNC08",
-   "name_en": "Love Swing",
+   "name_en": "Days of Love Swing Pack",
    "name_zh": "",
    "usd": 19.99,
    "items": [
@@ -1504,12 +1504,12 @@
    ],
    "event": "",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Love Swing; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC45",
-   "name_en": "Love Gondola",
+   "name_en": "Days of Love Gondola Pack",
    "name_zh": "",
    "usd": 19.99,
    "items": [
@@ -1517,8 +1517,8 @@
    ],
    "event": "",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Love Gondola; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC77",
@@ -1666,7 +1666,7 @@
   },
   {
    "id": "SNC23",
-   "name_en": "Bloom Teatable",
+   "name_en": "Bloom Teaset Pack",
    "name_zh": "",
    "usd": 19.99,
    "items": [
@@ -1674,12 +1674,12 @@
    ],
    "event": "",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Bloom Teatable; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC46",
-   "name_en": "Bloom Wisteriatable",
+   "name_en": "Purple Bloom Teaset Pack",
    "name_zh": "",
    "usd": 19.99,
    "items": [
@@ -1687,8 +1687,8 @@
    ],
    "event": "",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Bloom Wisteriatable; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC80",
@@ -1798,7 +1798,7 @@
   },
   {
    "id": "SNC82",
-   "name_en": "Nature Bluesunglasses",
+   "name_en": "Nature Glasses Pack",
    "name_zh": "",
    "usd": 19.99,
    "items": [
@@ -1806,8 +1806,8 @@
    ],
    "event": "nature_21",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Nature Bluesunglasses; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC83",
@@ -2388,7 +2388,7 @@
   },
   {
    "id": "SNC33",
-   "name_en": "Summer Umbrella Pack",
+   "name_en": "Summer Parasol Pack",
    "name_zh": "",
    "usd": 19.99,
    "items": [
@@ -2396,8 +2396,8 @@
    ],
    "event": "summer_21",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Summer Umbrella Pack; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC211",
@@ -2656,7 +2656,7 @@
   },
   {
    "id": "SNC01",
-   "name_en": "Founder Pack",
+   "name_en": "Founder's Pack",
    "name_zh": "",
    "usd": 29.99,
    "items": [
@@ -2664,8 +2664,8 @@
    ],
    "event": "",
    "year": "",
-   "status": "game-only",
-   "note": ""
+   "status": "confirmed",
+   "note": "game name Founder Pack; wiki name per 2026-11 re-release table"
   },
   {
    "id": "SNC54",
