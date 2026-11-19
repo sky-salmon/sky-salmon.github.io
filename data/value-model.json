@@ -1,14 +1,14 @@
 {
  "_about": "Account value estimate for the card maker. Beta. Fitted on asking prices (and asking prices of posts later marked sold) from public FB trading groups; value = market x (base(start season) x streak + old ultimates + packs) x binding x refunds.",
- "version": "0.3",
+ "version": "0.4",
  "updated": "2026-11-19",
  "beta": true,
  "basis": {
-  "accounts": 73,
+  "accounts": 85,
   "sold": 13,
   "from": "2026-06-14",
   "to": "2026-11-19",
-  "fit_r2_log": 0.922
+  "fit_r2_log": 0.903
  },
  "current_season": "32",
  "fx": {
@@ -19,50 +19,50 @@
  },
  "market": {
   "TWD": 1.0,
-  "MYR": 0.88,
-  "CNY": 0.919,
-  "HKD": 0.893
+  "MYR": 0.929,
+  "CNY": 0.936,
+  "HKD": 0.896
  },
  "base": {
-  "02": 50680,
-  "03": 44060,
-  "04": 38300,
-  "05": 33300,
-  "06": 17300,
-  "07": 5230,
-  "08": 5230,
-  "09": 5230,
-  "10": 4580,
-  "11": 3520,
-  "12": 3520,
-  "13": 3520,
-  "14": 3520,
-  "15": 3520,
-  "16": 3520,
-  "17": 3490,
-  "18": 3410,
-  "19": 3330,
-  "20": 3260,
-  "21": 3190,
-  "22": 3190,
-  "23": 3190,
-  "24": 3190,
-  "25": 3190,
-  "26": 3190,
-  "27": 2690,
-  "28": 2160,
-  "29": 1740,
-  "30": 1400,
-  "31": 1290,
-  "32": 1190
+  "02": 50500,
+  "03": 43910,
+  "04": 38170,
+  "05": 33180,
+  "06": 17050,
+  "07": 5200,
+  "08": 5200,
+  "09": 5200,
+  "10": 4540,
+  "11": 3530,
+  "12": 3530,
+  "13": 3530,
+  "14": 3530,
+  "15": 3530,
+  "16": 3530,
+  "17": 3530,
+  "18": 3470,
+  "19": 3380,
+  "20": 3290,
+  "21": 3200,
+  "22": 3200,
+  "23": 3200,
+  "24": 3200,
+  "25": 3200,
+  "26": 3200,
+  "27": 2640,
+  "28": 2120,
+  "29": 1710,
+  "30": 1370,
+  "31": 1270,
+  "32": 1170
  },
  "streak": {
-  "無斷": 1.382,
-  "偽無斷": 1.233,
-  "微斷": 1.164,
+  "無斷": 1.374,
+  "偽無斷": 1.216,
+  "微斷": 1.154,
   "斷季": 1.0,
-  "大斷": 0.75,
-  "簡號": 0.466
+  "大斷": 0.755,
+  "簡號": 0.467
  },
  "older_season_share": 0.6,
  "hot_ultimates": {
@@ -70,31 +70,31 @@
    "zh": "追光季畢業禮 大傘",
    "nick": "傘",
    "season": "03",
-   "twd": 14800
+   "twd": 14600
   },
   "CharSkyKid_Prop_AP04Bonfire": {
    "zh": "歸屬季畢業禮 篝火",
    "nick": "篝火",
    "season": "04",
-   "twd": 15000
+   "twd": 14700
   },
   "CharSkyKid_Mask_APDefault": {
    "zh": "音韻季畢業禮 白鳥",
    "nick": "白鳥",
    "season": "05",
-   "twd": 41900
+   "twd": 41700
   },
   "CharSkyKid_Horn_AP06Tassel": {
    "zh": "魔法季畢業禮 耳墜",
    "nick": "耳墜",
    "season": "06",
-   "twd": 8100
+   "twd": 8000
   },
   "CharSkyKid_Mask_AP08Wolf": {
    "zh": "預言季畢業禮 阿努",
    "nick": "阿努",
    "season": "08",
-   "twd": 4200
+   "twd": 4000
   },
   "CharSkyKid_Wing_AP09Phoenix_01": {
    "zh": "夢想季畢業禮 不死鳥斗篷",
@@ -130,14 +130,14 @@
  "hot_items": {
   "CharSkyKid_Wing_TGCWireframe": {
    "nick": "五週年斗",
-   "twd": 3800
+   "twd": 3700
   },
   "CharSkyKid_Horn_FlowerPoppy_01": {
    "nick": "小白花",
-   "twd": 3900
+   "twd": 3800
   }
  },
- "badge_twd": 175,
+ "badge_twd": 176,
  "pack_value": {
   "S": 80,
   "A": 40,
@@ -353,16 +353,16 @@
  },
  "binding": {
   "all_free": 1.03,
-  "one_locked": 0.94,
-  "more_locked": 0.85,
+  "one_locked": 0.95,
+  "more_locked": 0.87,
   "unknown": 1.0
  },
- "dirty": 0.489,
+ "dirty": 0.485,
  "range": {
-  "low": 0.73,
-  "high": 1.27
+  "low": 0.74,
+  "high": 1.23
  },
- "typical_error": 0.36,
+ "typical_error": 0.33,
  "spread": {
   "low": 0.85,
   "high": 1.05
@@ -465,6 +465,15 @@
    ],
    "twd": 10000,
    "cur": "TWD",
+   "date": "2026-11-17",
+   "sold": false
+  },
+  {
+   "start": "32",
+   "kind": "未標",
+   "ults": [],
+   "twd": 4980,
+   "cur": "MYR",
    "date": "2026-11-17",
    "sold": false
   },
@@ -1211,6 +1220,107 @@
    "cur": "MYR",
    "date": "2026-06-14",
    "sold": true
+  },
+  {
+   "start": "18",
+   "kind": "未標",
+   "ults": [
+    "眼鏡"
+   ],
+   "twd": 4330,
+   "cur": "MYR",
+   "date": "2026-11-18",
+   "sold": false
+  },
+  {
+   "start": "27",
+   "kind": "未標",
+   "ults": [],
+   "twd": 1780,
+   "cur": "MYR",
+   "date": "2026-11-17",
+   "sold": false
+  },
+  {
+   "start": "30",
+   "kind": "未標",
+   "ults": [],
+   "twd": 1130,
+   "cur": "MYR",
+   "date": "2026-11-17",
+   "sold": false
+  },
+  {
+   "start": "31",
+   "kind": "未標",
+   "ults": [],
+   "twd": 570,
+   "cur": "MYR",
+   "date": "2026-11-17",
+   "sold": false
+  },
+  {
+   "start": "32",
+   "kind": "未標",
+   "ults": [],
+   "twd": 650,
+   "cur": "TWD",
+   "date": "2026-11-16",
+   "sold": false
+  },
+  {
+   "start": "31",
+   "kind": "未標",
+   "ults": [],
+   "twd": 500,
+   "cur": "TWD",
+   "date": "2026-11-15",
+   "sold": false
+  },
+  {
+   "start": "24",
+   "kind": "無斷",
+   "ults": [],
+   "twd": 5180,
+   "cur": "MYR",
+   "date": "2026-11-14",
+   "sold": false
+  },
+  {
+   "start": "32",
+   "kind": "未標",
+   "ults": [],
+   "twd": 810,
+   "cur": "MYR",
+   "date": "2026-11-14",
+   "sold": false
+  },
+  {
+   "start": "22",
+   "kind": "未標",
+   "ults": [],
+   "twd": 2500,
+   "cur": "TWD",
+   "date": "2026-11-13",
+   "sold": false
+  },
+  {
+   "start": "32",
+   "kind": "未標",
+   "ults": [],
+   "twd": 1500,
+   "cur": "TWD",
+   "date": "2026-11-11",
+   "sold": false
+  },
+  {
+   "start": "31",
+   "kind": "未標",
+   "ults": [],
+   "twd": 960,
+   "cur": "CNY",
+   "date": "2026-11-11",
+   "sold": false
   }
  ]
 }
