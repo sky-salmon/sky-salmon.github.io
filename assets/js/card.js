@@ -878,7 +878,7 @@
     closePop();
     const meta = SECTIONS[sec];
     const cats = SEC_CATS[sec] || [];
-    pk = { sec, mode: meta.picker, sel: new Map(), cat: sec === 'iap' ? 'packs' : cats.length === 1 ? cats[0] : 'all', season: 'all', q: '',
+    pk = { sec, mode: meta.picker, sel: new Map(), cat: sec === 'iap' ? 'all' : cats.length === 1 ? cats[0] : 'all', season: 'all', q: '',
       price: sec === 'iap' ? 'auto' : '', group: 'closet', series: '__recent', only: false };
     state.items[sec].forEach(it => pk.sel.set(itemKey(it), it));
     pk.start = [...pk.sel.keys()].join('|');
@@ -888,7 +888,7 @@
     $('#picker-price').hidden = sec !== 'iap';
     $('#picker-guard').hidden = true;
     $('#picker-q').value = '';
-    $('#picker-q').placeholder = sec === 'pass' ? t('找季節或畢業禮，例如 梵谷、Moomin、31') : sec === 'iap' ? t('搜尋禮包，例如 Bat、Moomin、Fortune') : t('搜尋名稱、季節，例如 Deer、AP21、感恩');
+    $('#picker-q').placeholder = sec === 'pass' ? t('找季節或畢業禮，例如 梵谷、Moomin、31') : sec === 'iap' ? t('搜尋：蝙蝠斗、大耳狗、萬聖節、2024…') : t('搜尋名稱、季節，例如 Deer、AP21、感恩');
     $('.picker-search').hidden = pk.mode !== 'catalog';
     $('#picker-cats').hidden = sec === 'extra';
     $('#picker-season').hidden = sec !== 'extra';
@@ -920,7 +920,7 @@
     if (pk.mode === 'pins') cats = [['all', t('徽章')], ['mine', t('自訂圖示')]];
     else if (pk.mode === 'catalog') {
       if (pk.sec === 'pass') cats = [['pass', t('季節')], ['mine', t('自訂圖示')]];
-      else if (pk.sec === 'iap') cats = [['packs', t('禮包')], ['mine', t('自訂圖示')]];
+      else if (pk.sec === 'iap') cats = [['all', t('全部')], ['picked', t('已選')], ...PACK_TYPES.map(([k]) => [k, TYPE_ZH[k]]), ['mine', t('自訂圖示')]];
       else if (pk.sec === 'spells') cats = [['spell', D.CAT_BY_ID.spell.zh], ['mine', t('自訂圖示')]];
     }
     if (cats) $('#picker-cats').innerHTML = cats.map(([id, zh]) => `<button type="button" class="chip-btn" data-cat="${id}" aria-pressed="${id === pk.cat}">${zh}</button>`).join('');
@@ -1016,67 +1016,51 @@
     if (s) seasonKeys(s).forEach(k => togglePick(k, on));
   }
 
-  // IAP: series index on the left (recent, picked, seasons, events, other), the packs of that series on the right
+  // IAP: one list, newest first, grouped by the event or season that sold each pack. Search reads the Chinese name,
+  // the English name, the nicknames traders use (蝙蝠斗, 彩武, 林克 …), the event and the year; the chips narrow it to
+  // packs holding a cape, a hairstyle … or to what's picked.
   const packKeys = p => p.items.map(path => 'c:' + path);
-  const seriesName = (kind, series) => kind === 'season' ? D.seasonFull(series) : kind === 'other' ? t('常駐與其他') : series;
-  function iapIndex(P) {
-    const by = new Map();
-    P.forEach(p => {
-      const k = p.kind + '|' + p.series;
-      if (!by.has(k)) by.set(k, { key: k, kind: p.kind, series: p.series, packs: [], latest: '' });
-      const s = by.get(k); s.packs.push(p); if (p.year > s.latest) s.latest = p.year;
-    });
-    const all = [...by.values()];
-    const maxSeason = Math.max(0, ...P.filter(p => p.kind === 'season').map(p => +p.series));
-    const maxYear = Math.max(0, ...P.map(p => +p.year || 0));
-    return {
-      season: all.filter(s => s.kind === 'season').sort((a, b) => b.series.localeCompare(a.series)),
-      event: all.filter(s => s.kind === 'event').sort((a, b) => b.latest.localeCompare(a.latest) || b.packs.length - a.packs.length),
-      other: all.filter(s => s.kind === 'other'),
-      recent: P.filter(p => (p.kind === 'season' && +p.series >= maxSeason - 4) || (p.kind === 'event' && +p.year >= maxYear - 1))
-    };
+  const LANG_EN = !!(window.I18N && window.I18N.lang === 'en');
+  const PACK_TYPES = [['cape', ['cape']], ['hair', ['hair']], ['mask', ['mask', 'face']], ['outfit', ['outfit', 'top', 'shoes']], ['acc', ['head', 'ear', 'neck']], ['prop', ['prop']]];
+  const TYPE_ZH = { cape: t('斗篷'), hair: t('髮型'), mask: t('面具'), outfit: t('服裝鞋子'), acc: t('飾品'), prop: t('道具') };
+  const packCats = p => p.cats || (p.cats = new Set(p.items.map(x => D.parsePath(x).cat)));
+  function packGroup(p) {
+    if (p.kind === 'season') return { key: 's' + p.series, label: `<span class="mono">AP${esc(p.series)}</span> ${esc(D.seasonName(p.series))}`, year: D.seasonYear(p.series) || '0', rank: 1, sub: +p.series };
+    if (p.kind === 'event') return { key: 'e' + p.evKey + p.year, label: esc(p.evZh) + (p.year ? ` <span class="mono">${esc(p.year)}</span>` : ''), year: p.year || '0', rank: 2, sub: 0 };
+    return { key: 'o', label: t('常駐與其他'), year: '0', rank: 3, sub: 0 };
   }
+  const packText = p => p.text || (p.text = [p.name, p.nameZh, p.nameHans, p.nameEn, p.id, ...(p.aka || []), p.evZh, p.series, p.year,
+    p.kind === 'season' ? D.seasonFull(p.series) + ' ap' + p.series : '', ...[...packCats(p)].map(c => (D.CAT_BY_ID[c] || {}).zh || '')].join(' ').toLowerCase());
   function renderIap() {
-    const P = D.packs(), I = pk.iapIndex || (pk.iapIndex = iapIndex(P));
-    const q = pk.q.trim().toLowerCase();
+    const P = D.packs();
+    const terms = pk.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const packState = p => { const keys = packKeys(p), n = keys.filter(k => pk.sel.has(k)).length; return n === 0 ? 0 : n === keys.length ? 2 : 1; };
-    const picked = list => list.filter(p => packState(p)).length;
-    let packs, title;
-    if (q) {
-      packs = P.filter(p => (p.name + ' ' + p.id + ' ' + p.series + ' ' + seriesName(p.kind, p.series) + ' ' + p.items.map(x => D.parsePath(x).label).join(' ')).toLowerCase().includes(q));
-      title = t('搜尋「{q}」', { q: pk.q.trim() });
-    } else if (pk.series === '__recent') { packs = I.recent; title = t('最近的禮包'); }
-    else if (pk.series === '__picked') { packs = P.filter(p => packState(p)); title = t('已選的禮包'); }
-    else { const s = [...I.season, ...I.event, ...I.other].find(x => x.key === pk.series); packs = s ? s.packs : []; title = s ? esc(seriesName(s.kind, s.series)) : ''; }
-    const idxBtn = (key, label, list) => { const k = picked(list); return `<button type="button" data-series="${esc(key)}" aria-pressed="${!q && pk.series === key}"><span>${label}</span><span>${k ? `<span class="sel">${k}✓</span> ` : ''}<span class="n">${list.length}</span></span></button>`; };
-    // events: newest year first; seasons and "other" in one block
-    const blocks = new Map();
-    packs.slice().sort((a, b) => (b.year || '').localeCompare(a.year || '') || (b.kind === 'season' ? b.series.localeCompare(a.series) : 0)).forEach(p => {
-      const y = p.kind === 'event' ? p.year : p.kind === 'season' ? D.seasonFull(p.series) : '';
-      if (!blocks.has(y)) blocks.set(y, []);
-      blocks.get(y).push(p);
-    });
+    const type = PACK_TYPES.find(([k]) => k === pk.cat);
+    const list = P.filter(p => (pk.cat !== 'picked' || packState(p)) && (!type || type[1].some(c => packCats(p).has(c)))
+      && terms.every(w => packText(p).includes(w)));
+    const groups = new Map();
+    list.forEach(p => { const g = packGroup(p); if (!groups.has(g.key)) groups.set(g.key, Object.assign(g, { packs: [] })); groups.get(g.key).packs.push(p); });
+    const ordered = [...groups.values()].sort((a, b) => b.year.localeCompare(a.year) || a.rank - b.rank || b.sub - a.sub);
+    const nPicked = P.filter(p => packState(p)).length;
     const tile = p => {
       const st = packState(p), n = Math.min(p.items.length, 3);
       const contents = p.items.map(x => D.parsePath(x).label).join('、');
-      return `<button type="button" class="pk-pack${st === 1 ? ' part' : ''}" data-pack="${esc(p.id)}" aria-pressed="${st === 2}" title="${esc(p.name)}${p.items.length > 1 ? esc(t('（{n} 件：{list}）', { n: p.items.length, list: contents })) : ''}${p.status !== 'confirmed' ? ' · ' + esc(p.status === 'game-only' ? t('僅遊戲資料') : t('已下架')) : ''}">
+      const alt = LANG_EN ? '' : p.nameEn;
+      return `<button type="button" class="pk-pack${st === 1 ? ' part' : ''}" data-pack="${esc(p.id)}" aria-pressed="${st === 2}" title="${esc(p.name)}${alt ? ' · ' + esc(alt) : ''}${p.items.length > 1 ? esc(t('（{n} 件：{list}）', { n: p.items.length, list: contents })) : ''}">
         ${p.status !== 'confirmed' ? '<span class="pk-flag" aria-hidden="true"></span>' : ''}
         <span class="pk-stack n${n}">${p.items.slice(0, 3).map(iconImg).join('')}</span>
-        <span class="pk-price">${p.usd != null ? money(p.usd, 'US$') : t('價格未知')}</span>
-        <span class="pk-nm">${esc(p.name)}</span></button>`;
+        <span class="pk-nm">${esc(p.name)}</span>
+        <span class="pk-price">${p.usd != null ? money(p.usd, 'US$') : t('價格未知')}${p.items.length > 1 ? ` <span class="pk-n">· ${t('{n} 件', { n: p.items.length })}</span>` : ''}</span></button>`;
     };
-    pBody.innerHTML = `<div class="pk-split">
-      <nav class="pk-nav" aria-label="${t('禮包分類')}">
-        ${idxBtn('__recent', t('最近'), I.recent)}${idxBtn('__picked', t('已選'), P.filter(p => packState(p)))}
-        <span class="pk-sec">${t('季節')}</span>${I.season.map(s => idxBtn(s.key, `<span class="mono">AP${s.series}</span> ${esc(D.seasonName(s.series))}`, s.packs)).join('')}
-        <span class="pk-sec">${t('節日活動')}</span>${I.event.map(s => idxBtn(s.key, esc(s.series.replace(/^Days of /, '')), s.packs)).join('')}
-        ${I.other.length ? `<span class="pk-sec">${t('其他')}</span>${I.other.map(s => idxBtn(s.key, t('常駐與其他'), s.packs)).join('')}` : ''}
-      </nav>
-      <div class="pk-main"><p class="picker-group-head">${esc(title)} <span class="mono">${packs.length}</span></p>
-        ${packs.length ? [...blocks].map(([y, ps]) => `${blocks.size > 1 && y ? `<p class="pk-year">${esc(y)}</p>` : ''}<div class="pk-packs">${ps.map(tile).join('')}</div>`).join('')
-          : `<p class="picker-empty">${t('沒有符合的禮包。')}</p>`}
-        <p class="pk-legend"><span><i class="pk-flag" aria-hidden="true"></i>${t('灰點：只在遊戲內購清單或已下架，wiki 沒有對到')}</span></p>
-      </div></div>`;
+    const head = terms.length ? t('找到 {n} 個禮包', { n: list.length }) : pk.cat === 'picked' ? t('已選 {n} 個禮包', { n: list.length }) : t('{n} 個禮包，新到舊', { n: list.length });
+    pBody.innerHTML = `<div class="pk-list">
+      <p class="pk-count">${head}${nPicked && pk.cat !== 'picked' ? ` · <button type="button" class="text-link" data-cat-go="picked">${t('已選 {n} 個', { n: nPicked })}</button>` : ''}</p>
+      ${list.length ? ordered.map(g => `<section class="pk-group"><p class="pk-group-head">${g.label} <span class="pk-group-n">${g.packs.length}</span></p>
+        <div class="pk-packs">${g.packs.map(tile).join('')}</div></section>`).join('')
+        : `<div class="picker-empty">${terms.length ? t('找不到「{q}」。換個叫法試試，例如英文名、活動或年份。', { q: esc(pk.q.trim()) }) : t('沒有符合的禮包。')}
+            ${pk.cat !== 'all' || terms.length ? `<button type="button" class="btn btn-sm" data-iap-reset>${t('清除搜尋和分類')}</button>` : ''}</div>`}
+      ${list.some(p => p.status !== 'confirmed') ? `<p class="pk-legend"><span><i class="pk-flag" aria-hidden="true"></i>${t('灰點：只在遊戲內購清單或已下架，wiki 沒有對到')}</span></p>` : ''}
+    </div>`;
   }
   function togglePack(id) {
     const p = D.packs().find(x => x.id === id);
@@ -1169,6 +1153,12 @@
   }
   pBody.addEventListener('click', e => {
     if (e.target.closest('[data-upload]')) { $('#custom-input').click(); return; }
+    const go = e.target.closest('[data-cat-go], [data-iap-reset]');
+    if (go) {
+      pk.cat = go.dataset.catGo || 'all';
+      if (go.hasAttribute('data-iap-reset')) { pk.q = ''; $('#picker-q').value = ''; }
+      renderPickerChrome(); refreshPicker(true); return;
+    }
     const b2 = e.target.closest('[data-season-toggle], [data-pend], [data-ult], [data-pass-all], [data-series], [data-pack], [data-rail]');
     if (b2) {
       const d = b2.dataset;
