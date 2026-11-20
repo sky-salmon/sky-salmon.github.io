@@ -390,7 +390,6 @@
  "不要了": "Discard",
  "加入名片": "Add to card",
  "PASS · 季卡與畢業禮": "PASS · Season passes & ultimate gifts",
- "點季卡或畢業禮選取，「整季」一次選好那一季。": "Tap a pass or a gift to pick it; “Whole season” picks the whole season at once.",
  "點禮包選取，裡面的物品會一起放上名片。": "Tap a pack to pick it; everything in it goes on the card.",
  "點魔法選取，數量之後在名片上點它就能改。": "Tap a spell to pick it; tap it on the card later to change the count.",
  "用左邊的分類或搜尋找物品，點一下選取。": "Browse the categories or search, then tap an item to pick it.",
@@ -521,5 +520,10 @@
  "{n} 季，新到舊": "{n} seasons, newest first",
  "找不到「{q}」。換個叫法試試，例如季節名、AP 編號或年份。": "Nothing matches “{q}”. Try a season name, an AP number or a year.",
  "幣別": "Currency",
- "加入物品，點物品可以改名、移動或移除；按": "to add items, tap an item to rename, move or remove it; press"
+ "加入物品，點物品可以改名、移動或移除；按": "to add items, tap an item to rename, move or remove it; press",
+ "點季卡或畢業禮選取；點季節名稱一次選好整季。": "Tap a season pass or ultimate gift to pick it; tap a season’s name to pick the whole season.",
+ "圓的是季卡，方的是畢業禮。": "Round: season pass. Square: ultimate gift.",
+ "從某一季起都有": "Every season from…",
+ "從某一季起都有…": "Every season from…",
+ "從 {season} 起": "From {season} on"
 }
