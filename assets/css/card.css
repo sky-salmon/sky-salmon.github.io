@@ -925,22 +925,36 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 .pk-n { color: var(--muted); font-weight: 400; }
 .picker-empty .btn { margin-top: 10px; }
 
-/* PASS picker: season groups of square tiles */
-.pk-count { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
-.pk-count-end { margin-left: auto; }
-.pk-group-head .pk-all { margin-left: auto; align-self: center; padding: 4px 11px; font-size: 12.5px; font-weight: 600; }
-.pk-pass-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 7px; margin-bottom: 0; }
-.pk-pass .pk-nm { min-height: 0; -webkit-line-clamp: 1; font-size: 12px; }
-.pk-pass .pk-stack img { filter: grayscale(1) opacity(.45); transition: filter .15s; }
-.pk-pass:hover .pk-stack img { filter: grayscale(.3) opacity(.85); }
-.pk-pass[aria-pressed="true"] .pk-stack img { filter: none; }
-.pk-pass.is-pend .pk-nm { color: var(--accent); }
-.pk-list.is-pass { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; align-items: start; }
-.is-pass > .pk-count, .is-pass > .picker-empty { grid-column: 1 / -1; }
-.is-pass .pk-group { margin: 0; padding: 8px 10px 10px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255, 255, 255, .02); }
-.is-pass .pk-group.on { border-color: rgba(242, 160, 90, .4); background: rgba(242, 160, 90, .05); }
-.is-pass .pk-group-head { position: static; align-items: center; margin: 0 0 8px; padding: 0 0 0 2px; background: none; }
-@media (max-width: 680px) { .pk-list.is-pass { grid-template-columns: 1fr; gap: 8px; } }
+/* PASS picker: compact season cards, 4 a row on desktop and 2 on phones */
+.pk-count { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.pk-count-end { display: inline-flex; align-items: center; gap: 12px; margin-left: auto; }
+.pk-from { width: auto; max-width: 52vw; padding: 5px 28px 5px 10px; font-size: 12.5px; }
+.pk-list.is-pass { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; align-items: start; }
+.is-pass > .pk-count, .is-pass > .ps-legend, .is-pass > .picker-empty { grid-column: 1 / -1; }
+.ps-legend { margin: -2px 0 2px; font-size: 12px; }
+.ps { display: grid; gap: 6px; min-width: 0; padding: 5px 6px 7px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .02); }
+.ps.on { border-color: rgba(242, 160, 90, .42); background: rgba(242, 160, 90, .06); }
+.ps-head { display: flex; align-items: center; gap: 5px; width: 100%; min-width: 0; padding: 4px 4px 2px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; }
+.ps-head:hover { background: rgba(255, 255, 255, .06); }
+.ps-head .mono { flex: none; font-size: 10.5px; color: var(--accent); }
+.ps-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-n { flex: none; margin-left: auto; font-family: var(--font-mono); font-size: 10.5px; font-weight: 400; color: var(--muted); }
+.ps-chk { flex: none; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid var(--line-strong); font-size: 10px; font-weight: 800; color: #1f1d12; }
+.ps.on .ps-chk { border-color: var(--accent); }
+.ps-head[aria-pressed="true"] .ps-chk { background: var(--accent); }
+.ps-head[aria-pressed="true"] .ps-chk::after { content: "✓"; }
+.ps-items { display: flex; flex-wrap: wrap; gap: 5px; }
+.ps-it { position: relative; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 9px; border: 1px solid var(--line); background: rgba(0, 0, 0, .18); }
+.ps-it.is-pend { border-radius: 50%; }
+.ps-it img { width: 27px; height: 27px; object-fit: contain; filter: grayscale(1) opacity(.42); transition: filter .15s; }
+.ps-it:hover img { filter: grayscale(.3) opacity(.85); }
+.ps-it[aria-pressed="true"] { border-color: var(--accent); background: rgba(242, 160, 90, .2); }
+.ps-it[aria-pressed="true"] img { filter: none; }
+@media (max-width: 680px) {
+  .pk-list.is-pass { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .pk-count-end { margin-left: 0; width: 100%; justify-content: space-between; }
+  .pk-from { max-width: none; flex: 1; }
+}
 
 /* 估價: accuracy and "你認為值多少" */
 .val-acc { margin-top: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255, 255, 255, .025); }

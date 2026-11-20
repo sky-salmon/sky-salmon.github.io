@@ -849,7 +849,7 @@
   let pk = null; // { sec, mode, sel: Map(key → item), order: [keys], cat, season, q }
   const PICK_TITLES = { pass: t('PASS · 季卡與畢業禮'), pin: t('PIN & STAR · 徽章'), iap: t('IAP · 內購禮包'), spells: t('SPELLS · 魔法'), extra: t('CLOSET · 衣櫃'), link: t('LINK · 綁定平台') };
   const PICK_SUBS = {
-    pass: t('點季卡或畢業禮選取，「整季」一次選好那一季。'),
+    pass: t('點季卡或畢業禮選取；點季節名稱一次選好整季。'),
     iap: t('點禮包選取，裡面的物品會一起放上名片。'),
     spells: t('點魔法選取，數量之後在名片上點它就能改。'),
     extra: t('用左邊的分類或搜尋找物品，點一下選取。'),
@@ -979,19 +979,20 @@
     const nOn = all.filter(s => st(s).on).length;
     const tile = (i, s, pend) => {
       const key = 'c:' + i.path, label = pend ? t('{season}・季卡', { season: D.seasonFull(s.code) }) : t('{season}・畢業禮・{type}', { season: D.seasonFull(s.code), type: typeZh(i) });
-      return `<button type="button" class="pk-pack pk-pass${pend ? ' is-pend' : ''}" ${pend ? 'data-pend' : 'data-ult'}="${esc(key)}" data-season="${s.code}" aria-pressed="${pk.sel.has(key)}" title="${esc(label)}${pend ? '' : ' (' + esc(i.label) + ')'}" aria-label="${esc(label)}">
-        <span class="pk-stack">${iconImg(i.path)}</span><span class="pk-nm">${pend ? t('季卡') : esc(typeZh(i))}</span></button>`;
+      return `<button type="button" class="ps-it${pend ? ' is-pend' : ''}" ${pend ? 'data-pend' : 'data-ult'}="${esc(key)}" data-season="${s.code}" aria-pressed="${pk.sel.has(key)}" title="${esc(label)}${pend ? '' : ' (' + esc(i.label) + ')'}" aria-label="${esc(label)}">${iconImg(i.path)}</button>`;
     };
     const head = terms.length ? t('找到 {n} 季', { n: list.length }) : pk.cat === 'picked' ? t('已選 {n} 季', { n: list.length }) : t('{n} 季，新到舊', { n: list.length });
+    const from = `<select class="select pk-from" data-pass-from aria-label="${t('從某一季起都有')}"><option value="">${t('從某一季起都有…')}</option>${all.map(s => `<option value="${s.code}">${esc(t('從 {season} 起', { season: 'AP' + s.code + ' ' + D.seasonName(s.code) }))}</option>`).join('')}</select>`;
     pBody.innerHTML = `<div class="pk-list is-pass">
-      <p class="pk-count">${head}${nOn && pk.cat !== 'picked' ? ` · <button type="button" class="text-link" data-cat-go="picked">${t('已選 {n} 季', { n: nOn })}</button>` : ''}
-        <button type="button" class="text-link pk-count-end" data-pass-all>${t('全部季節都有')}</button></p>
+      <div class="pk-count">${head}${nOn && pk.cat !== 'picked' ? ` · <button type="button" class="text-link" data-cat-go="picked">${t('已選 {n} 季', { n: nOn })}</button>` : ''}
+        <span class="pk-count-end">${from}<button type="button" class="text-link" data-pass-all>${t('全部季節都有')}</button></span></div>
+      <p class="ps-legend hint">${t('圓的是季卡，方的是畢業禮。')}</p>
       ${list.length ? list.map(s => {
-        const x = st(s);
-        return `<section class="pk-group${x.on ? ' on' : ''}"><p class="pk-group-head"><span class="mono">AP${esc(s.code)}</span> ${esc(D.seasonName(s.code))}
-            <span class="pk-group-n">${x.n ? `${x.n}/${x.of}` : ''}</span>
-            <button type="button" class="pk-all" data-season-toggle="${s.code}" aria-pressed="${x.full}">${x.full ? t('取消整季') : t('整季')}</button></p>
-          <div class="pk-packs pk-pass-grid">${s.pend ? tile(s.pend, s, true) : ''}${s.ults.map(u => tile(u, s, false)).join('')}</div></section>`;
+        const x = st(s), name = D.seasonFull(s.code);
+        return `<section class="ps${x.on ? ' on' : ''}">
+          <button type="button" class="ps-head" data-season-toggle="${s.code}" aria-pressed="${x.full}" title="${esc(x.full ? t('取消整季') : t('整季'))}" aria-label="${esc(name + ' · ' + (x.full ? t('取消整季') : t('整季')))}">
+            <span class="mono">AP${esc(s.code)}</span><span class="ps-nm">${esc(D.seasonName(s.code))}</span><span class="ps-n">${x.n && !x.full ? `${x.n}/${x.of}` : ''}</span><span class="ps-chk" aria-hidden="true"></span></button>
+          <div class="ps-items">${s.pend ? tile(s.pend, s, true) : ''}${s.ults.map(u => tile(u, s, false)).join('')}</div></section>`;
       }).join('')
         : `<div class="picker-empty">${terms.length ? t('找不到「{q}」。換個叫法試試，例如季節名、AP 編號或年份。', { q: esc(pk.q.trim()) }) : pk.cat === 'picked' ? t('還沒選任何季節。') : t('找不到符合的季節，換個關鍵字試試。')}
             ${pk.cat !== 'pass' || terms.length ? `<button type="button" class="btn btn-sm" data-pick-reset>${t('清除搜尋和分類')}</button>` : ''}</div>`}</div>`;
@@ -1161,6 +1162,12 @@
     }
     const b = e.target.closest('.pick');
     if (b) { togglePick(b.dataset.key); updatePickerStatus(); if (pk.sec === 'extra' && pk.catalog) refreshPicker(); }
+  });
+  pBody.addEventListener('change', e => {
+    const f = e.target.closest('[data-pass-from]');
+    if (!f || !f.value || !pk.seasons) return;
+    pk.seasons.filter(x => x.code >= f.value && x.pend).forEach(x => togglePick('c:' + x.pend.path, true));
+    refreshPicker();
   });
   $('#picker-tray').addEventListener('click', e => {
     const b = e.target.closest('[data-unpick]');
