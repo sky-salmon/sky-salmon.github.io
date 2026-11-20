@@ -13,6 +13,7 @@
   // looked up by value below, listed here for the translation build:
   // t('無斷') t('偽無斷') t('微斷') t('斷季') t('大斷') t('簡號') t('綁定全可換') t('1 個綁定不能出') t('2 個以上綁定不能出')
   // t('五週年斗') t('小白花')
+  // t('（第一季是半季，有{item}）') t('（第一季是半季，沒有{item}）')
   // t('傘') t('篝火') t('白鳥') t('耳墜') t('阿努') t('不死鳥') t('玫瑰') t('羽毛') t('白梟') t('眼鏡')
 
   // how close the model came on accounts it had not seen (leave-one-out over the posts it was fitted on), for models
@@ -145,20 +146,26 @@
     const first = owned[0], fin = codes.filter(c => c < cur);
     const state = c => (!a.seasons.has(c) ? null : answers.half && c === first ? 'h' : a.grad.has(c) ? 'g' : 'p');
     const held = c => (state(c) ? 1 : answers.fake ? model.fake_presence : 0);
+    // a first season joined halfway is worth what its sought-after ultimate says (魔法 → 耳墜, 預言 → 阿努, 小王子 → 玫瑰 …):
+    // with it, like the whole season; without it, most of the way down to the next start; no such item: halfway
+    const HW = model.half || { with_hot: 1, without_hot: 0.25, no_hot_item: model.half_weight || 0.5 };
+    const hotOf = c => Object.entries(model.hot_ultimates).filter(([, v]) => v.season === c);
+    const halfInfo = c => { const h = hotOf(c), has = h.some(([k]) => a.ults.has(k));
+      return { w: !h.length ? HW.no_hot_item : has ? HW.with_hot : HW.without_hot, nick: h.length ? h[0][1].nick : '', has }; };
     let best = null;
     owned.forEach(t => {
       const span = fin.filter(c => c >= t);
       if (!span.length) return;
       const cov = span.reduce((n, c) => n + held(c), 0) / span.length, grads = span.filter(c => a.grad.has(c)).length;   // a half first season can still be graduated
       const nxt = codes[Math.min(codes.indexOf(t) + 1, codes.length - 1)];
-      const level = state(t) === 'h' ? B[nxt] + model.half_weight * (B[t] - B[nxt]) : B[t];
+      const level = state(t) === 'h' ? B[nxt] + halfInfo(t).w * (B[t] - B[nxt]) : B[t];
       const value = level * (cv.lo + (cv.hi - cv.lo) * Math.pow(cov, cv.k)) * (1 + model.grad_bonus * grads / span.length);
       if (!best || value > best.value) best = { value, start: t, cov, grads, span: span.length, missing: span.filter(c => !state(c)).length };
     });
     if (!best) best = { value: B[first] * cv.lo, start: first, cov: 0, grads: 0, span: 0, missing: 0 };   // only the running season
     best.kind = !best.missing ? '無斷' : answers.fake ? '偽無斷' : best.missing <= 2 ? '微斷' : best.cov >= 0.7 ? '斷季' : best.cov >= 0.3 ? '大斷' : '簡號';
     best.older = owned.filter(c => c < best.start).length;
-    best.half = answers.half && best.start === first;
+    best.half = answers.half && best.start === first ? halfInfo(first) : null;
     return best;
   }
   // candles typed on the card: 5800, 5,800, 5.8k, 1.2萬 / 1.2w
@@ -217,7 +224,9 @@
     const kind = h.kind === '無斷' && h.older ? t('{season}起無斷，另有 {n} 個更早的季節', { season: seasonName(h.start), n: h.older })
       : h.missing ? t('{season}起{kind}（缺 {n} 季）', { season: seasonName(h.start), kind: t(h.kind), n: h.missing })
         : t('{season}起{kind}', { season: seasonName(h.start), kind: t(h.kind) });
-    lines.push([t('季節'), kind + (h.half ? t('（第一季是半季）') : ''), '']);
+    const half = !h.half ? '' : !h.half.nick ? t('（第一季是半季）')
+      : t(h.half.has ? '（第一季是半季，有{item}）' : '（第一季是半季，沒有{item}）', { item: t(h.half.nick) });
+    lines.push([t('季節'), kind + half, '']);
     if (e.cover && h.span) lines.push([t('畢業'), t('{g} / {n} 季', { g: h.grads, n: h.span }), '']);
     if (e.hot.length) lines.push([t('老畢業禮'), e.hot.map(u => t(u.nick)).join('、'), '+' + money(e.ultVal)]);
     if (e.items.length) lines.push([t('熱門物品'), e.items.map(u => t(u.nick)).join('、'), '+' + money(e.itemVal)]);
@@ -232,7 +241,9 @@
     why.innerHTML = lines.map(([k, v, x]) => `<li><span class="k">${k}</span><span class="v">${v}</span><span class="x mono">${x}</span></li>`).join('');
     const n = e.near.length, level = n >= 5 ? t('中') : n >= 2 ? t('偏低') : t('很低');
     basis.textContent = t('可信度：{level}。相近起點的參考貼文 {n} 筆（{from}～{to}，公開社團）。衣櫃、蠟燭和名片上沒放的東西都會讓實際價格差很多。', {
-      level, n, from: model.basis.from, to: model.basis.to }) + (h.half ? ' ' + t('半季打幾折還沒有足夠的成交資料，先算在「從這季起」和「從下一季起」的正中間。') : '');
+      level, n, from: model.basis.from, to: model.basis.to }) + (!h.half ? '' : ' ' + (h.half.nick
+      ? t('半季看有沒有拿到當季的熱門畢業禮：有就當整季算，沒有就接近從下一季起算。沒有的折多少，還沒有足夠的成交資料。')
+      : t('這季沒有特別熱門的畢業禮，半季先算在「從這季起」和「從下一季起」的正中間。')));
     renderAccuracy(h.start);
     last = e; $('#val-sg').hidden = false;
     $('#val-sg-cur').textContent = CUR[answers.cur].trim();
