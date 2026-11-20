@@ -54,7 +54,7 @@
           <button class="ab-btn" id="btn-export" type="button" aria-label="匯出設定" title="匯出設定：格式、解析度、檔名" aria-haspopup="dialog"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3.5 5.5h6M13.5 5.5h3M3.5 10h2M9.5 10h7M3.5 14.5h8M15.5 14.5h1"/><circle cx="11.5" cy="5.5" r="1.9"/><circle cx="7.5" cy="10" r="1.9"/><circle cx="13.5" cy="14.5" r="1.9"/></svg></button>
           <button class="btn-download" id="btn-download" type="button" aria-label="下載圖片（PNG，2 倍）" title="下載圖片（PNG，2 倍）"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5v9M6.2 9 10 12.8 13.8 9"/><path d="M4 13.5v1.6A1.9 1.9 0 0 0 5.9 17h8.2a1.9 1.9 0 0 0 1.9-1.9v-1.6"/></svg><span class="lbl">下載<span class="lbl-x">圖片</span></span></button>
         </div>
-        <p class="stage-hint hint" id="stage-hint">點名片上的數字和文字直接修改；按 <b>＋</b> 加入物品，點物品可以標價或移除；按 <b>✎</b> 設定頭像、身高與備註。</p>
+        <p class="stage-hint hint" id="stage-hint">點名片上的數字和文字直接修改；按 <b>＋</b> 加入物品，點物品可以改名、移動或移除；按 <b>✎</b> 設定頭像、身高與備註。</p>
       </section>
 
       <!-- inspector -->
@@ -206,6 +206,7 @@
             <div class="val-q">
               <p class="pane-title">名片看不出來的</p>
               <label class="val-check" id="val-fake-row"><input type="checkbox" id="val-fake"><span>斷掉的季節，物品之後有換齊（偽無斷）</span></label>
+              <label class="val-check" id="val-half-row" hidden><input type="checkbox" id="val-half"><span>最早那一季是半季（季中才入坑）</span></label>
               <label class="val-field"><span>綁定</span>
                 <select class="select" id="val-binding">
                   <option value="unknown">不確定</option><option value="all_free">全部可換綁</option>
@@ -213,7 +214,21 @@
                 </select></label>
               <label class="val-check"><input type="checkbox" id="val-dirty"><span>有刷退禮包或髒號紀錄</span></label>
             </div>
+            <div class="val-acc" id="val-acc"></div>
             <p class="hint val-basis" id="val-basis"></p>
+            <form class="val-sg" id="val-sg" novalidate>
+              <p class="pane-title">覺得估得不準？</p>
+              <p class="hint">填你認為這個號值多少，累積起來會用來重新計算每個季節、畢業禮和禮包的價值。</p>
+              <div class="val-sg-row">
+                <label class="val-sg-price"><span class="val-sg-cur" id="val-sg-cur">NT$</span><input class="input" id="val-sg-price" type="text" inputmode="numeric" maxlength="9" autocomplete="off" placeholder="例如 6500" aria-label="你認為的價格"></label>
+                <select class="select" id="val-sg-source" aria-label="這個數字是">
+                  <option value="sold">實際成交價</option><option value="ask">看到的開價</option><option value="own">我的號，想賣的價</option><option value="feel">憑感覺</option>
+                </select>
+              </div>
+              <textarea class="input val-sg-note" id="val-sg-note" maxlength="500" rows="2" placeholder="為什麼（選填）：例如有絕版禮包沒算到、這種號最近很搶手" aria-label="原因（選填）"></textarea>
+              <div class="val-sg-foot"><button type="submit" class="btn btn-primary btn-sm" id="val-sg-send">送出建議</button><span class="hint val-sg-msg" id="val-sg-msg" aria-live="polite"></span></div>
+              <p class="hint val-sg-privacy">會一起送出名片上的季節、物品、徽章數、蠟燭數和上面的選項；不含名字、頭像和備註。</p>
+            </form>
             </div>
             <p class="hint val-note">依公開交易社團的開價和已售貼文推估，只是行情參考，不是成交保證。帳號買賣違反官方服務條款，可能被原主找回或封號。</p>
           </div>
@@ -261,7 +276,6 @@
         <span class="picker-count"><b id="picker-status" aria-live="polite">已選 0 個</b><button type="button" class="text-link" id="picker-clear">全部取消</button></span>
         <div class="picker-tray" id="picker-tray" aria-label="已選的物品"></div>
       </div>
-      <label class="picker-price" id="picker-price" hidden><span>新加入的標價</span><select class="select" id="price-select" aria-label="新加入物品的標價"></select></label>
       <button type="button" class="btn btn-primary picker-done" id="picker-ok">完成</button>
     </div>
     <!-- leaving with picks that are not on the card yet -->
@@ -282,13 +296,6 @@
     <span class="pop-titles"><b id="pop-name">物品</b><small id="pop-sub"></small></span>
     <button type="button" class="row-btn" id="pop-close" aria-label="關閉"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9"/></svg></button>
   </div>
-  <label class="pop-field" id="pop-price-row">
-    <span>價格</span>
-    <span class="pop-price">
-      <select class="select" id="pop-currency" aria-label="幣別"><option>US$</option><option>NT$</option><option>HK$</option><option>RM</option><option>¥</option><option>€</option></select>
-      <input class="input" id="pop-price" type="text" inputmode="decimal" maxlength="9" placeholder="不標價" aria-label="價格">
-    </span>
-  </label>
   <div class="pop-field" id="pop-count-row">
     <span>數量</span>
     <span class="stepper"><button type="button" id="pop-minus" aria-label="減少">−</button><input class="input" id="pop-count" type="text" inputmode="numeric" maxlength="4" aria-label="數量"><button type="button" id="pop-plus" aria-label="增加">＋</button></span>

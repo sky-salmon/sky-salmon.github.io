@@ -11,7 +11,9 @@ rules_version = '2';
 //   gated/{feature} the data a restricted feature needs (e.g. the value model); readable by admins, by accounts
 //                   approved for that feature, or by anyone when the feature is public.
 //   feedback/{id}   messages from the site's feedback form: anyone can send one, only admins read them.
-// Nothing outside requests/, access/ and feedback/ can be listed (admins only), so shared cards are only reachable
+//   valueSuggestions/{id}  "this account is worth X" from people who can use the 估價 tab, with what the estimate saw;
+//                   only admins read them (to refit the value model).
+// Nothing outside requests/, access/, feedback/ and valueSuggestions/ can be listed (admins only), so shared cards are only reachable
 // through their link.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -126,6 +128,25 @@ service cloud.firestore {
       allow get, list, delete: if isAdmin();
       allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
         && request.resource.data.status in ['new', 'done'];
+    }
+
+    match /valueSuggestions/{id} {
+      // whoever may use the estimate can say what they think the account is worth; the uid can't be someone else's
+      allow create: if (isAdmin() || hasPerm('value') || isPublic('value')) && validSuggestion(request.resource.data);
+      allow get, list, delete: if isAdmin();
+      allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['new', 'done'];
+    }
+    function validSuggestion(d) {
+      return d.keys().hasOnly(['model', 'cur', 'price', 'priceTwd', 'est', 'source', 'note', 'acct', 'uid', 'lang', 'status', 'createdAt'])
+        && d.model is string && d.model.size() <= 20 && d.cur in ['TWD', 'CNY', 'MYR', 'HKD']
+        && d.price is number && d.price > 0 && d.price < 10000000 && d.priceTwd is number
+        && d.est is map && d.est.keys().hasOnly(['center', 'low', 'high', 'quick', 'patient'])
+        && d.source in ['sold', 'ask', 'own', 'feel'] && d.note is string && d.note.size() <= 500
+        && d.acct is map && d.acct.seasons is list && d.acct.seasons.size() <= 80 && d.acct.items is list && d.acct.items.size() <= 3000
+        && d.acct.ults is list && d.acct.ults.size() <= 200 && d.acct.packs is list && d.acct.packs.size() <= 600
+        && ((request.auth == null && d.uid == '') || (request.auth != null && d.uid == request.auth.uid))
+        && d.lang is string && d.lang.size() <= 20 && d.status == 'new' && d.createdAt == request.time;
     }
 
     // admin.html before config/: one GitHub token per admin account. Read once to move it into config/github.

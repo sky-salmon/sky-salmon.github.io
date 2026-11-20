@@ -44,7 +44,7 @@
   const LANG = window.I18N ? window.I18N.lang : 'zh-Hant';
   const SEASONS = { '01': { en: '' } };
   (window.SKY_SEASONS || []).forEach(s => {
-    SEASONS[s.code] = { zh: LANG === 'en' ? s.en : LANG === 'zh-Hans' ? s.zh_hans : s.zh, en: s.en, start: s.start, end: s.end };
+    SEASONS[s.code] = { zh: LANG === 'en' ? s.en : LANG === 'zh-Hans' ? s.zh_hans : s.zh, en: s.en, start: s.start, end: s.end, aka: s.aka || [] };
   });
   function seasonName(code) {
     const s = SEASONS[code];
@@ -105,7 +105,7 @@
   function applySeasons(list) {
     (list || []).forEach(s => {
       SEASONS[s.code] = { zh: LANG === 'en' ? s.en : LANG === 'zh-Hans' ? (s.zh_hans || (SEASONS[s.code] || {}).zh || s.zh) : s.zh,
-        en: s.en, start: s.start, end: s.end };
+        en: s.en, start: s.start, end: s.end, aka: [...new Set([...(s.aka || []), ...((SEASONS[s.code] || {}).aka || [])])] };
     });
   }
   // paid packs for the IAP picker, grouped into series: a season, an event family (Days of Mischief …) or "other"
@@ -422,6 +422,7 @@
   window.CardData = {
     CATS, CAT_BY_ID, CLOSET_CATS, SEASONS, seasonName, seasonFull, seasonLabel, parsePath, iconURL, loadCatalog, packs,
     seasonYear: code => ((SEASONS[code] || {}).start || '').slice(0, 4),
+    seasonAka: code => (SEASONS[code] || {}).aka || [],
     CURRENCIES, GLYPH, PINS, LINKS, GRADIENTS, gradientCSS, SOLIDS, FONTS,
     WALLPAPERS, wallpaperURL, textureURL, PAPERS
   };

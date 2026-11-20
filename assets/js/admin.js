@@ -247,10 +247,11 @@
     $('#n-items').textContent = ITEMS.length;
     $('#n-packs').textContent = W.packs.length;
     document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === ui.tab)));
-    $('main.work').classList.toggle('is-update', ['update', 'access', 'feedback'].includes(ui.tab));
+    $('main.work').classList.toggle('is-update', ['update', 'access', 'feedback', 'valuefb'].includes(ui.tab));
     if (ui.tab === 'update') { renderUpdate(); return; }
     if (ui.tab === 'access') { renderAccess(); return; }
     if (ui.tab === 'feedback') { renderFeedback(); return; }
+    if (ui.tab === 'valuefb') { renderValueFb(); return; }
     renderList();
     renderEditor();
   }
@@ -259,6 +260,7 @@
     if (ui.tab === 'update') { renderUpdate(); return; }
     if (ui.tab === 'access') { renderAccess(); return; }
     if (ui.tab === 'feedback') { renderFeedback(); return; }
+    if (ui.tab === 'valuefb') { renderValueFb(); return; }
     const d = diff()[ui.tab];
     if (ui.tab === 'seasons') renderSeasons(d); else if (ui.tab === 'items') renderItems(d); else renderPacks(d);
     if (focus) { const q = $('#q'); q.focus(); q.setSelectionRange(pos, pos); }
@@ -364,6 +366,7 @@
         <div class="field"><span>畢業禮 <span class="hint">${(s.ultimates || []).length} 件 · 從這季的物品裡加</span></span>
           <div class="mini">${(s.ultimates || []).map(n => miniItem(n, 'ult')).join('') || '<span class="hint">還沒有畢業禮</span>'}</div>
           ${itemPicker('ult', '加入畢業禮：搜尋這季的物品')}</div>
+        <label class="field"><span>別稱 <span class="hint">搜尋用，用、分隔，例如 阿努、耳墜</span></span><input class="input" data-s="aka" value="${esc((s.aka || []).join('、'))}"></label>
         <label class="field"><span>備註</span><textarea data-s="note">${esc(s.note || '')}</textarea></label>
         <div class="actions">${orig ? '' : '<span class="tag new">新季節</span>'}${delBlock('這個季節')}</div>
       </div>`;
@@ -451,7 +454,10 @@
     if (!ui.sel) { if (el.dataset.pick) showResults(el); return; }
     if (el.dataset.s) {
       if (el.dataset.s === 'code') return;
-      seasonByCode(selKey())[el.dataset.s] = el.value; changed(true); return;
+      const se = seasonByCode(selKey());
+      if (el.dataset.s === 'aka') { const a = el.value.split(/[、,，;；]/).map(x => x.trim()).filter(Boolean); if (a.length) se.aka = [...new Set(a)]; else delete se.aka; }
+      else se[el.dataset.s] = el.value;
+      changed(true); return;
     }
     if (el.dataset.p) {
       const p = W.packs.find(x => x.id === selKey()), k = el.dataset.p;
@@ -504,8 +510,8 @@
     if (t.id === 'logout') { logout(); return; }
     if (t.id === 'settings') { openSettings(); return; }
     if (!W) return;   // nothing else works before the data is in
-    if (ds.tab) { ui.tab = ds.tab; ui.sel = null; ui.q = ''; ui.confirmDel = false; if (ds.tab === 'access' || ds.tab === 'feedback') { ACC = null; FBK = null; } render(); return; }
-    if (ds.acc || ds.fbk || ds.feat || ds.accOnly || ds.fbkOnly || t.id === 'model-pick') { onFirestoreClick(t); return; }
+    if (ds.tab) { ui.tab = ds.tab; ui.sel = null; ui.q = ''; ui.confirmDel = false; if (ds.tab === 'access' || ds.tab === 'feedback' || ds.tab === 'valuefb') { ACC = null; FBK = null; VSG = null; } render(); return; }
+    if (ds.acc || ds.fbk || ds.vsg || ds.feat || ds.accOnly || ds.fbkOnly || ds.vsgOnly || t.id === 'model-pick') { onFirestoreClick(t); return; }
     if (ds.season) { ui.sel = 'S:' + ds.season; ui.confirmDel = false; render(); return; }
     if (ds.item) { ui.sel = 'I:' + ds.item; ui.confirmDel = false; render(); return; }
     if (ds.pack) { ui.sel = 'P:' + ds.pack; ui.confirmDel = false; render(); return; }
@@ -688,7 +694,7 @@
       } catch { W = clone(ORIG); }
       ui.sel = 'S:' + W.seasons.map(s => s.code).sort().pop();
       render();
-      if (mode === 'google' && fb && guser) { loadAccess().catch(() => {}); loadFeedback().catch(() => {}); }
+      if (mode === 'google' && fb && guser) { loadAccess().catch(() => {}); loadFeedback().catch(() => {}); loadValueFb().catch(() => {}); }
       if (restored) toast(`已還原上次未儲存的 ${restored} 筆變更`, 4000);
     } catch (e) {
       $('#rows').innerHTML = `<p class="empty"><b>載入失敗</b>${esc(e.message)}</p>`;
@@ -1022,7 +1028,7 @@
   // gated/{feature} {data, version} (what a restricted feature reads); feedback/{id} {kind, msg, page, contact, status}.
   const FEATURES = [['value', '估價分頁', '名片產生器的「估價」。核准並勾選的帳號才讀得到估價模型（gated/value）。']];
   const FB_KIND = { bug: '問題回報', data: '資料有誤', idea: '建議', other: '其他' };
-  let ACC = null, FBK = null;
+  let ACC = null, FBK = null, VSG = null;
   const needGoogle = () => { if (mode === 'google' && fb && guser) return false;
     $('#filters').innerHTML = ''; $('#rows').innerHTML = '<p class="empty"><b>要用 Google 登入</b>權限和回饋存在 Firebase，請用管理員的 Google 帳號登入這一頁。</p>'; return true; };
   const when = ts => { const d = ts && ts.toDate ? ts.toDate() : null; return d ? d.toLocaleString('zh-TW', { hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''; };
@@ -1089,8 +1095,65 @@
         <p class="fbk-msg">${esc(f.msg)}</p>${f.contact ? `<p class="note">聯絡方式：${esc(f.contact)}</p>` : ''}
       </div>`).join('') || `<p class="empty">${only === 'new' ? '沒有未處理的回饋。' : '沒有回饋。'}</p>`}</div>`;
   }
+  // 估價建議: what people think an account is worth next to what the estimate said; exported to refit the model
+  const VSG_SRC = { sold: ['實際成交價', 'gold'], ask: ['看到的開價', ''], own: ['自己的號想賣', 'new'], feel: ['憑感覺', ''] };
+  const VSG_BIND = { all_free: '綁定全可換', one_locked: '1 個綁定不能出', more_locked: '2 個以上綁定不能出', unknown: '綁定不確定' };
+  const VSG_CUR = { TWD: 'NT$', CNY: 'RMB ', MYR: 'RM', HKD: 'HK$' };
+  const ntd = n => 'NT$' + Math.round(n || 0).toLocaleString('en-US');
+  const sname = c => (W && (W.seasons.find(x => x.code === c) || {}).zh) || 'AP' + c;
+  async function loadValueFb() {
+    const q = await fb.getDocs(fb.collection(fdb, 'valueSuggestions'));
+    VSG = q.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => ((b.createdAt && b.createdAt.seconds) || 0) - ((a.createdAt && a.createdAt.seconds) || 0));
+    $('#n-valuefb').textContent = VSG.filter(v => v.status === 'new').length || '';
+  }
+  async function renderValueFb() {
+    if (needGoogle()) return;
+    if (!VSG) {
+      $('#filters').innerHTML = ''; $('#rows').innerHTML = '<p class="loading">讀取中…</p>';
+      try { await loadValueFb(); if (!ACC) await loadAccess().catch(() => {}); }
+      catch (e) { $('#rows').innerHTML = `<p class="empty"><b>讀取失敗</b>${esc(e.code || e.message)}：Firestore 規則可能還沒更新，請把 firebase/firestore.rules 貼到 Firebase 控制台發布。</p>`; return; }
+      if (ui.tab !== 'valuefb') return;
+    }
+    const only = ui.vsgOnly || 'new';
+    const list = VSG.filter(v => only === 'all' || v.status === only);
+    $('#filters').innerHTML = [['new', `未處理 ${VSG.filter(v => v.status === 'new').length}`], ['done', `已處理 ${VSG.filter(v => v.status === 'done').length}`], ['all', `全部 ${VSG.length}`]]
+      .map(([k, z]) => `<button type="button" class="chip" data-vsg-only="${k}" aria-pressed="${only === k}">${z}</button>`).join('')
+      + '<button type="button" class="btn ghost small" data-vsg="reload">重新整理</button><button type="button" class="btn small" data-vsg="export"' + (VSG.length ? '' : ' disabled') + '>匯出 JSON</button>';
+    const ratios = VSG.filter(v => v.est && v.est.center > 0).map(v => v.priceTwd / v.est.center).sort((a, b) => a - b);
+    const med = ratios.length ? ratios[Math.floor(ratios.length / 2)] : null;
+    const who = uid => { const r = ACC && ACC.rows.find(x => x.uid === uid); return uid ? (r ? r.label : uid.slice(0, 8)) : '未登入訪客'; };
+    const row = v => {
+      const a = v.acct || {}, e = v.est || {}, src = VSG_SRC[v.source] || [v.source, ''];
+      const diffPct = e.center ? Math.round((v.priceTwd / e.center - 1) * 100) : null;
+      const orig = v.cur && v.cur !== 'TWD' ? `${VSG_CUR[v.cur] || v.cur}${Math.round(v.price).toLocaleString('en-US')}（≈${ntd(v.priceTwd)}）` : ntd(v.priceTwd);
+      const hist = a.start ? `${esc(sname(a.start))}起${esc(a.kind || '')}${a.missing ? `（缺 ${a.missing} 季）` : ''}${a.older ? `，另有 ${a.older} 個更早的季節` : ''}` : '';
+      const extra = [`${(a.seasons || []).length} 季`, `畢業禮 ${(a.ults || []).length}`, `禮包 ${(a.packs || []).length}`, `徽章 ${a.badges || 0}`, `物品 ${(a.items || []).length}`,
+        a.currency && a.currency.candle && a.currency.candle !== '0' ? `蠟燭 ${esc(a.currency.candle)}` : '', VSG_BIND[a.binding] || '', a.fake ? '偽無斷' : '', a.dirty ? '刷退/髒號' : ''].filter(Boolean).join(' · ');
+      return `<div class="fbk vsg" data-id="${esc(v.id)}">
+        <div class="fbk-head"><span class="tag ${src[1]}">${esc(src[0])}</span><span class="note">${esc(when(v.createdAt))} · ${esc(who(v.uid))} · 模型 v${esc(v.model)}</span>
+          <span class="spacer"></span>${v.status === 'new' ? '<button type="button" class="btn small" data-vsg="done">標記已處理</button>' : '<button type="button" class="btn ghost small" data-vsg="undo">改回未處理</button>'}<button type="button" class="btn ghost small" data-vsg="delete">刪除</button></div>
+        <p class="vsg-price"><span class="note">估價</span> ${ntd(e.low)}–${ntd(e.high)} <span class="note">（中間 ${ntd(e.center)}）</span> → <span class="note">建議</span> <b>${orig}</b>${diffPct !== null ? ` <span class="tag ${diffPct >= 0 ? 'new' : 'del'}">${diffPct >= 0 ? '+' : ''}${diffPct}%</span>` : ''}</p>
+        <p class="note">${hist}${hist ? ' · ' : ''}${extra}</p>
+        ${v.note ? `<p class="fbk-msg">${esc(v.note)}</p>` : ''}
+      </div>`;
+    };
+    $('#rows').innerHTML = `<div class="acc">
+      ${VSG.length ? `<p class="note">共 ${VSG.length} 筆${med ? `，建議價是估價的 ${med.toFixed(2)} 倍（中位數）` : ''}，其中實際成交價 ${VSG.filter(v => v.source === 'sold').length} 筆。累積到幾十筆後按「匯出 JSON」，把檔案交給 Claude 重新計算每個季節、畢業禮和禮包的價值，算好的新模型再從「權限」上傳。</p>` : ''}
+      ${list.map(row).join('') || `<p class="empty">${only === 'new' ? '沒有未處理的估價建議。有人在名片產生器的「估價」填了「你認為值多少」，會出現在這裡。' : '沒有估價建議。'}</p>`}</div>`;
+  }
+  function exportValueFb() {
+    const out = VSG.map(v => Object.assign({}, v, { createdAt: v.createdAt && v.createdAt.toDate ? v.createdAt.toDate().toISOString() : null }));
+    const blob = new Blob([JSON.stringify({ exported: new Date().toISOString(), count: out.length, suggestions: out }, null, 1)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `value-suggestions-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast(`已匯出 ${out.length} 筆`);
+  }
   async function onFirestoreClick(t) {
     const ds = t.dataset;
+    if (ds.vsgOnly) { ui.vsgOnly = ds.vsgOnly; renderValueFb(); return; }
+    if (ds.vsg === 'reload') { VSG = null; renderValueFb(); return; }
+    if (ds.vsg === 'export') { exportValueFb(); return; }
     if (ds.accOnly) { ui.accOnly = ds.accOnly; renderAccess(); return; }
     if (ds.fbkOnly) { ui.fbkOnly = ds.fbkOnly; renderFeedback(); return; }
     if (t.id === 'model-pick') { $('#model-file').click(); return; }
@@ -1123,6 +1186,12 @@
         else { const status = ds.fbk === 'done' ? 'done' : 'new'; await fb.setDoc(ref, { status }, { merge: true }); f.status = status; }
         $('#n-feedback').textContent = FBK.filter(x => x.status === 'new').length || '';
         renderFeedback();
+      } else if (ds.vsg) {
+        const id = t.closest('[data-id]').dataset.id, v = VSG.find(x => x.id === id), ref = fb.doc(fdb, 'valueSuggestions', id);
+        if (ds.vsg === 'delete') { if (!confirm('刪除這筆估價建議？')) { t.disabled = false; return; } await fb.deleteDoc(ref); VSG = VSG.filter(x => x.id !== id); }
+        else { const status = ds.vsg === 'done' ? 'done' : 'new'; await fb.setDoc(ref, { status }, { merge: true }); v.status = status; }
+        $('#n-valuefb').textContent = VSG.filter(x => x.status === 'new').length || '';
+        renderValueFb();
       }
     } catch (e) { toast('操作失敗：' + esc(e.code || e.message), 6000); t.disabled = false; }
   }

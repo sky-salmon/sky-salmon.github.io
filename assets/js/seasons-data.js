@@ -7,7 +7,8 @@ window.SKY_SEASONS = [
 "en": "Gratitude",
 "start": "2019-07-19",
 "end": "2019-09-02",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "03",
@@ -16,7 +17,11 @@ window.SKY_SEASONS = [
 "en": "Lightseekers",
 "start": "2019-09-23",
 "end": "2019-11-10",
-"note": ""
+"note": "",
+"aka": [
+"傘",
+"伞"
+]
 },
 {
 "code": "04",
@@ -25,7 +30,10 @@ window.SKY_SEASONS = [
 "en": "Belonging",
 "start": "2019-11-18",
 "end": "2020-01-12",
-"note": ""
+"note": "",
+"aka": [
+"篝火"
+]
 },
 {
 "code": "05",
@@ -34,7 +42,11 @@ window.SKY_SEASONS = [
 "en": "Rhythm",
 "start": "2020-01-24",
 "end": "2020-04-05",
-"note": ""
+"note": "",
+"aka": [
+"白鳥",
+"白鸟"
+]
 },
 {
 "code": "06",
@@ -43,7 +55,12 @@ window.SKY_SEASONS = [
 "en": "Enchantment",
 "start": "2020-04-20",
 "end": "2020-06-21",
-"note": ""
+"note": "",
+"aka": [
+"耳墜",
+"耳坠",
+"耳"
+]
 },
 {
 "code": "07",
@@ -52,7 +69,8 @@ window.SKY_SEASONS = [
 "en": "Sanctuary",
 "start": "2020-07-13",
 "end": "2020-09-20",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "08",
@@ -61,7 +79,11 @@ window.SKY_SEASONS = [
 "en": "Prophecy",
 "start": "2020-10-05",
 "end": "2020-12-13",
-"note": ""
+"note": "",
+"aka": [
+"阿努",
+"努"
+]
 },
 {
 "code": "09",
@@ -70,7 +92,11 @@ window.SKY_SEASONS = [
 "en": "Dreams",
 "start": "2021-01-04",
 "end": "2021-03-14",
-"note": ""
+"note": "",
+"aka": [
+"不死鳥",
+"不死鸟"
+]
 },
 {
 "code": "10",
@@ -79,7 +105,8 @@ window.SKY_SEASONS = [
 "en": "Assembly",
 "start": "2021-04-05",
 "end": "2021-06-13",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "11",
@@ -88,7 +115,10 @@ window.SKY_SEASONS = [
 "en": "The Little Prince",
 "start": "2021-07-06",
 "end": "2021-09-19",
-"note": ""
+"note": "",
+"aka": [
+"玫瑰"
+]
 },
 {
 "code": "12",
@@ -97,7 +127,10 @@ window.SKY_SEASONS = [
 "en": "Flight",
 "start": "2021-10-04",
 "end": "2021-12-19",
-"note": ""
+"note": "",
+"aka": [
+"羽毛"
+]
 },
 {
 "code": "13",
@@ -106,7 +139,8 @@ window.SKY_SEASONS = [
 "en": "Abyss",
 "start": "2022-01-17",
 "end": "2022-03-27",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "14",
@@ -115,7 +149,11 @@ window.SKY_SEASONS = [
 "en": "Performance",
 "start": "2022-04-11",
 "end": "2022-06-26",
-"note": ""
+"note": "",
+"aka": [
+"白梟",
+"白枭"
+]
 },
 {
 "code": "15",
@@ -124,7 +162,8 @@ window.SKY_SEASONS = [
 "en": "Shattering",
 "start": "2022-07-11",
 "end": "2022-09-26",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "16",
@@ -133,7 +172,8 @@ window.SKY_SEASONS = [
 "en": "AURORA",
 "start": "2022-10-17",
 "end": "2023-01-02",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "17",
@@ -142,7 +182,8 @@ window.SKY_SEASONS = [
 "en": "Remembrance",
 "start": "2023-01-16",
 "end": "2023-04-02",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "18",
@@ -151,7 +192,8 @@ window.SKY_SEASONS = [
 "en": "Passage",
 "start": "2023-04-17",
 "end": "2023-07-02",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "19",
@@ -160,7 +202,11 @@ window.SKY_SEASONS = [
 "en": "Moments",
 "start": "2023-07-17",
 "end": "2023-10-01",
-"note": ""
+"note": "",
+"aka": [
+"眼鏡",
+"眼镜"
+]
 },
 {
 "code": "20",
@@ -169,7 +215,8 @@ window.SKY_SEASONS = [
 "en": "Revival",
 "start": "2023-10-16",
 "end": "2023-12-31",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "21",
@@ -178,7 +225,8 @@ window.SKY_SEASONS = [
 "en": "Nine-Colored Deer",
 "start": "2024-01-15",
 "end": "2024-03-31",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "22",
@@ -187,7 +235,8 @@ window.SKY_SEASONS = [
 "en": "Nesting",
 "start": "2024-04-15",
 "end": "2024-06-30",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "23",
@@ -196,7 +245,8 @@ window.SKY_SEASONS = [
 "en": "Duets",
 "start": "2024-07-15",
 "end": "2024-09-29",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "24",
@@ -205,7 +255,8 @@ window.SKY_SEASONS = [
 "en": "Moomin",
 "start": "2024-10-14",
 "end": "2024-12-29",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "25",
@@ -214,7 +265,8 @@ window.SKY_SEASONS = [
 "en": "Radiance",
 "start": "2025-01-20",
 "end": "2025-04-06",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "26",
@@ -223,7 +275,8 @@ window.SKY_SEASONS = [
 "en": "Blue Bird",
 "start": "2025-04-21",
 "end": "2025-07-06",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "27",
@@ -232,7 +285,8 @@ window.SKY_SEASONS = [
 "en": "Two Embers",
 "start": "2025-07-21",
 "end": "2025-10-05",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "28",
@@ -241,7 +295,8 @@ window.SKY_SEASONS = [
 "en": "Migration",
 "start": "2025-10-20",
 "end": "2026-01-04",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "29",
@@ -250,7 +305,8 @@ window.SKY_SEASONS = [
 "en": "Lightmending",
 "start": "2026-01-16",
 "end": "2026-04-02",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "30",
@@ -259,7 +315,8 @@ window.SKY_SEASONS = [
 "en": "Carnival",
 "start": "2026-04-17",
 "end": "2026-07-02",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "31",
@@ -268,7 +325,8 @@ window.SKY_SEASONS = [
 "en": "Dear Van Gogh",
 "start": "2026-07-17",
 "end": "2026-10-01",
-"note": ""
+"note": "",
+"aka": []
 },
 {
 "code": "32",
@@ -277,6 +335,7 @@ window.SKY_SEASONS = [
 "en": "Pearl",
 "start": "2026-10-16",
 "end": "2026-12-31",
-"note": "暫譯：官方中文名稱尚未公布"
+"note": "暫譯：官方中文名稱尚未公布",
+"aka": []
 }
 ];
