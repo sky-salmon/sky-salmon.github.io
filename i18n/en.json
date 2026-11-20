@@ -555,5 +555,11 @@
  "圓的是季卡，方的是畢業禮。": "Round: season pass. Square: ultimate gift.",
  "從某一季起都有": "Every season from…",
  "從某一季起都有…": "Every season from…",
- "從 {season} 起": "From {season} on"
+ "從 {season} 起": "From {season} on",
+ "最早那一季是半季（季中才入坑）": "The first season was joined halfway",
+ "（第一季是半季）": " (first season joined halfway)",
+ "畢業": "Graduated",
+ "{g} / {n} 季": "{g} of {n} seasons",
+ "{n} 根": "{n}",
+ "半季打幾折還沒有足夠的成交資料，先算在「從這季起」和「從下一季起」的正中間。": "There isn't enough sales data yet on how much a half season knocks off, so it is priced halfway between starting this season and starting the next."
 }
