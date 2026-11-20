@@ -1210,7 +1210,8 @@
       } else if (el.id === 'model-file' && el.files[0]) {
         const text = await el.files[0].text(); el.value = '';
         let m; try { m = JSON.parse(text); } catch { toast('不是 JSON 檔'); return; }
-        if (!m || !m.version || !m.base || !m.streak || !m.hot_ultimates) { toast('這不是估價模型（缺 version、base、streak 或 hot_ultimates）', 6000); return; }
+        // v0.4 models carry streak steps; v0.5 (form "coverage") carries the coverage curve instead
+        if (!m || !m.version || !m.base || !(m.streak || m.coverage) || !m.hot_ultimates) { toast('這不是估價模型（缺 version、base、streak／coverage 或 hot_ultimates）', 6000); return; }
         const data = JSON.stringify(m);
         if (data.length > 990000) { toast('模型太大（超過 1 MB）'); return; }
         await fb.setDoc(fb.doc(fdb, 'gated', 'value'), { data, version: String(m.version), updatedAt: fb.serverTimestamp() });
