@@ -147,18 +147,21 @@
     const state = c => (!a.seasons.has(c) ? null : answers.half && c === first ? 'h' : a.grad.has(c) ? 'g' : 'p');
     const held = c => (state(c) ? 1 : answers.fake ? model.fake_presence : 0);
     // a first season joined halfway is worth what its sought-after ultimate says (魔法 → 耳墜, 預言 → 阿努, 小王子 → 玫瑰 …):
-    // with it, like the whole season; without it, most of the way down to the next start; no such item: halfway
-    const HW = model.half || { with_hot: 1, without_hot: 0.25, no_hot_item: model.half_weight || 0.5 };
+    // with it, a little under the whole season; without it, most of the way down to the next start; no such item: halfway
+    const HW = model.half || { with_hot_level: 0.9, without_hot_gap: 0.25, no_hot_gap: model.half_weight || 0.5 };
     const hotOf = c => Object.entries(model.hot_ultimates).filter(([, v]) => v.season === c);
-    const halfInfo = c => { const h = hotOf(c), has = h.some(([k]) => a.ults.has(k));
-      return { w: !h.length ? HW.no_hot_item : has ? HW.with_hot : HW.without_hot, nick: h.length ? h[0][1].nick : '', has }; };
+    const halfInfo = c => { const h = hotOf(c); return { nick: h.length ? h[0][1].nick : '', has: h.some(([k]) => a.ults.has(k)) }; };
+    const halfLevel = (t, nxt) => {
+      const gap = w => B[nxt] + w * (B[t] - B[nxt]), hi = halfInfo(t);
+      return !hi.nick ? gap(HW.no_hot_gap) : hi.has ? Math.max(gap(HW.without_hot_gap), B[t] * HW.with_hot_level) : gap(HW.without_hot_gap);
+    };
     let best = null;
     owned.forEach(t => {
       const span = fin.filter(c => c >= t);
       if (!span.length) return;
       const cov = span.reduce((n, c) => n + held(c), 0) / span.length, grads = span.filter(c => a.grad.has(c)).length;   // a half first season can still be graduated
       const nxt = codes[Math.min(codes.indexOf(t) + 1, codes.length - 1)];
-      const level = state(t) === 'h' ? B[nxt] + halfInfo(t).w * (B[t] - B[nxt]) : B[t];
+      const level = state(t) === 'h' ? halfLevel(t, nxt) : B[t];
       const value = level * (cv.lo + (cv.hi - cv.lo) * Math.pow(cov, cv.k)) * (1 + model.grad_bonus * grads / span.length);
       if (!best || value > best.value) best = { value, start: t, cov, grads, span: span.length, missing: span.filter(c => !state(c)).length };
     });
@@ -179,7 +182,9 @@
     if (!h) return { empty: true };
     const hot = [...a.ults].map(n => model.hot_ultimates[n]).filter(Boolean)
       .sort((x, y) => (x.season || '').localeCompare(y.season || ''));
-    const ultVal = hot.reduce((v, u) => v + u.twd, 0);        // traders price these as items of their own
+    // traders price these as items of their own; a half first season's own item counts a little less (like its level)
+    const halfCut = h.half && h.half.has ? ((model.half || {}).with_hot_level || 1) : 1;
+    const ultVal = hot.reduce((v, u) => v + u.twd * (u.season === h.start && halfCut < 1 ? halfCut : 1), 0);
     const items = [...a.names].map(n => (model.hot_items || {})[n]).filter(Boolean);
     const itemVal = items.reduce((v, u) => v + u.twd, 0);
     const badgeVal = a.badges * (model.badge_twd || 0);
@@ -242,7 +247,7 @@
     const n = e.near.length, level = n >= 5 ? t('中') : n >= 2 ? t('偏低') : t('很低');
     basis.textContent = t('可信度：{level}。相近起點的參考貼文 {n} 筆（{from}～{to}，公開社團）。衣櫃、蠟燭和名片上沒放的東西都會讓實際價格差很多。', {
       level, n, from: model.basis.from, to: model.basis.to }) + (!h.half ? '' : ' ' + (h.half.nick
-      ? t('半季看有沒有拿到當季的熱門畢業禮：有就當整季算，沒有就接近從下一季起算。沒有的折多少，還沒有足夠的成交資料。')
+      ? t('半季看有沒有拿到當季的熱門畢業禮：有的話比整季便宜一點，沒有就接近從下一季起算。折多少還沒有足夠的成交資料。')
       : t('這季沒有特別熱門的畢業禮，半季先算在「從這季起」和「從下一季起」的正中間。')));
     renderAccuracy(h.start);
     last = e; $('#val-sg').hidden = false;
