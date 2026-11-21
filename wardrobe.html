@@ -10,13 +10,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Outfit:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/wardrobe.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
 </head>
 <body data-page="wardrobe">
 <main class="wd">
   <header class="wd-head">
     <span class="eyebrow" data-rise>sky-salmon<b>02 / 06</b></span>
     <h1 class="title" data-rise>衣櫃圖鑑 <em>Catalog</em></h1>
-    <p class="lead" data-rise>依部位與季節瀏覽遊戲裡的每一件物品。想看自己的角色穿起來的樣子，到 <a href="height.html">身高</a> 頁上傳服裝 QR。</p>
+    <p class="lead" data-rise>依部位與季節瀏覽遊戲裡的每一件物品，點一下就能在 3D 角色身上試穿（需要開通）。想看自己的角色，到 <a href="height.html">身高</a> 頁上傳服裝 QR。</p>
   </header>
   <p class="wd-banner" id="wd-banner" hidden></p>
 
@@ -38,7 +44,14 @@
 
   <div class="wd-body" data-rise>
     <div class="wd-grid" id="wd-grid"><p class="wd-empty">載入中…</p></div>
-    <aside class="wd-detail" id="wd-detail" aria-live="polite" hidden></aside>
+    <aside class="wd-side" id="wd-side" hidden>
+      <section class="wd-stage" id="wd-stage" aria-label="3D 試穿" hidden>
+        <div class="wd-canvas-wrap"><canvas id="wd-canvas" aria-label="3D 角色，拖曳可以轉動"></canvas><p class="wd-stage-note" id="wd-stage-note" aria-live="polite"></p></div>
+        <div class="wd-clips" id="wd-clips" role="group" aria-label="動作"></div>
+        <div class="wd-worn" id="wd-worn"></div>
+      </section>
+      <div class="wd-detail" id="wd-detail" aria-live="polite" hidden></div>
+    </aside>
   </div>
 </main>
 
@@ -47,6 +60,8 @@
 <script src="assets/js/site.js"></script>
 <script src="assets/js/seasons-data.js"></script>
 <script src="assets/js/card-data.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/access.js"></script>
 <script src="assets/js/wardrobe.js"></script>
 </body>
 </html>

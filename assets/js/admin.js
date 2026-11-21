@@ -471,7 +471,7 @@
     if (el.dataset.pick) showResults(el);
   }
   function onChange(e) {
-    if (e.target.dataset && (e.target.dataset.feat || e.target.dataset.acc === 'perm' || e.target.id === 'model-file')) { onFirestoreChange(e.target); return; }
+    if (e.target.dataset && (e.target.dataset.feat || e.target.dataset.acc === 'perm' || e.target.dataset.mail === 'perm' || e.target.id === 'model-file')) { onFirestoreChange(e.target); return; }
     const el = e.target;
     if (!W) return;
     if (el.id === 'f-group') { ui.group = el.value; ui.limit = 200; renderList(); return; }
@@ -511,7 +511,7 @@
     if (t.id === 'settings') { openSettings(); return; }
     if (!W) return;   // nothing else works before the data is in
     if (ds.tab) { ui.tab = ds.tab; ui.sel = null; ui.q = ''; ui.confirmDel = false; if (ds.tab === 'access' || ds.tab === 'feedback' || ds.tab === 'valuefb') { ACC = null; FBK = null; VSG = null; } render(); return; }
-    if (ds.acc || ds.fbk || ds.vsg || ds.feat || ds.accOnly || ds.fbkOnly || ds.vsgOnly || t.id === 'model-pick') { onFirestoreClick(t); return; }
+    if (ds.acc || ds.fbk || ds.vsg || ds.feat || ds.mail || ds.accOnly || ds.fbkOnly || ds.vsgOnly || t.id === 'model-pick') { onFirestoreClick(t); return; }
     if (ds.season) { ui.sel = 'S:' + ds.season; ui.confirmDel = false; render(); return; }
     if (ds.item) { ui.sel = 'I:' + ds.item; ui.confirmDel = false; render(); return; }
     if (ds.pack) { ui.sel = 'P:' + ds.pack; ui.confirmDel = false; render(); return; }
@@ -1026,18 +1026,22 @@
   // ── 權限 + 回饋 (Google mode): restricted features, account requests, feedback inbox ─────────────────────
   // access/{uid} {label, status pending|approved|denied, perms {feature: true}}; config/features {public {feature: true}};
   // gated/{feature} {data, version} (what a restricted feature reads); feedback/{id} {kind, msg, page, contact, status}.
-  const FEATURES = [['value', '估價分頁', '名片產生器的「估價」。核准並勾選的帳號才讀得到估價模型（gated/value）。']];
+  const FEATURES = [['value', '估價分頁', '名片產生器的「估價」。核准並勾選的帳號才讀得到估價模型（gated/value）。'],
+    ['wardrobe3d', '3D 圖鑑', '衣櫃圖鑑的 3D 試穿。核准並勾選的帳號、或 Email 名單上的人才看得到。']];
+  const isMail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const FB_KIND = { bug: '問題回報', data: '資料有誤', idea: '建議', other: '其他' };
   let ACC = null, FBK = null, VSG = null;
   const needGoogle = () => { if (mode === 'google' && fb && guser) return false;
     $('#filters').innerHTML = ''; $('#rows').innerHTML = '<p class="empty"><b>要用 Google 登入</b>權限和回饋存在 Firebase，請用管理員的 Google 帳號登入這一頁。</p>'; return true; };
   const when = ts => { const d = ts && ts.toDate ? ts.toDate() : null; return d ? d.toLocaleString('zh-TW', { hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''; };
   async function loadAccess() {
-    const [rq, ft, gv] = await Promise.all([fb.getDocs(fb.collection(fdb, 'access')), fb.getDoc(cfgRef('features')), fb.getDoc(fb.doc(fdb, 'gated', 'value')).catch(() => null)]);
+    const [rq, ft, gv, al] = await Promise.all([fb.getDocs(fb.collection(fdb, 'access')), fb.getDoc(cfgRef('features')), fb.getDoc(fb.doc(fdb, 'gated', 'value')).catch(() => null),
+      fb.getDoc(cfgRef('allow')).catch(() => null)]);
     ACC = {
       rows: rq.docs.map(d => Object.assign({ uid: d.id }, d.data())).sort((a, b) => ((b.createdAt && b.createdAt.seconds) || 0) - ((a.createdAt && a.createdAt.seconds) || 0)),
       pub: (ft.exists() && ft.data().public) || {},
-      model: gv && gv.exists() ? { version: gv.data().version, updatedAt: gv.data().updatedAt, size: (gv.data().data || '').length } : null
+      model: gv && gv.exists() ? { version: gv.data().version, updatedAt: gv.data().updatedAt, size: (gv.data().data || '').length } : null,
+      allow: (al && al.exists() && al.data().emails) || {}   // email → {feature: true}: open without applying
     };
     $('#n-access').textContent = ACC.rows.filter(r => r.status === 'pending').length || '';
   }
@@ -1067,9 +1071,20 @@
         ${k === 'value' ? '<button type="button" class="btn small" id="model-pick">上傳估價模型…</button><input type="file" id="model-file" accept=".json,application/json" hidden>' : ''}
       </div>`).join('');
     const status = { pending: '<span class="tag gold">待審核</span>', approved: '<span class="tag new">已核准</span>', denied: '<span class="tag del">已拒絕</span>' };
+    const mails = Object.keys(ACC.allow).sort();
+    const mailBox = `<div class="file"><div class="file-head"><span class="fn">用 Email 開放</span><span class="tag">${mails.length}</span></div>
+        <div class="acc-row acc-mail-add"><div class="acc-who"><input class="input" id="mail-new" type="email" inputmode="email" autocomplete="off" placeholder="someone@gmail.com" aria-label="要開放的 Email"></div>
+          <div class="acc-perms">${FEATURES.map(([k, z]) => `<label class="acc-perm"><input type="checkbox" data-mail-new="${k}"${k === 'wardrobe3d' ? ' checked' : ''}><span>${esc(z)}</span></label>`).join('')}</div>
+          <div class="acc-acts"><button type="button" class="btn small" data-mail="add">加入</button></div></div>
+        ${mails.map(m => `<div class="acc-row" data-mail-row="${esc(m)}">
+          <div class="acc-who"><b>${esc(m)}</b><span class="note">用這個 Google 帳號登入就能用，不用申請</span></div>
+          <div class="acc-perms">${FEATURES.map(([k, z]) => `<label class="acc-perm"><input type="checkbox" data-mail="perm" data-k="${k}"${ACC.allow[m][k] ? ' checked' : ''}><span>${esc(z)}</span></label>`).join('')}</div>
+          <div class="acc-acts"><button type="button" class="btn ghost small" data-mail="remove">移除</button></div></div>`).join('')}
+        <p class="note pad">名單上的人不必送出申請：用這個 Email 的 Google 帳號登入後，勾選的功能就能用。</p></div>`;
     $('#rows').innerHTML = `<div class="acc">
       <div class="file"><div class="file-head"><span class="fn">需要核准的功能</span></div>${features}
-        <p class="note pad">沒開放給所有人的功能，只有下面核准、而且勾了那項功能的帳號能用。改變會立刻生效（對方重新整理或按「重新檢查」）。</p></div>
+        <p class="note pad">沒開放給所有人的功能，只有下面核准、而且勾了那項功能的帳號，或 Email 名單上的人能用。改變會立刻生效（對方重新整理或按「重新檢查」）。</p></div>
+      ${mailBox}
       <div class="file"><div class="file-head"><span class="fn">申請的帳號</span><span class="tag">${list.length}</span></div>
         ${list.map(r => `<div class="acc-row" data-uid="${esc(r.uid)}">
           <div class="acc-who"><b>${esc(r.label || '（沒有 Email）')}</b><span class="note">${esc(when(r.createdAt))} 申請${r.updatedAt && r.status !== 'pending' ? ' · ' + esc(when(r.updatedAt)) + ' 更新' : ''} · <span class="mono-s">${esc(r.uid.slice(0, 8))}</span></span></div>
@@ -1157,7 +1172,24 @@
     if (ds.accOnly) { ui.accOnly = ds.accOnly; renderAccess(); return; }
     if (ds.fbkOnly) { ui.fbkOnly = ds.fbkOnly; renderFeedback(); return; }
     if (t.id === 'model-pick') { $('#model-file').click(); return; }
-    if (ds.feat) return;   // checkbox: handled on change
+    if (ds.feat || ds.mail === 'perm') return;   // checkboxes: handled on change
+    if (ds.mail === 'add' || ds.mail === 'remove') {
+      const emails = Object.assign({}, ACC.allow);
+      if (ds.mail === 'add') {
+        const m = $('#mail-new').value.trim().toLowerCase(), perms = {};
+        document.querySelectorAll('[data-mail-new]').forEach(c => { if (c.checked) perms[c.dataset.mailNew] = true; });
+        if (!isMail(m)) { toast('請填一個 Email，例如 someone@gmail.com'); $('#mail-new').focus(); return; }
+        if (!Object.keys(perms).length) { toast('至少勾一項功能'); return; }
+        emails[m] = Object.assign({}, emails[m] || {}, perms);
+      } else {
+        const m = t.closest('[data-mail-row]').dataset.mailRow;
+        if (!confirm(`把 ${m} 從名單移除？`)) return;
+        delete emails[m];
+      }
+      try { await fb.setDoc(cfgRef('allow'), { emails, updatedAt: fb.serverTimestamp() }); ACC.allow = emails; toast(ds.mail === 'add' ? '已加入名單' : '已移除'); renderAccess(); }
+      catch (e) { toast('儲存失敗：' + esc(e.code || e.message) + '（Firestore 規則可能還沒更新）', 6000); }
+      return;
+    }
     if (ds.acc === 'reload') { ACC = null; renderAccess(); return; }
     if (ds.fbk === 'reload') { FBK = null; renderFeedback(); return; }
     if (ds.acc === 'perm') return;   // checkbox: handled on change
@@ -1201,6 +1233,12 @@
         const pub = Object.assign({}, ACC.pub); if (el.checked) pub[el.dataset.feat] = true; else delete pub[el.dataset.feat];
         await fb.setDoc(cfgRef('features'), { public: pub, updatedAt: fb.serverTimestamp() });
         ACC.pub = pub; toast(el.checked ? '已開放給所有人' : '已改回需要核准');
+      } else if (el.dataset.mail === 'perm') {
+        const m = el.closest('[data-mail-row]').dataset.mailRow, emails = Object.assign({}, ACC.allow), perms = Object.assign({}, emails[m] || {});
+        if (el.checked) perms[el.dataset.k] = true; else delete perms[el.dataset.k];
+        emails[m] = perms;
+        await fb.setDoc(cfgRef('allow'), { emails, updatedAt: fb.serverTimestamp() });
+        ACC.allow = emails; toast('已更新');
       } else if (el.dataset.acc === 'perm') {
         const uid = el.closest('[data-uid]').dataset.uid, r = ACC.rows.find(x => x.uid === uid);
         if (r.status !== 'approved') return;   // pending/denied: saved when approving
@@ -1210,7 +1248,8 @@
       } else if (el.id === 'model-file' && el.files[0]) {
         const text = await el.files[0].text(); el.value = '';
         let m; try { m = JSON.parse(text); } catch { toast('不是 JSON 檔'); return; }
-        if (!m || !m.version || !m.base || !m.streak || !m.hot_ultimates) { toast('這不是估價模型（缺 version、base、streak 或 hot_ultimates）', 6000); return; }
+        // v0.4 models carry streak steps; v0.5 (form "coverage") carries the coverage curve instead
+        if (!m || !m.version || !m.base || !(m.streak || m.coverage) || !m.hot_ultimates) { toast('這不是估價模型（缺 version、base、streak／coverage 或 hot_ultimates）', 6000); return; }
         const data = JSON.stringify(m);
         if (data.length > 990000) { toast('模型太大（超過 1 MB）'); return; }
         await fb.setDoc(fb.doc(fdb, 'gated', 'value'), { data, version: String(m.version), updatedAt: fb.serverTimestamp() });

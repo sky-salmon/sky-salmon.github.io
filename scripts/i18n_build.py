@@ -30,7 +30,7 @@ def html_keys() -> list[str]:
 
 def js_keys() -> list[str]:
     keys = []
-    for f in ("card.js", "card-value.js", "card-data.js", "site.js", "i18n.js", "cloud.js", "wardrobe.js"):
+    for f in ("card.js", "card-value.js", "card-data.js", "site.js", "i18n.js", "cloud.js", "wardrobe.js", "access.js"):
         s = (ROOT / "assets" / "js" / f).read_text(encoding="utf-8")
         keys += [m.replace("\\'", "'") for m in re.findall(r"\bt\('((?:[^'\\]|\\.)*)'", s)]
     return [k for k in keys if CJK.search(k)]

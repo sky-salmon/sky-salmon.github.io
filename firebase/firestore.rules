@@ -8,6 +8,8 @@ rules_version = '2';
 //   access/{uid}    every signed-in account that asked for a restricted feature: pending until an admin approves it
 //                   and ticks the features it may use (perms: {feature: true}).
 //   config/features which restricted features are open to everyone after all ({public: {feature: true}}).
+//   config/allow    email addresses an admin opened features to without a request ({emails: {email: {feature: true}}});
+//                   a signed-in Google account with that (verified) email gets those features.
 //   gated/{feature} the data a restricted feature needs (e.g. the value model); readable by admins, by accounts
 //                   approved for that feature, or by anyone when the feature is public.
 //   feedback/{id}   messages from the site's feedback form: anyone can send one, only admins read them.
@@ -26,11 +28,18 @@ service cloud.firestore {
       return request.auth != null && (request.auth.uid in rootAdmins()
         || (exists(admins) && request.auth.uid in get(admins).data.uids));
     }
-    // an account an admin approved for this feature
-    function hasPerm(f) {
+    // an account an admin approved for this feature, or whose email an admin listed for it
+    function hasPerm(f) { return approvedFor(f) || listedFor(f); }
+    function approvedFor(f) {
       let a = /databases/$(database)/documents/access/$(request.auth.uid);
       return request.auth != null && exists(a) && get(a).data.status == 'approved'
         && f in get(a).data.perms && get(a).data.perms[f] == true;
+    }
+    function listedFor(f) {
+      let c = /databases/$(database)/documents/config/allow;
+      return request.auth != null && request.auth.token.email_verified == true && exists(c)
+        && request.auth.token.email.lower() in get(c).data.emails
+        && get(c).data.emails[request.auth.token.email.lower()].get(f, false) == true;
     }
     // a restricted feature the admins opened to everyone
     function isPublic(f) {
@@ -96,6 +105,14 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['label', 'status', 'perms', 'note', 'createdAt', 'updatedAt'])
         && request.resource.data.label == resource.data.label && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.status in ['pending', 'approved', 'denied'] && request.resource.data.perms is map
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /config/allow {
+      allow get, delete: if isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['emails', 'updatedAt'])
+        && request.resource.data.emails is map && request.resource.data.emails.size() <= 500
         && request.resource.data.updatedAt == request.time;
     }
 
