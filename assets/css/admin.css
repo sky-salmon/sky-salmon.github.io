@@ -216,6 +216,7 @@ progress.up-bar::-moz-progress-bar { background: var(--gold); border-radius: 99p
 .fbk-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .fbk-msg { margin: 0; white-space: pre-wrap; line-height: 1.6; font-size: 14px; }
 .vsg-price { margin: 0; font-size: 14px; }
+.acc-mail-add .input { width: 100%; }
 .vsg-price b { font-size: 15px; }
 .warn { color: var(--del); }
 .pad { padding: 10px 12px; }

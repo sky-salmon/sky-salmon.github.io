@@ -22,8 +22,8 @@
 .wd-select option { background: #1a1d1c; }
 .wd-count { margin: 0; font-size: 12.5px; color: var(--muted); }
 
-.wd-body { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
-.wd-body:has(.wd-detail[hidden]) { grid-template-columns: minmax(0, 1fr); }
+.wd-body { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+.wd-body:has(.wd-side[hidden]) { grid-template-columns: minmax(0, 1fr); }
 .wd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
 .wd-item { display: grid; gap: 4px; justify-items: center; text-align: center; padding: 10px 8px 9px; border-radius: 16px;
   border: 1px solid var(--line); background: rgba(255, 255, 255, .03); color: var(--ink); }
@@ -35,7 +35,9 @@
 .wd-meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
 .wd-empty { grid-column: 1 / -1; color: var(--muted); text-align: center; padding: 32px; }
 
-.wd-detail { position: sticky; top: calc(64px + var(--wd-bar-h, 140px) + 8px); border: 1px solid var(--line-strong); border-radius: 20px; padding: 18px; display: grid; gap: 8px;
+.wd-side { position: sticky; top: calc(64px + var(--wd-bar-h, 140px) + 8px); display: grid; gap: 12px; max-height: calc(100vh - 64px - var(--wd-bar-h, 140px) - 16px); overflow-y: auto; scrollbar-width: thin; }
+.wd-side[hidden] { display: none; }
+.wd-detail { position: relative; border: 1px solid var(--line-strong); border-radius: 20px; padding: 18px; display: grid; gap: 8px;
   justify-items: start; background: rgba(255, 255, 255, .03); }
 .wd-close { position: absolute; top: 8px; right: 10px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; }
 .wd-close:hover { color: var(--ink); background: rgba(255, 255, 255, .06); }
@@ -51,7 +53,7 @@
 
 @media (max-width: 900px) {
   .wd-body { grid-template-columns: minmax(0, 1fr); }
-  .wd-detail { position: relative; top: 0; order: -1; grid-template-columns: 72px minmax(0, 1fr); column-gap: 14px; padding: 14px; }
+  .wd-detail { position: relative; top: 0; grid-template-columns: 72px minmax(0, 1fr); column-gap: 14px; padding: 14px; }   /* under the stage */
   .wd-d-icon { width: 72px; height: 72px; grid-row: span 2; border-radius: 18px; }
   .wd-d-icon img { width: 56px; height: 56px; }
   .wd-d-name { font-size: 17px; align-self: end; }
@@ -62,3 +64,39 @@
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 @media (max-width: 760px) { .wd-head { padding: 18px 0 4px; } }
+
+/* 3D try-on (restricted: admin.html → 權限 → 3D 圖鑑) */
+.wd-stage { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--line-strong); border-radius: 20px;
+  background: radial-gradient(120% 80% at 50% 100%, rgba(243, 190, 110, .22), transparent 60%), rgba(255, 255, 255, .03); }
+.wd-stage[hidden] { display: none; }
+.wd-canvas-wrap { position: relative; }
+#wd-canvas { display: block; width: 100%; height: min(46vh, 420px); touch-action: pan-y; cursor: grab; }
+#wd-canvas:active { cursor: grabbing; }
+.wd-stage-note { position: absolute; left: 0; right: 0; bottom: 6px; margin: 0; text-align: center; font-size: 12.5px; color: var(--muted); pointer-events: none; }
+.wd-clips { display: flex; flex-wrap: wrap; gap: 6px; }
+.wd-clips .chip-btn { padding: 5px 11px; font-size: 12.5px; }
+.wd-stage .chip-btn { border: 1px solid var(--line-strong); background: transparent; color: var(--ink-soft); border-radius: 999px; font-weight: 600; }
+.wd-stage .chip-btn:hover { border-color: var(--gold); color: var(--ink); }
+.wd-stage .text-link { border: 0; background: none; padding: 0; color: var(--gold); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+.wd-worn { display: grid; gap: 6px; }
+.wd-worn-head { display: flex; justify-content: space-between; align-items: baseline; margin: 0; font-size: 13px; font-weight: 700; }
+.wd-worn-head .text-link { font-size: 12.5px; font-weight: 500; }
+.wd-worn .hint { margin: 0; font-size: 12.5px; }
+.wd-worn-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.wd-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 3px 4px 3px 6px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(0, 0, 0, .18); font-size: 12px; }
+.wd-chip img { width: 20px; height: 20px; object-fit: contain; }
+.wd-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+.wd-chip button { width: 20px; height: 20px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .08); color: var(--ink-soft); line-height: 1; }
+.wd-chip button:hover { background: rgba(255, 255, 255, .18); color: var(--ink); }
+.wd-d-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.wd-d-note { font-size: 12.5px; color: var(--muted); }
+.wd-lock { width: 100%; display: grid; gap: 8px; justify-items: start; margin-top: 6px; padding: 12px; border-radius: 14px; border: 1px dashed var(--line-strong); background: rgba(0, 0, 0, .15); }
+.wd-lock p { margin: 0; font-size: 13px; line-height: 1.55; }
+.wd-lock b { color: var(--gold); font-weight: 600; word-break: break-all; }
+.wd-lock-head { font-weight: 700; color: var(--ink); }
+@media (max-width: 900px) {
+  .wd-side { position: relative; top: 0; order: -1; max-height: none; overflow: visible; }
+  #wd-canvas { height: 300px; }
+  .wd-d-acts, .wd-lock { grid-column: 1 / -1; }
+}
