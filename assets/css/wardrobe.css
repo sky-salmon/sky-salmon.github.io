@@ -37,6 +37,7 @@
 
 .wd-side { position: sticky; top: calc(64px + var(--wd-bar-h, 140px) + 8px); display: grid; gap: 12px; max-height: calc(100vh - 64px - var(--wd-bar-h, 140px) - 16px); overflow-y: auto; scrollbar-width: thin; }
 .wd-side[hidden] { display: none; }
+.wd-side { scroll-margin-top: 76px; }   /* clear of the site header when scrolled to */
 .wd-detail { position: relative; border: 1px solid var(--line-strong); border-radius: 20px; padding: 18px; display: grid; gap: 8px;
   justify-items: start; background: rgba(255, 255, 255, .03); }
 .wd-close { position: absolute; top: 8px; right: 10px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; }

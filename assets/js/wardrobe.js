@@ -155,7 +155,7 @@
       ${worn.length ? `<div class="wd-worn-list">${worn.map(([sl, n]) => {
         const i = byName.get(n);
         return `<span class="wd-chip" title="${esc(i ? i.label : n)}">${i ? `<img src="${esc(D.iconURL(i.path))}" alt="">` : ''}<span>${esc(i ? i.label : n.replace('CharSkyKid_', ''))}</span><button type="button" data-off="${esc(sl)}" aria-label="${esc(t('脫下 {name}', { name: i ? i.label : n }))}">×</button></span>`;
-      }).join('')}</div>` : `<p class="hint">${t('點左邊的物品就會穿上；拖曳角色可以轉動。')}</p>`}`;
+      }).join('')}</div>` : `<p class="hint">${t('點一件物品就會穿上；拖曳角色可以轉動。')}</p>`}`;
   }
   async function startStage() {
     $('#wd-stage').hidden = false; renderSide();

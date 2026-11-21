@@ -586,7 +586,7 @@ window.I18N_DICT = {
 "身上穿的": "Wearing",
 "全部換回預設": "Back to the default outfit",
 "脫下 {name}": "Take off {name}",
-"點左邊的物品就會穿上；拖曳角色可以轉動。": "Tap an item to put it on; drag the kid to turn it.",
+"點一件物品就會穿上；拖曳角色可以轉動。": "Tap an item to put it on; drag the kid to turn it.",
 "3D 角色載入中…": "Loading the 3D kid…",
 "舊版的造型連結已經不能打開了。想看自己的角色，請到 <a href=\"{href}\">身高</a> 頁上傳服裝 QR。": "Old look links no longer open. To see your own kid, upload your outfit QR on the <a href=\"{href}\">Height</a> page.",
 "圖鑑載入失敗，請重新整理再試一次。": "The catalog couldn't load. Please refresh and try again."
@@ -1047,7 +1047,7 @@ window.I18N_DICT = {
 "換裝中…": "换装中…",
 "全部換回預設": "全部换回缺省",
 "脫下 {name}": "脱下 {name}",
-"點左邊的物品就會穿上；拖曳角色可以轉動。": "点左边的物品就会穿上；拖曳角色可以转动。",
+"點一件物品就會穿上；拖曳角色可以轉動。": "点一件物品就会穿上；拖曳角色可以转动。",
 "3D 角色載入中…": "3D 角色加载中…",
 "舊版的造型連結已經不能打開了。想看自己的角色，請到 <a href=\"{href}\">身高</a> 頁上傳服裝 QR。": "旧版的造型链接已经不能打开了。想看自己的角色，请到 <a href=\"{href}\">身高</a> 页上传服装 QR。",
 "圖鑑載入失敗，請重新整理再試一次。": "图鉴加载失败，请刷新再试一次。"

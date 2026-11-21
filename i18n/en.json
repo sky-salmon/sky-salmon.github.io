@@ -585,7 +585,7 @@
  "身上穿的": "Wearing",
  "全部換回預設": "Back to the default outfit",
  "脫下 {name}": "Take off {name}",
- "點左邊的物品就會穿上；拖曳角色可以轉動。": "Tap an item to put it on; drag the kid to turn it.",
  "3D 角色載入中…": "Loading the 3D kid…",
- "舊版的造型連結已經不能打開了。想看自己的角色，請到 <a href=\"{href}\">身高</a> 頁上傳服裝 QR。": "Old look links no longer open. To see your own kid, upload your outfit QR on the <a href=\"{href}\">Height</a> page."
+ "舊版的造型連結已經不能打開了。想看自己的角色，請到 <a href=\"{href}\">身高</a> 頁上傳服裝 QR。": "Old look links no longer open. To see your own kid, upload your outfit QR on the <a href=\"{href}\">Height</a> page.",
+ "點一件物品就會穿上；拖曳角色可以轉動。": "Tap an item to put it on; drag the kid to turn it."
 }
