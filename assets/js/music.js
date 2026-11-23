@@ -501,7 +501,7 @@
   };
   const scrim = $('#scrim');
   const pills = $$('.mu-pill');
-  const drawers = { instrument: $('#drawer-instrument'), library: $('#drawer-library'), compose: $('#drawer-compose'), settings: $('#drawer-settings') };
+  const drawers = { instrument: $('#drawer-instrument'), library: $('#drawer-library'), compose: $('#drawer-compose'), transcribe: $('#drawer-transcribe'), settings: $('#drawer-settings') };
 
   // ── keys ────────────────────────────────────────────────────────────────
   const GLYPH = {
@@ -995,6 +995,7 @@
     returnFocus = trigger || pills.find(p => p.dataset.drawer === name);
     if (name === 'library') renderLibrary();
     if (name === 'compose') updateRecUI();
+    if (name === 'transcribe' && window.TranscribeUI) window.TranscribeUI.open();
     el.classList.add('is-open');
     scrim.classList.add('is-on');
     pills.forEach(p => p.setAttribute('aria-expanded', String(p.dataset.drawer === name)));
@@ -1277,5 +1278,18 @@
   fill(tp.seek);
 
   // read-only hook for debugging / automated checks
-  window.CandleMusic = { get audio() { return Audio.ctx; }, get notesPlayed() { return Audio.stats.notes; }, get state() { return { mode: P.mode, playing: P.playing, step: P.step, song: P.song && P.song.name, hit: P.hit, miss: P.miss }; } };
+  // 轉譜 (music-transcribe-ui.js): put a sheet into the songbook, or play it on the stage without keeping it
+  function addSong(raw) {
+    const song = normalizeStored(Object.assign({ id: uid(), source: 'import', created: Date.now() }, raw));
+    if (!song) return null;
+    library.push(song); saveLibrary(); renderLibrary();
+    return song;
+  }
+  function previewSong(raw) {
+    const song = normalizeStored(Object.assign({ id: 'preview', source: 'import', created: Date.now() }, raw));
+    if (!song) return;
+    closeDrawer(false);
+    loadSong(song, 'listen', true);
+  }
+  window.CandleMusic = { addSong, preview: previewSong, get audio() { return Audio.ctx; }, get notesPlayed() { return Audio.stats.notes; }, get state() { return { mode: P.mode, playing: P.playing, step: P.step, song: P.song && P.song.name, hit: P.hit, miss: P.miss }; } };
 })();
