@@ -476,3 +476,29 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
   .mu-motes, .mu-ripple { display: none; }
   .mu-key, .mu-key.is-down, .mu-key.is-lit, .mu-key::after { transform: none; }
 }
+
+/* 轉譜 drawer (music-transcribe-ui.js) */
+#tr-body .hint { margin: 8px 0 0; font-size: 12.5px; line-height: 1.6; }
+.tr-lock { display: grid; gap: 10px; justify-items: start; padding: 14px; border-radius: 14px; border: 1px dashed var(--line-strong, rgba(255,255,255,.2)); }
+.tr-lock p { margin: 0; font-size: 13.5px; line-height: 1.6; }
+.tr-lock b { color: var(--accent); word-break: break-all; }
+.tr-file { margin: 0 0 8px; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.tr-progress { height: 8px; border-radius: 999px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+.tr-progress i { display: block; height: 100%; background: var(--accent); transition: width .2s; }
+.tr-sum { margin: 0 0 6px; font-size: 13.5px; line-height: 1.6; }
+.tr-sum b, .tr-acc b { color: var(--accent); }
+#tr-body .mu-d-label small { font-weight: 400; color: var(--muted); margin-left: 6px; font-size: 11.5px; }
+.tr-seg { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+.tr-seg button { line-height: 1.3; }
+.tr-seg button small { display: block; font-size: 11px; font-weight: 500; opacity: .8; }
+.tr-seg button[aria-pressed="true"] { background: var(--accent); color: #1f1d12; border-color: transparent; }
+.tr-row { display: flex; align-items: center; gap: 10px; }
+.tr-row .btn { min-width: 40px; padding: 6px 0; }
+.tr-shift { font-size: 13.5px; min-width: 9em; text-align: center; }
+.tr-roll { display: block; width: 100%; height: 92px; margin-top: 14px; }
+.tr-roll .bg { fill: rgba(0, 0, 0, .25); stroke: none; }
+.tr-roll .dot { fill: var(--accent); stroke: none; }
+.tr-name { margin-top: 12px; display: grid; gap: 4px; font-size: 12.5px; }
+.tr-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+#tr-body .text-link { border: 0; background: none; padding: 2px 4px; color: var(--ink-soft); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+#tr-body .text-link:hover { color: var(--accent); }

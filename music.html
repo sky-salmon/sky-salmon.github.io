@@ -41,6 +41,10 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle class="mu-rec-dot" cx="12" cy="12" r="3.2"/></svg>
           <span>編曲</span>
         </button>
+        <button class="mu-pill" type="button" data-drawer="transcribe" aria-expanded="false" aria-controls="drawer-transcribe">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2"/></svg>
+          <span>轉譜</span>
+        </button>
         <button class="mu-pill" type="button" data-drawer="settings" aria-expanded="false" aria-controls="drawer-settings">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
           <span>設定</span>
@@ -198,6 +202,17 @@
     </aside>
 
     <!-- 設定 -->
+    <aside class="mu-drawer" id="drawer-transcribe" role="dialog" aria-labelledby="dh-transcribe" tabindex="-1">
+      <header class="mu-drawer-head">
+        <div>
+          <span class="mu-drawer-eyebrow mono">05 · TRANSCRIBE</span>
+          <h2 id="dh-transcribe">轉譜 <em>By ear</em></h2>
+        </div>
+        <button class="icon-btn mu-close" type="button" aria-label="關閉轉譜面板"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
+      </header>
+      <div class="mu-drawer-body" id="tr-body"></div>
+    </aside>
+
     <aside class="mu-drawer" id="drawer-settings" role="dialog" aria-labelledby="dh-settings" tabindex="-1">
       <header class="mu-drawer-head">
         <div>
@@ -285,5 +300,8 @@
 </main>
 <script src="assets/js/site.js"></script>
 <script src="assets/js/music.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/access.js"></script>
+<script src="assets/js/music-transcribe-ui.js"></script>
 </body>
 </html>

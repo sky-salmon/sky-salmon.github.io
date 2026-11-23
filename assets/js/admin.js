@@ -1027,7 +1027,8 @@
   // access/{uid} {label, status pending|approved|denied, perms {feature: true}}; config/features {public {feature: true}};
   // gated/{feature} {data, version} (what a restricted feature reads); feedback/{id} {kind, msg, page, contact, status}.
   const FEATURES = [['value', '估價分頁', '名片產生器的「估價」。核准並勾選的帳號才讀得到估價模型（gated/value）。'],
-    ['wardrobe3d', '3D 圖鑑', '衣櫃圖鑑的 3D 試穿。核准並勾選的帳號、或 Email 名單上的人才看得到。']];
+    ['wardrobe3d', '3D 圖鑑', '衣櫃圖鑑的 3D 試穿。核准並勾選的帳號、或 Email 名單上的人才看得到。'],
+    ['transcribe', '音檔轉樂譜', '樂譜頁的「轉譜」：上傳鋼琴錄音，自動產生光遇樂譜（選手指數）。']];
   const isMail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const FB_KIND = { bug: '問題回報', data: '資料有誤', idea: '建議', other: '其他' };
   let ACC = null, FBK = null, VSG = null;
@@ -1074,7 +1075,7 @@
     const mails = Object.keys(ACC.allow).sort();
     const mailBox = `<div class="file"><div class="file-head"><span class="fn">用 Email 開放</span><span class="tag">${mails.length}</span></div>
         <div class="acc-row acc-mail-add"><div class="acc-who"><input class="input" id="mail-new" type="email" inputmode="email" autocomplete="off" placeholder="someone@gmail.com" aria-label="要開放的 Email"></div>
-          <div class="acc-perms">${FEATURES.map(([k, z]) => `<label class="acc-perm"><input type="checkbox" data-mail-new="${k}"${k === 'wardrobe3d' ? ' checked' : ''}><span>${esc(z)}</span></label>`).join('')}</div>
+          <div class="acc-perms">${FEATURES.map(([k, z]) => `<label class="acc-perm"><input type="checkbox" data-mail-new="${k}"><span>${esc(z)}</span></label>`).join('')}</div>
           <div class="acc-acts"><button type="button" class="btn small" data-mail="add">加入</button></div></div>
         ${mails.map(m => `<div class="acc-row" data-mail-row="${esc(m)}">
           <div class="acc-who"><b>${esc(m)}</b><span class="note">用這個 Google 帳號登入就能用，不用申請</span></div>
