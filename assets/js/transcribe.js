@@ -3,13 +3,12 @@
  *   const raw = await transcribeAudio(fileOrPcm, pct => …)        // { duration, out, notes: [{ t, d, midi, amp }] } (seconds)
  *   raw.notes = await notesFrom(raw.out, 'low' | 'mid' | 'high')   // 靈敏度: re-read the model's output, no re-run
  *   const sheet = toSky(raw.notes, { fingers, transpose, octave, quantize })
- *        // { notes: [[ms, key]], bpm, info: { shift, octave, keyName, snapped, folded, dropped, total } }
+ *        // { notes: [[ms, key]], bpm, t0, info: { shift, octave, keyName, tune, bass, acc, snapped, folded, dropped, ghosts, total } }
  *
- * The recording never leaves the browser. Sky's instrument has 15 keys: the white keys from C4 to C6. So the piece is
- * moved to the transposition with the fewest sharps and flats (a major key lands on C major, a minor key on A minor),
- * the melody's octave is fitted into the two octaves, notes outside are folded in, the few left between white keys
- * snap to the neighbour the piece uses more, and every moment keeps at most `fingers` keys: the melody (the top line),
- * then the bass, then the loudest of the rest. */
+ * The recording never leaves the browser. Sky's instrument has 15 keys: the white keys from C4 to C6. The notes are
+ * sorted into the tune, the bass and the accompaniment; the piece is moved to the transposition with the fewest sharps
+ * and flats (a major key lands on C major, a minor key on A minor); the tune is fitted into the two octaves and the
+ * rest is placed under it. Finger counts are layers: 1 = the tune, 2 = + the bass, 3 and up = + the accompaniment. */
 export const SR = 22050;
 export const SKY_MIDI = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84];
 const WHITE = new Set([0, 2, 4, 5, 7, 9, 11]);
@@ -43,14 +42,15 @@ export async function runModel(input, onProgress = () => {}, opts = {}) {
   await model.evaluateModel(pcm, (f, o, c) => { frames.push(...f); onsets.push(...o); contours.push(...c); }, p => onProgress(p));
   return { frames, onsets, contours, duration: pcm.length / SR, backend: tf.getBackend() };
 }
-// notes from the model's output; a higher onset threshold keeps fewer, surer notes
-// (tuned on rendered piano clips with known notes: 0.6 / 0.4 / 11 frames read them best)
-export const LEVELS = { low: { onset: 0.7, frame: 0.45, minLen: 11 }, mid: { onset: 0.6, frame: 0.4, minLen: 11 }, high: { onset: 0.5, frame: 0.3, minLen: 7 } };
+// notes from the model's output; a higher onset threshold keeps fewer, surer notes. Every note needs its own onset:
+// basic-pitch's "melodia trick" (turning leftover ringing into extra notes) is off — on a piano those are the pedal and
+// the strings' overtones, and they were most of the noise. (Tuned on 18 rendered piano clips with known notes.)
+export const LEVELS = { low: { onset: 0.8, frame: 0.5, minLen: 11 }, mid: { onset: 0.7, frame: 0.45, minLen: 11 }, high: { onset: 0.55, frame: 0.4, minLen: 9 } };
 export async function notesFrom(out, level = 'mid', opts = {}) {
   const { outputToNotesPoly, addPitchBendsToNoteEvents, noteFramesToTime } = await lib;
   const L = LEVELS[level] || LEVELS.mid;
   const events = noteFramesToTime(addPitchBendsToNoteEvents(out.contours,
-    outputToNotesPoly(out.frames, out.onsets, opts.onsetThresh ?? L.onset, opts.frameThresh ?? L.frame, opts.minNoteLen ?? L.minLen)));
+    outputToNotesPoly(out.frames, out.onsets, opts.onsetThresh ?? L.onset, opts.frameThresh ?? L.frame, opts.minNoteLen ?? L.minLen, true, null, null, false)));
   return events.map(n => ({ t: n.startTimeSeconds, d: n.durationSeconds, midi: n.pitchMidi, amp: n.amplitude }))
     .sort((a, b) => a.t - b.t || b.midi - a.midi);
 }
@@ -59,56 +59,6 @@ export async function transcribeAudio(input, onProgress = () => {}, opts = {}) {
   return { duration: out.duration, backend: out.backend, out, notes: await notesFrom(out, opts.level || 'mid', opts) };
 }
 
-// ── to Sky ──────────────────────────────────────────────────────────────────
-// onset groups: notes starting within CHORD_S of the group's first note
-function groups(notes) {
-  const out = [];
-  for (const n of notes) {
-    const g = out[out.length - 1];
-    if (g && n.t - g.t <= CHORD_S) g.notes.push(n); else out.push({ t: n.t, notes: [n] });
-  }
-  out.forEach(g => g.notes.sort((a, b) => b.midi - a.midi));   // top line first
-  return out;
-}
-const weight = n => Math.max(0.05, Math.min(n.d || 0.2, 1.5)) * (n.amp || 0.5);
-// the transposition (−6 … +5 semitones) that puts the most of the piece on white keys. Neighbouring keys share six of
-// their seven notes, so a few misheard notes can tip the count: within 1 % of the best, the smallest move wins.
-function bestShift(notes) {
-  const hist = new Array(12).fill(0);
-  notes.forEach(n => { hist[((Math.round(n.midi) % 12) + 12) % 12] += weight(n); });
-  const total = hist.reduce((a, b) => a + b, 0) || 1, score = {};
-  for (let s = -6; s <= 5; s++) score[s] = hist.reduce((a, w, pc) => a + (WHITE.has(((pc + s) % 12 + 12) % 12) ? w : 0), 0) / total;
-  const top = Math.max(...Object.values(score));
-  const shift = Object.keys(score).map(Number).filter(s => score[s] >= top - 0.01).sort((a, b) => Math.abs(a) - Math.abs(b) || score[b] - score[a])[0];
-  return { shift, fit: score[shift], hist };
-}
-// the octave that puts the melody (each chord's top note) inside C4–C6
-function bestOctave(gs, shift) {
-  let best = 0, bestScore = -1;
-  for (let o = -48; o <= 48; o += 12) {
-    let sc = 0;
-    gs.forEach(g => {
-      const m = Math.round(g.notes[0].midi) + shift + o;
-      if (m >= 60 && m <= 84) sc += 3;
-      g.notes.slice(1).forEach(n => { const k = Math.round(n.midi) + shift + o; if (k >= 60 && k <= 84) sc += 0.5; });
-    });
-    if (sc > bestScore || (sc === bestScore && Math.abs(o) < Math.abs(best))) { best = o; bestScore = sc; }
-  }
-  return best;
-}
-// Sky key index for a MIDI note already moved by shift + octave: folded into range, snapped to a white key
-function toKey(m, hist, shift, stats) {
-  let x = m;
-  while (x < 60) { x += 12; stats.folded++; }
-  while (x > 84) { x -= 12; stats.folded++; }
-  if (!WHITE.has(x % 12)) {
-    stats.snapped++;
-    const up = x + 1 <= 84 ? x + 1 : null, down = x - 1 >= 60 ? x - 1 : null;
-    const w = k => (k == null ? -1 : hist[((k - shift) % 12 + 12) % 12]);   // how much the piece uses that pitch
-    x = up == null ? down : down == null ? up : (w(up) > w(down) ? up : down);
-  }
-  return SKY_MIDI.indexOf(x);
-}
 // beat length (seconds) from the onsets: autocorrelation of an onset train, 60–180 BPM
 function beatOf(times) {
   if (times.length < 8) return 0.5;
@@ -125,36 +75,225 @@ function beatOf(times) {
   return best * BIN;
 }
 
+// ── to Sky ──────────────────────────────────────────────────────────────────
+// A piano cover is a tune over an accompaniment. The sheet is built in layers, so every finger count keeps the same tune:
+//   1 finger: the tune · 2: + the bass · 3, 4, no limit: + the accompaniment (at most that many keys at a time).
+// The accompaniment is always placed under the tune: Sky has only two octaves, and a left hand folded up into the
+// tune's octave is what makes a sheet sound muddy.
+const OVERTONES = new Set([12, 19, 24, 28]);   // octave, octave + fifth, two octaves, two octaves + third
+const GHOST = 0.6;                             // an overtone heard as a note is quieter than the string it rings on
+// notes starting together (within 50 ms) where the upper one sits on an overtone of a louder lower one: the string
+// ringing, not a key (a real octave doubling is played about as loud as the note under it)
+function dropGhosts(notes, ratio = GHOST) {
+  const amp = n => n.amp ?? 0.5;
+  return notes.filter((n, i) => {
+    for (let j = i - 1; j >= 0 && n.t - notes[j].t <= 0.05; j--) if (isGhost(n, notes[j])) return false;
+    for (let j = i + 1; j < notes.length && notes[j].t - n.t <= 0.05; j++) if (isGhost(n, notes[j])) return false;
+    return true;
+  });
+  function isGhost(n, m) { return m.midi < n.midi && OVERTONES.has(Math.round(n.midi) - Math.round(m.midi)) && amp(n) < amp(m) * ratio; }
+}
+// onset groups: notes starting within CHORD_S of the group's first note → group index per note
+function groupIds(notes) {
+  const id = new Array(notes.length); let g = -1, gt = -Infinity;
+  notes.forEach((n, i) => { if (n.t - gt > CHORD_S) { g++; gt = n.t; } id[i] = g; });
+  return { id, count: g + 1 };
+}
+// a percentile of the pitches within ±2.5 s of each note: where the top (or bottom) of the texture is around it
+function around(notes, q) {
+  const out = new Array(notes.length); let lo = 0, hi = 0;
+  for (let i = 0; i < notes.length; i++) {
+    while (notes[lo].t < notes[i].t - 2.5) lo++;
+    while (hi < notes.length && notes[hi].t <= notes[i].t + 2.5) hi++;
+    const w = []; for (let k = lo; k < hi; k++) w.push(notes[k].midi);
+    w.sort((a, b) => a - b); out[i] = w[Math.min(w.length - 1, Math.floor(w.length * q))];
+  }
+  return out;
+}
+// The tune: the best single line through the piece, one note per moment. A note is a good tune note when it is near
+// the top of the texture around it and played firmly; the line prefers steps to leaps, does not dip under a tune note
+// still ringing above it (that is the accompaniment moving), and is penalised for passing under a higher note it skips.
+function findTune(notes, w = {}) {
+  const W = Object.assign({ top: 0.3, low: 1.5, amp: 2, leap: 1.2, ring: 0.6, skip: 1, rest: 0.5 }, w);
+  const N = notes.length, { id } = groupIds(notes);
+  const top = []; notes.forEach((n, i) => { if (top[id[i]] == null || n.midi > notes[top[id[i]]].midi) top[id[i]] = i; });
+  const amps = notes.map(n => n.amp ?? 0.5).sort((a, b) => a - b), med = amps[amps.length >> 1] || 0.5;
+  const hiRef = around(notes, 0.85);
+  const gain = i => { const n = notes[i]; return 1 + W.amp * ((n.amp ?? 0.5) - med) - W.low * Math.max(0, hiRef[i] - n.midi) / 12 + (top[id[i]] === i ? W.top : 0); };
+  const best = new Float64Array(N), prev = new Int32Array(N).fill(-1);
+  let farBest = 0, farIdx = -1, far = 0;            // the best line ending more than 3 s back (a rest, then a new phrase)
+  for (let i = 0; i < N; i++) {
+    const n = notes[i];
+    while (far < i && notes[far].t < n.t - 3) { if (best[far] > farBest) { farBest = best[far]; farIdx = far; } far++; }
+    let b = farIdx >= 0 ? farBest - W.rest : 0, bp = farIdx;
+    if (b < 0) { b = 0; bp = -1; }
+    for (let j = i - 1; j >= far; j--) {
+      if (id[j] === id[i]) continue;
+      const m = notes[j], leap = Math.abs(n.midi - m.midi);
+      let c = W.leap * Math.max(0, leap - 2) / 12 + (leap > 12 ? 0.8 : 0);
+      const ring = m.t + m.d - n.t;
+      if (n.midi < m.midi && ring > 0.08) c += W.ring * Math.min(1, ring / 0.3);
+      const hiSide = Math.max(m.midi, n.midi);
+      for (let k = id[j] + 1; k < id[i]; k++) { const x = notes[top[k]]; if (x.midi > hiSide) c += W.skip * (x.amp ?? 0.5) / med; }
+      if (best[j] - c > b) { b = best[j] - c; bp = j; }
+    }
+    best[i] = gain(i) + b; prev[i] = bp;
+  }
+  const tune = new Set();
+  let i = 0; for (let k = 1; k < N; k++) if (best[k] > best[i]) i = k;
+  for (; i >= 0 && N; i = prev[i]) tune.add(i);
+  // a figure under the tune (tune, E, tune, E, …): a pitch struck 3+ times within ±2.5 s that the line took only now
+  // and then, each time as a dip between higher tune notes — taken out, so the line doesn't flicker in and out of it
+  const line = [...tune].sort((a, b) => a - b), out = [];
+  line.forEach((k, j) => {
+    const n = notes[k], a = notes[line[j - 1]], b = notes[line[j + 1]];
+    if (!a || !b || a.midi <= n.midi || b.midi <= n.midi) return;
+    let reps = 0, taken = 0;
+    for (let q = 0; q < N; q++) if (notes[q].midi === n.midi && Math.abs(notes[q].t - n.t) <= 2.5) { reps++; if (tune.has(q)) taken++; }
+    if (reps >= 3 && taken / reps < 0.5) out.push(k);
+  });
+  out.forEach(k => tune.delete(k));
+  return tune;
+}
+const weight = n => Math.max(0.05, Math.min(n.d || 0.2, 1.5)) * (n.amp || 0.5);
+// the transposition (−6 … +5 semitones) that puts the most of the piece on white keys (the tune counts double: its
+// sharps must snap, the accompaniment's are left out). Neighbouring keys share six of their seven notes, so a few
+// misheard notes can tip the count: within 1 % of the best, the smallest move wins.
+function bestShift(notes, w = weight) {
+  const hist = new Array(12).fill(0);
+  notes.forEach(n => { hist[((Math.round(n.midi) % 12) + 12) % 12] += w(n); });
+  const total = hist.reduce((a, b) => a + b, 0) || 1, score = {};
+  for (let s = -6; s <= 5; s++) score[s] = hist.reduce((a, x, pc) => a + (WHITE.has(((pc + s) % 12 + 12) % 12) ? x : 0), 0) / total;
+  const top = Math.max(...Object.values(score));
+  const shift = Object.keys(score).map(Number).filter(s => score[s] >= top - 0.01).sort((a, b) => Math.abs(a) - Math.abs(b) || score[b] - score[a])[0];
+  return { shift, fit: score[shift], hist };
+}
+// the octave that puts the most of the tune inside C4–C6, a little higher when it is a tie (room for the left hand)
+function tuneOctave(tune, shift) {
+  let best = 0, bestScore = -Infinity;
+  for (let o = -48; o <= 48; o += 12) {
+    let sc = 0;
+    tune.forEach(n => { const m = Math.round(n.midi) + shift + o; if (m >= 60 && m <= 84) sc += 1; if (m >= 67 && m <= 84) sc += 0.15; });
+    if (sc > bestScore + 1e-9) { best = o; bestScore = sc; }
+  }
+  return best;
+}
+// a tune note: folded into range, snapped to a white key (the neighbour the piece uses more)
+function tuneKey(m, hist, shift, stats) {
+  let x = m;
+  while (x < 60) { x += 12; stats.folded++; }
+  while (x > 84) { x -= 12; stats.folded++; }
+  if (!WHITE.has(x % 12)) {
+    stats.snapped++;
+    const up = x + 1 <= 84 ? x + 1 : null, down = x - 1 >= 60 ? x - 1 : null;
+    const w = k => (k == null ? -1 : hist[((k - shift) % 12 + 12) % 12]);
+    x = up == null ? down : down == null ? up : (w(up) > w(down) ? up : down);
+  }
+  return x;
+}
+// an accompaniment note: on a white key, under the tune note sounding then; the bass as low as it goes, the rest as
+// near its own octave as fits. null when it has no place (between keys, or no room under the tune).
+function underKey(m, natural, ceiling, bass) {
+  if (!WHITE.has(((m % 12) + 12) % 12)) return null;
+  const c = [];
+  for (let x = m - 60; x <= m + 60; x += 12) if (x >= 60 && x <= 84 && x < ceiling) c.push(x);
+  if (!c.length) return null;
+  return bass ? c[0] : c.reduce((a, b) => (Math.abs(b - natural) < Math.abs(a - natural) ? b : a));
+}
+
 export function toSky(notesIn, opts = {}) {
   const fingers = opts.fingers || 0;                       // 0 = no limit
-  const minAmp = opts.minAmp ?? 0;
-  const all = notesIn.filter(n => n.midi >= 21 && n.midi <= 108);
-  const notes = all.filter(n => (n.amp ?? 1) >= minAmp);
-  const stats = { snapped: 0, folded: 0, dropped: all.length - notes.length, total: all.length, merged: 0 };
-  if (!notes.length) return { notes: [], bpm: 120, info: Object.assign({ shift: 0, octave: 0, keyName: '' }, stats) };
-  const sh = bestShift(notes);
+  const all = notesIn.filter(n => n.midi >= 21 && n.midi <= 108).slice().sort((a, b) => a.t - b.t || b.midi - a.midi);
+  const notes = opts.ghosts === false ? all : dropGhosts(all, opts.ghostRatio);
+  const stats = { snapped: 0, folded: 0, dropped: 0, ghosts: all.length - notes.length, total: all.length, merged: 0, tune: 0, bass: 0, acc: 0 };
+  if (!notes.length) return { notes: [], bpm: 120, t0: 0, info: Object.assign({ shift: 0, autoShift: 0, octave: 0, keyName: '', steps: 0 }, stats) };
+  // who plays what
+  const tuneIdx = findTune(notes, opts.tuneWeights);
+  const loRef = around(notes, 0.1), { id } = groupIds(notes);
+  const low = []; notes.forEach((n, i) => { if (low[id[i]] == null || n.midi < notes[low[id[i]]].midi) low[id[i]] = i; });
+  const tuneList = [...tuneIdx].sort((a, b) => a - b).map(i => notes[i]);
+  // the tune note sounding at t (or the next one, if it comes within 0.6 s)
+  let tp = 0;
+  const tuneAt = t => {
+    while (tp + 1 < tuneList.length && tuneList[tp + 1].t <= t + 0.03) tp++;
+    const a = tuneList[tp];
+    if (a && a.t <= t + 0.03 && a.t + Math.max(a.d, 0.3) + 0.1 >= t) return a;
+    const b = a && a.t <= t + 0.03 ? tuneList[tp + 1] : a;
+    return b && b.t - t < 0.6 ? b : null;
+  };
+  const role = notes.map((n, i) => {
+    if (tuneIdx.has(i)) return 'tune';
+    const tn = tuneAt(n.t);
+    return low[id[i]] === i && n.midi <= loRef[i] + 4 && (!tn || n.midi <= tn.midi - 9) ? 'bass' : 'acc';
+  });
+  // where it goes
+  const roleOf = new Map(notes.map((n, i) => [n, role[i]]));
+  const sh = bestShift(notes, n => weight(n) * (roleOf.get(n) === 'tune' ? 2 : 1));
   const shift = Number.isFinite(opts.transpose) ? opts.transpose : sh.shift;
-  const gs = groups(notes);
-  const octave = Number.isFinite(opts.octave) ? opts.octave : bestOctave(gs, shift);
-  // each moment: melody (top), bass (bottom), then the inner notes from the top down; at most `fingers` different keys
-  // (by pitch, not loudness: the heard loudness of inner notes is unsteady, the pitch isn't — 3 fingers read 90 % → 92 %)
-  let steps = gs.map(g => {
-    const ordered = [g.notes[0]];
-    if (g.notes.length > 1) ordered.push(g.notes[g.notes.length - 1]);
-    g.notes.slice(1, -1).forEach(n => ordered.push(n));
-    const keys = [];
-    for (const n of ordered) {
-      const k = toKey(Math.round(n.midi) + shift + octave, sh.hist, shift, stats);
-      if (k >= 0 && !keys.includes(k)) keys.push(k);
-      if (fingers && keys.length >= fingers) break;
-    }
-    return { t: g.t, keys };
+  const tuneNotes = notes.filter((n, i) => role[i] === 'tune');
+  const octave = Number.isFinite(opts.octave) ? opts.octave : tuneOctave(tuneNotes.length ? tuneNotes : notes, shift);
+  // phrase by phrase (split at rests over 1.5 s), each at the octave, one down or one up: a note outside the two
+  // octaves costs 1 (it would fold back and break the line), changing octave between phrases costs 1 plus the size of
+  // the jump it makes — so a part of the song that climbs too high moves down as a whole
+  const tuneSky = new Map(), phrases = [];
+  tuneNotes.forEach((n, j) => { if (!j || n.t - tuneNotes[j - 1].t > 1.5) phrases.push([]); phrases[phrases.length - 1].push(n); });
+  const OCT = Number.isFinite(opts.octave) ? [octave] : [octave, octave - 12, octave + 12];
+  const outside = (ph, o) => ph.filter(n => { const m = Math.round(n.midi) + shift + o; return m < 60 || m > 84; }).length;
+  let cost = OCT.map(o => outside(phrases[0] || [], o)), back = [];
+  for (let p = 1; p < phrases.length; p++) {
+    const last = phrases[p - 1][phrases[p - 1].length - 1].midi, first = phrases[p][0].midi;
+    const step = OCT.map(o => {
+      let bc = Infinity, bi = 0;
+      OCT.forEach((po, b) => { const c = cost[b] + (o === po ? 0 : 1 + 0.1 * Math.max(0, Math.abs(first + o - last - po) - 7)); if (c < bc) { bc = c; bi = b; } });
+      return [bc + outside(phrases[p], o), bi];
+    });
+    cost = step.map(x => x[0]); back.push(step.map(x => x[1]));
+  }
+  const pick = new Array(phrases.length);
+  let k = cost.indexOf(Math.min(...cost));
+  for (let p = phrases.length - 1; p >= 0; p--) { pick[p] = OCT[k]; if (p) k = back[p - 1][k]; }
+  phrases.forEach((ph, p) => ph.forEach(n => tuneSky.set(n, tuneKey(Math.round(n.midi) + shift + pick[p], sh.hist, shift, stats))));
+  tp = 0;
+  const items = [];
+  notes.forEach((n, i) => {
+    const r = role[i];
+    if (r === 'tune') { items.push({ t: n.t, x: tuneSky.get(n), pr: 0 }); stats.tune++; return; }
+    if (fingers === 1 || (fingers === 2 && r === 'acc')) return;
+    const tn = tuneAt(n.t), m = Math.round(n.midi) + shift;
+    const x = underKey(m, m + octave, tn ? tuneSky.get(tn) : 85, r === 'bass');
+    if (x == null) { stats.dropped++; return; }
+    items.push({ t: n.t, x, pr: r === 'bass' ? 1 : 2 }); stats[r]++;
+  });
+  items.sort((a, b) => a.t - b.t || a.pr - b.pr || b.x - a.x);
+  // moments: notes within 70 ms are played together, and a left hand up to 100 ms ahead of the tune joins its chord (at
+  // the tune's time); a key already struck in the last 150 ms by another voice is not struck again
+  let steps = [];
+  const lastHit = new Map();
+  items.forEach(it => {
+    const h = lastHit.get(it.x);
+    if (it.pr > 0 && h != null && it.t - h < 0.15) { stats.merged++; return; }
+    lastHit.set(it.x, it.t);
+    const s = steps[steps.length - 1];
+    if (s && it.t - s.t0 <= (it.pr === 0 && !s.tuned ? 0.1 : 0.07)) { s.items.push(it); if (it.pr === 0 && !s.tuned) { s.t = it.t; s.tuned = true; } }
+    else steps.push({ t: it.t, t0: it.t, items: [it], tuned: it.pr === 0 });
+  });
+  steps = steps.map(s => {
+    const keys = [], pr = Math.min(...s.items.map(it => it.pr));
+    s.items.sort((a, b) => a.pr - b.pr || b.x - a.x).forEach(it => {
+      const k = SKY_MIDI.indexOf(it.x);
+      if (k >= 0 && !keys.includes(k) && (!fingers || keys.length < fingers)) keys.push(k);
+    });
+    return { t: s.t, keys, pr };
   }).filter(s => s.keys.length);
-  // with one or two fingers, a moment right on the heels of the last one can't be played: keep the earlier one
+  // with one or two fingers, a moment right on the heels of the last one can't be played: the tune's moment stays
   const gap = fingers === 1 ? 0.09 : fingers === 2 ? 0.06 : 0;
   if (gap) {
     const kept = [];
-    steps.forEach(s => { const p = kept[kept.length - 1]; if (p && s.t - p.t < gap) stats.merged++; else kept.push(s); });
+    steps.forEach(s => {
+      const p = kept[kept.length - 1];
+      if (!p || s.t - p.t >= gap) kept.push(s);
+      else { stats.merged++; if (s.pr < p.pr) kept[kept.length - 1] = s; }
+    });
     steps = kept;
   }
   // timing: as played, or on a grid of quarter beats
@@ -176,6 +315,6 @@ export function toSky(notesIn, opts = {}) {
   steps.forEach((s, i) => s.keys.forEach(k => out.push([Math.round(times[i] * 1000), k])));
   // the piece's key, read back from the move: major → C, minor → A
   const tonicMajor = ((0 - shift) % 12 + 12) % 12, tonicMinor = ((9 - shift) % 12 + 12) % 12;
-  return { notes: out, bpm, t0, info: Object.assign({ shift, autoShift: sh.shift, octave, fit: sh.fit,
-    keyName: `${NAMES[tonicMajor]} 大調／${NAMES[tonicMinor]} 小調`, steps: steps.length }, stats) };
+  return { notes: out, bpm, t0, roles: opts.roles ? notes.map((n, i) => ({ t: n.t, midi: n.midi, role: role[i] })) : undefined,
+    info: Object.assign({ shift, autoShift: sh.shift, octave, fit: sh.fit, keyName: `${NAMES[tonicMajor]} 大調／${NAMES[tonicMinor]} 小調`, steps: steps.length }, stats) };
 }
