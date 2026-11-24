@@ -15,8 +15,8 @@
   // measured on 34 piano test clips with known notes (computer-rendered with human timing and pedal, from clean to a
   // soft, roomy, mp3'd home recording; 30 with a known tune), by 靈敏度: tune = how well the tune comes out (F1 of its
   // notes, %); noise = the share of the sheet's notes that aren't in the piece (%), by finger count
-  const ACC = { low: { tune: 89, noise: { 1: 4, 2: 2, 3: 2, 4: 2, 0: 2 } }, mid: { tune: 91, noise: { 1: 5, 2: 3, 3: 4, 4: 4, 0: 4 } },
-    high: { tune: 90, noise: { 1: 7, 2: 6, 3: 7, 4: 7, 0: 7 } } };
+  const ACC = { low: { tune: 91, noise: { 1: 5, 2: 3, 3: 3, 4: 3, 0: 3 } }, mid: { tune: 93, noise: { 1: 5, 2: 4, 3: 5, 4: 5, 0: 5 } },
+    high: { tune: 92, noise: { 1: 7, 2: 7, 3: 8, 4: 8, 0: 8 } } };
   const LAYERS = { 1: '只有旋律', 2: '旋律＋低音＋伴奏，同時最多 2 個鍵', 3: '旋律＋低音＋伴奏，同時最多 3 個鍵', 4: '旋律＋低音＋伴奏，同時最多 4 個鍵', 0: '旋律＋低音＋伴奏，不限同時按幾個' };
   let gate = { code: 'loading' }, busy = false, mod = null;
   // job: the file being read and what came out of it; opts: what the visitor picked
