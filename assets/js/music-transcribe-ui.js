@@ -12,9 +12,12 @@
   if (!body) return;
   const FINGERS = [[1, '1 指'], [2, '2 指'], [3, '3 指'], [4, '4 指'], [0, '不限']];
   const SENS = [['low', '低'], ['mid', '中'], ['high', '高']];
-  // how much of the sheet was right on 10 piano test clips with known notes (computer-rendered, with human timing,
-  // reverb and noise): the share of notes on the right key at the right time, in % — by 靈敏度 and finger count
-  const ACC = { low: { 1: 90, 2: 93, 3: 91, 4: 93, 0: 94 }, mid: { 1: 88, 2: 93, 3: 92, 4: 93, 0: 94 }, high: { 1: 63, 2: 77, 3: 78, 4: 81, 0: 81 } };
+  // measured on 34 piano test clips with known notes (computer-rendered with human timing and pedal, from clean to a
+  // soft, roomy, mp3'd home recording; 30 with a known tune), by 靈敏度: tune = how well the tune comes out (F1 of its
+  // notes, %); noise = the share of the sheet's notes that aren't in the piece (%), by finger count
+  const ACC = { low: { tune: 89, noise: { 1: 4, 2: 2, 3: 2, 4: 2, 0: 2 } }, mid: { tune: 91, noise: { 1: 5, 2: 3, 3: 4, 4: 4, 0: 4 } },
+    high: { tune: 90, noise: { 1: 7, 2: 6, 3: 7, 4: 7, 0: 7 } } };
+  const LAYERS = { 1: '只有旋律', 2: '旋律＋低音＋伴奏，同時最多 2 個鍵', 3: '旋律＋低音＋伴奏，同時最多 3 個鍵', 4: '旋律＋低音＋伴奏，同時最多 4 個鍵', 0: '旋律＋低音＋伴奏，不限同時按幾個' };
   let gate = { code: 'loading' }, busy = false, mod = null;
   // job: the file being read and what came out of it; opts: what the visitor picked
   let job = null;
@@ -58,7 +61,7 @@
       </div>
       <input type="file" id="tr-file" accept="audio/*,video/*,.mp3,.m4a,.wav,.ogg,.flac,.mp4,.mov" hidden>
       <p class="hint">鋼琴獨奏、旋律清楚的錄音效果最好；有人聲或鼓的原曲會比較亂。檔案只在你的瀏覽器裡處理，不會上傳。</p>
-      <p class="hint tr-acc">準確度參考：用 10 段已知每個音的鋼琴測試錄音試過，2 指樂譜約 <b>${ACC.mid[2]}%</b> 的音對（1 指 ${ACC.mid[1]}%、不限 ${ACC.mid[0]}%）。測試錄音是電腦合成再加上彈奏誤差、殘響和雜音；真人在家錄、手機收音、有伴奏時通常會低一些。</p>`;
+      <p class="hint tr-acc">準確度參考：用 34 段已知每個音的鋼琴測試錄音試過（從乾淨的到像在家用手機錄的都有），旋律約 <b>${ACC.mid.tune}%</b> 抓對，2 指樂譜裡多出來的雜音約 ${ACC.mid.noise[2]}%。辨識門檻會依錄音自動調整。測試錄音是電腦合成的；有人聲或其他樂器的原曲通常會差一些。</p>`;
   }
   function workHTML() {
     const pct = Math.round((job.progress || 0) * 100);
@@ -79,9 +82,9 @@
     const i = sheet.info, n = sheet.notes.length;
     const shiftTxt = i.shift === 0 ? '不用移調' : `移調 ${i.shift > 0 ? '+' : ''}${i.shift} 半音`;
     return `<p class="tr-file mono">${esc(job.name)}</p>
-      <p class="tr-sum">聽到 <b>${i.total}</b> 個音，原曲約為 <b>${esc(i.keyName)}</b>，${shiftTxt}後放進光遇的 15 個鍵。</p>
+      <p class="tr-sum">聽到 <b>${i.total}</b> 個音，其中旋律 <b>${i.tune}</b> 個${job.raw.out.sure < 0.85 ? '（錄音偏輕柔，已自動放寬辨識）' : ''}。原曲約為 <b>${esc(i.keyName)}</b>，${shiftTxt}後放進光遇的 15 個鍵。</p>
       <h3 class="mu-d-label">手指數 <small>同一時間最多按幾個鍵</small></h3>${seg('fingers', FINGERS, opts.fingers)}
-      <p class="hint tr-acc">這個設定在測試錄音上約 <b>${ACC[opts.sensitivity][opts.fingers]}%</b> 的音對${opts.sensitivity === 'high' ? '（測試錄音都很清楚，「高」會多聽出雜音；錄音小聲、漏了很多音時再用）' : ''}。</p>
+      <p class="hint tr-acc"><b>${LAYERS[opts.fingers]}</b>。測試錄音上旋律約 ${ACC[opts.sensitivity].tune}% 抓對、雜音約 ${ACC[opts.sensitivity].noise[opts.fingers]}%${opts.sensitivity === 'high' ? '（「高」會多聽出雜音，錄音小聲、漏了很多音時再用）' : ''}。</p>
       <h3 class="mu-d-label">移調</h3>
       <div class="tr-row"><button type="button" class="btn" data-tr-nudge="-1" aria-label="降半音">−</button>
         <span class="tr-shift">${opts.nudge ? `自動 ${opts.nudge > 0 ? '+' : ''}${opts.nudge}` : '自動（升降音最少）'}</span>
@@ -89,7 +92,7 @@
       <h3 class="mu-d-label">節奏</h3>${seg('quantize', [[0, '照原本的時間'], [1, `對齊拍子<small>約 ${sheet.bpm} BPM</small>`]], opts.quantize ? 1 : 0)}
       <h3 class="mu-d-label">靈敏度 <small>越高聽到越多音，也越容易多出雜音</small></h3>${seg('sens', SENS, opts.sensitivity)}
       ${rollSVG(sheet.notes)}
-      <p class="hint">${n} 個音、${i.steps} 個時間點${i.snapped ? `；${i.snapped} 個升降音吸附到旁邊的鍵` : ''}${i.folded ? `；${i.folded} 次折回音域` : ''}${i.dropped ? `；過濾 ${i.dropped} 個小聲的音` : ''}。</p>
+      <p class="hint">${n} 個音、${i.steps} 個時間點${i.snapped ? `；旋律有 ${i.snapped} 個升降音吸附到旁邊的鍵` : ''}${i.folded ? `；${i.folded} 個旋律音超出兩個八度，移了八度` : ''}${i.dropped ? `；${i.dropped} 個伴奏音在黑鍵上或旋律下方放不下，略過` : ''}${i.ghosts ? `；去掉 ${i.ghosts} 個泛音` : ''}。</p>
       <label class="field tr-name"><span>樂譜名稱</span><input class="input" id="tr-name" maxlength="60" value="${esc(job.title)}"></label>
       <div class="tr-actions"><button type="button" class="btn btn-primary" data-tr-act="preview"${n ? '' : ' disabled'}>試聽</button>
         <button type="button" class="btn" data-tr-act="save"${n ? '' : ' disabled'}>存進樂譜庫</button>
