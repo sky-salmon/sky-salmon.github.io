@@ -12,12 +12,12 @@
   if (!body) return;
   const FINGERS = [[1, '1 指'], [2, '2 指'], [3, '3 指'], [4, '4 指'], [0, '不限']];
   const SENS = [['low', '低'], ['mid', '中'], ['high', '高']];
-  // measured on 18 piano test clips with known notes (computer-rendered, with human timing, pedal, reverb and noise;
-  // 14 of them with a known tune), by 靈敏度: tune = how well the tune comes out (F1 of its notes, %); noise = the
-  // share of the sheet's notes that aren't in the piece (%), by finger count
-  const ACC = { low: { tune: 92, noise: { 1: 4, 2: 3, 3: 2, 4: 2, 0: 2 } }, mid: { tune: 94, noise: { 1: 5, 2: 3, 3: 3, 4: 3, 0: 3 } },
-    high: { tune: 94, noise: { 1: 8, 2: 6, 3: 8, 4: 8, 0: 8 } } };
-  const LAYERS = { 1: '只有旋律', 2: '旋律＋低音', 3: '旋律＋低音＋伴奏', 4: '旋律＋低音＋伴奏', 0: '旋律＋低音＋伴奏，不限同時按幾個' };
+  // measured on 34 piano test clips with known notes (computer-rendered with human timing and pedal, from clean to a
+  // soft, roomy, mp3'd home recording; 30 with a known tune), by 靈敏度: tune = how well the tune comes out (F1 of its
+  // notes, %); noise = the share of the sheet's notes that aren't in the piece (%), by finger count
+  const ACC = { low: { tune: 89, noise: { 1: 4, 2: 2, 3: 2, 4: 2, 0: 2 } }, mid: { tune: 91, noise: { 1: 5, 2: 3, 3: 4, 4: 4, 0: 4 } },
+    high: { tune: 90, noise: { 1: 7, 2: 6, 3: 7, 4: 7, 0: 7 } } };
+  const LAYERS = { 1: '只有旋律', 2: '旋律＋低音＋伴奏，同時最多 2 個鍵', 3: '旋律＋低音＋伴奏，同時最多 3 個鍵', 4: '旋律＋低音＋伴奏，同時最多 4 個鍵', 0: '旋律＋低音＋伴奏，不限同時按幾個' };
   let gate = { code: 'loading' }, busy = false, mod = null;
   // job: the file being read and what came out of it; opts: what the visitor picked
   let job = null;
@@ -61,7 +61,7 @@
       </div>
       <input type="file" id="tr-file" accept="audio/*,video/*,.mp3,.m4a,.wav,.ogg,.flac,.mp4,.mov" hidden>
       <p class="hint">鋼琴獨奏、旋律清楚的錄音效果最好；有人聲或鼓的原曲會比較亂。檔案只在你的瀏覽器裡處理，不會上傳。</p>
-      <p class="hint tr-acc">準確度參考：用 18 段已知每個音的鋼琴測試錄音試過，旋律約 <b>${ACC.mid.tune}%</b> 抓對，2 指樂譜裡多出來的雜音約 ${ACC.mid.noise[2]}%。測試錄音是電腦合成再加上彈奏誤差、踏板、殘響和雜音；真人在家錄、手機收音、有人聲或其他樂器時通常會差一些。</p>`;
+      <p class="hint tr-acc">準確度參考：用 34 段已知每個音的鋼琴測試錄音試過（從乾淨的到像在家用手機錄的都有），旋律約 <b>${ACC.mid.tune}%</b> 抓對，2 指樂譜裡多出來的雜音約 ${ACC.mid.noise[2]}%。辨識門檻會依錄音自動調整。測試錄音是電腦合成的；有人聲或其他樂器的原曲通常會差一些。</p>`;
   }
   function workHTML() {
     const pct = Math.round((job.progress || 0) * 100);
@@ -82,7 +82,7 @@
     const i = sheet.info, n = sheet.notes.length;
     const shiftTxt = i.shift === 0 ? '不用移調' : `移調 ${i.shift > 0 ? '+' : ''}${i.shift} 半音`;
     return `<p class="tr-file mono">${esc(job.name)}</p>
-      <p class="tr-sum">聽到 <b>${i.total}</b> 個音，其中旋律 <b>${i.tune}</b> 個。原曲約為 <b>${esc(i.keyName)}</b>，${shiftTxt}後放進光遇的 15 個鍵。</p>
+      <p class="tr-sum">聽到 <b>${i.total}</b> 個音，其中旋律 <b>${i.tune}</b> 個${job.raw.out.sure < 0.85 ? '（錄音偏輕柔，已自動放寬辨識）' : ''}。原曲約為 <b>${esc(i.keyName)}</b>，${shiftTxt}後放進光遇的 15 個鍵。</p>
       <h3 class="mu-d-label">手指數 <small>同一時間最多按幾個鍵</small></h3>${seg('fingers', FINGERS, opts.fingers)}
       <p class="hint tr-acc"><b>${LAYERS[opts.fingers]}</b>。測試錄音上旋律約 ${ACC[opts.sensitivity].tune}% 抓對、雜音約 ${ACC[opts.sensitivity].noise[opts.fingers]}%${opts.sensitivity === 'high' ? '（「高」會多聽出雜音，錄音小聲、漏了很多音時再用）' : ''}。</p>
       <h3 class="mu-d-label">移調</h3>

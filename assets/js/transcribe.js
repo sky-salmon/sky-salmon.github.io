@@ -42,17 +42,55 @@ export async function runModel(input, onProgress = () => {}, opts = {}) {
   await model.evaluateModel(pcm, (f, o, c) => { frames.push(...f); onsets.push(...o); contours.push(...c); }, p => onProgress(p));
   return { frames, onsets, contours, duration: pcm.length / SR, backend: tf.getBackend() };
 }
-// notes from the model's output; a higher onset threshold keeps fewer, surer notes. Every note needs its own onset:
-// basic-pitch's "melodia trick" (turning leftover ringing into extra notes) is off — on a piano those are the pedal and
-// the strings' overtones, and they were most of the noise. (Tuned on 18 rendered piano clips with known notes.)
-export const LEVELS = { low: { onset: 0.8, frame: 0.5, minLen: 11 }, mid: { onset: 0.7, frame: 0.45, minLen: 11 }, high: { onset: 0.55, frame: 0.4, minLen: 9 } };
+// Notes from the model's output. How sure the model is of a note's onset depends on the recording: a loud, clean
+// one gives most real notes an onset above 0.8, a soft home recording with pedal and room sound often under 0.6. So the
+// onset threshold follows the recording: a share (by 靈敏度) of `sure`, the 90th percentile of the onset peaks of all
+// candidate notes. Every note needs its own onset — basic-pitch's "melodia trick" (turning leftover ringing into notes)
+// stays off: on a piano that is mostly the pedal and the strings' overtones. Then `tidy` drops the doubles and
+// overtones a lower threshold lets in. (Tuned on 34 rendered piano clips with known notes, clean to soft.)
+export const LEVELS = { low: { k: 0.8, lo: 0.5, hi: 0.75 }, mid: { k: 0.72, lo: 0.45, hi: 0.65 }, high: { k: 0.62, lo: 0.4, hi: 0.6 } };
+function onsetPeak(onsets, f0, k) {
+  let p = 0;
+  for (let f = Math.max(0, f0 - 2); f <= Math.min(onsets.length - 1, f0 + 2); f++) p = Math.max(p, onsets[f][k]);
+  return p;
+}
 export async function notesFrom(out, level = 'mid', opts = {}) {
-  const { outputToNotesPoly, addPitchBendsToNoteEvents, noteFramesToTime } = await lib;
+  const { outputToNotesPoly, noteFramesToTime } = await lib;
+  const read = (on, fr, len) => outputToNotesPoly(out.frames, out.onsets, on, fr, len, true, null, null, false);
+  if (out.sure == null) {
+    const peaks = read(0.3, 0.3, 7).map(e => onsetPeak(out.onsets, e.startFrame, e.pitchMidi - 21)).sort((a, b) => a - b);
+    out.sure = peaks.length ? peaks[Math.floor(peaks.length * 0.9)] : 0.9;
+  }
   const L = LEVELS[level] || LEVELS.mid;
-  const events = noteFramesToTime(addPitchBendsToNoteEvents(out.contours,
-    outputToNotesPoly(out.frames, out.onsets, opts.onsetThresh ?? L.onset, opts.frameThresh ?? L.frame, opts.minNoteLen ?? L.minLen, true, null, null, false)));
-  return events.map(n => ({ t: n.startTimeSeconds, d: n.durationSeconds, midi: n.pitchMidi, amp: n.amplitude }))
-    .sort((a, b) => a.t - b.t || b.midi - a.midi);
+  const th = opts.onsetThresh ?? Math.max(L.lo, Math.min(L.hi, L.k * out.sure));
+  const ev = read(th, opts.frameThresh ?? Math.max(0.3, th - 0.2), opts.minNoteLen ?? 11);
+  const notes = noteFramesToTime(ev).map((n, i) => ({ t: n.startTimeSeconds, d: n.durationSeconds, midi: n.pitchMidi, amp: n.amplitude,
+    on: onsetPeak(out.onsets, ev[i].startFrame, ev[i].pitchMidi - 21) })).sort((a, b) => a.t - b.t || b.midi - a.midi);
+  return tidy(notes);
+}
+// Reading at a lower threshold also lets in the same key heard twice (a late second onset, or the pedal ringing on
+// read as a new strike) and quiet overtones over a ringing note. Each has a much weaker onset than the real note
+// next to it (`on`: the onset peak each note starts from), so dropped are: the same key again within 0.3 s with under
+// 85 % of the first one's onset, or right after it stopped with under 60 %; and an octave / octave + fifth / two
+// octaves over a note struck at most 0.15 s before, with a weaker onset and a quieter tone (an overtone rings with
+// its string's attack — a tune note a twelfth over a held bass a beat later is real).
+const OVER = new Set([12, 19, 24, 28]);
+export function tidy(notes, t = {}) {
+  const T = Object.assign({ dup: 0.85, ring: 0.6, over: 0.8, overWin: 0.15 }, t), keep = notes.map(() => true);
+  for (let i = 0; i < notes.length; i++) {
+    const x = notes[i];
+    for (let j = i - 1; j >= 0 && x.t - notes[j].t < 3; j--) {
+      const m = notes[j];
+      if (!keep[j]) continue;
+      if (m.midi === x.midi && ((x.t - m.t < 0.3 && x.on < T.dup * m.on) || (x.t - (m.t + m.d) < 0.1 && x.on < T.ring * m.on))) { keep[i] = false; break; }
+      if (m.midi < x.midi && OVER.has(x.midi - m.midi) && x.t - m.t <= T.overWin && x.on < T.over * m.on && x.amp < m.amp) { keep[i] = false; break; }
+    }
+    for (let j = i + 1; keep[i] && j < notes.length && notes[j].t - x.t <= 0.05; j++) {
+      const m = notes[j];
+      if (m.midi < x.midi && OVER.has(x.midi - m.midi) && x.on < T.over * m.on && x.amp < m.amp) keep[i] = false;
+    }
+  }
+  return notes.filter((_, i) => keep[i]);
 }
 export async function transcribeAudio(input, onProgress = () => {}, opts = {}) {
   const out = await runModel(input, onProgress, opts);
@@ -76,8 +114,9 @@ function beatOf(times) {
 }
 
 // ── to Sky ──────────────────────────────────────────────────────────────────
-// A piano cover is a tune over an accompaniment. The sheet is built in layers, so every finger count keeps the same tune:
-//   1 finger: the tune · 2: + the bass · 3, 4, no limit: + the accompaniment (at most that many keys at a time).
+// A piano cover is a tune over an accompaniment. Every finger count keeps the same tune: 1 finger is the tune alone;
+// 2, 3, 4 add the bass and the accompaniment with at most that many keys at a time (the tune first, then the bass,
+// then the accompaniment from the top down); no limit keeps everything.
 // The accompaniment is always placed under the tune: Sky has only two octaves, and a left hand folded up into the
 // tune's octave is what makes a sheet sound muddy.
 const OVERTONES = new Set([12, 19, 24, 28]);   // octave, octave + fifth, two octaves, two octaves + third
@@ -258,7 +297,7 @@ export function toSky(notesIn, opts = {}) {
   notes.forEach((n, i) => {
     const r = role[i];
     if (r === 'tune') { items.push({ t: n.t, x: tuneSky.get(n), pr: 0 }); stats.tune++; return; }
-    if (fingers === 1 || (fingers === 2 && r === 'acc')) return;
+    if (fingers === 1) return;
     const tn = tuneAt(n.t), m = Math.round(n.midi) + shift;
     const x = underKey(m, m + octave, tn ? tuneSky.get(tn) : 85, r === 'bass');
     if (x == null) { stats.dropped++; return; }
