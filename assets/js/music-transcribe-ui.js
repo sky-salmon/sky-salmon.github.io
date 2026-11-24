@@ -12,6 +12,7 @@
   if (!body) return;
   const FINGERS = [[1, '1 指'], [2, '2 指'], [3, '3 指'], [4, '4 指'], [0, '不限']];
   const SENS = [['low', '低'], ['mid', '中'], ['high', '高']];
+  const SIMPLE = [[0, '完整'], [1, '適中'], [2, '精簡']];
   // measured on 34 piano test clips with known notes (computer-rendered with human timing and pedal, from clean to a
   // soft, roomy, mp3'd home recording; 30 with a known tune), by 靈敏度: tune = how well the tune comes out (F1 of its
   // notes, %); noise = the share of the sheet's notes that aren't in the piece (%), by finger count
@@ -21,7 +22,7 @@
   let gate = { code: 'loading' }, busy = false, mod = null;
   // job: the file being read and what came out of it; opts: what the visitor picked
   let job = null;
-  const opts = { fingers: 2, nudge: 0, quantize: false, sensitivity: 'mid' };
+  const opts = { fingers: 2, nudge: 0, quantize: false, sensitivity: 'mid', simplify: 1 };
   let sheet = null;
 
   async function checkGate() {
@@ -85,6 +86,8 @@
       <p class="tr-sum">聽到 <b>${i.total}</b> 個音，其中旋律 <b>${i.tune}</b> 個${job.raw.out.sure < 0.85 ? '（錄音偏輕柔，已自動放寬辨識）' : ''}。原曲約為 <b>${esc(i.keyName)}</b>，${shiftTxt}後放進光遇的 15 個鍵。</p>
       <h3 class="mu-d-label">手指數 <small>同一時間最多按幾個鍵</small></h3>${seg('fingers', FINGERS, opts.fingers)}
       <p class="hint tr-acc"><b>${LAYERS[opts.fingers]}</b>。測試錄音上旋律約 ${ACC[opts.sensitivity].tune}% 抓對、雜音約 ${ACC[opts.sensitivity].noise[opts.fingers]}%${opts.sensitivity === 'high' ? '（「高」會多聽出雜音，錄音小聲、漏了很多音時再用）' : ''}。</p>
+      <h3 class="mu-d-label">精簡度 <small>光遇每個鍵都一樣大聲，原曲輕輕帶過的伴奏會變吵</small></h3>${seg('simple', SIMPLE, opts.simplify)}
+      <p class="hint">${['伴奏全部保留。', '旋律、低音、和旋律一起按的和聲都保留；其他伴奏音跟前後的音至少隔 0.2 秒才留（慢的分解和弦幾乎全留，快的音群減半）。', '同上，但伴奏音至少隔 0.35 秒才留，更清爽。'][opts.simplify]}</p>
       <h3 class="mu-d-label">移調</h3>
       <div class="tr-row"><button type="button" class="btn" data-tr-nudge="-1" aria-label="降半音">−</button>
         <span class="tr-shift">${opts.nudge ? `自動 ${opts.nudge > 0 ? '+' : ''}${opts.nudge}` : '自動（升降音最少）'}</span>
@@ -109,7 +112,7 @@
   async function reread() { job.raw.notes = await mod.notesFrom(job.raw.out, opts.sensitivity); }
   function rebuild() {
     const auto = mod.toSky(job.raw.notes, { fingers: opts.fingers }).info.autoShift;
-    sheet = mod.toSky(job.raw.notes, { fingers: opts.fingers, quantize: opts.quantize, transpose: auto + opts.nudge });
+    sheet = mod.toSky(job.raw.notes, { fingers: opts.fingers, quantize: opts.quantize, transpose: auto + opts.nudge, simplify: opts.simplify });
   }
   async function start(file) {
     if (!file) return;
@@ -147,6 +150,7 @@
     if (d.trFingers !== undefined) opts.fingers = +d.trFingers;
     else if (d.trNudge) opts.nudge = Math.max(-11, Math.min(11, opts.nudge + +d.trNudge));
     else if (d.trQuantize !== undefined) opts.quantize = d.trQuantize === '1';
+    else if (d.trSimple !== undefined) opts.simplify = +d.trSimple;
     else if (d.trSens) { opts.sensitivity = d.trSens; reread().then(() => { rebuild(); render(); }); return; }
     else if (d.trAct === 'again') { job = null; sheet = null; render(); return; }
     else if (d.trAct === 'preview') { window.CandleMusic.preview(song()); return; }
