@@ -87,7 +87,7 @@
       <h3 class="mu-d-label">手指數 <small>同一時間最多按幾個鍵</small></h3>${seg('fingers', FINGERS, opts.fingers)}
       <p class="hint tr-acc"><b>${LAYERS[opts.fingers]}</b>。測試錄音上旋律約 ${ACC[opts.sensitivity].tune}% 抓對、雜音約 ${ACC[opts.sensitivity].noise[opts.fingers]}%${opts.sensitivity === 'high' ? '（「高」會多聽出雜音，錄音小聲、漏了很多音時再用）' : ''}。</p>
       <h3 class="mu-d-label">精簡度 <small>光遇每個鍵都一樣大聲，原曲輕輕帶過的伴奏會變吵</small></h3>${seg('simple', SIMPLE, opts.simplify)}
-      <p class="hint">${['伴奏全部保留。', '保留和旋律一起按的和聲與低音；旋律音之間的伴奏，每個空檔只留最重要的一個。', '只留和旋律一起按的和聲與低音，中間的伴奏都拿掉。'][opts.simplify]}</p>
+      <p class="hint">${['伴奏全部保留。', '旋律、低音、和旋律一起按的和聲都保留；其他伴奏音跟前後的音至少隔 0.2 秒才留（慢的分解和弦幾乎全留，快的音群減半）。', '同上，但伴奏音至少隔 0.35 秒才留，更清爽。'][opts.simplify]}</p>
       <h3 class="mu-d-label">移調</h3>
       <div class="tr-row"><button type="button" class="btn" data-tr-nudge="-1" aria-label="降半音">−</button>
         <span class="tr-shift">${opts.nudge ? `自動 ${opts.nudge > 0 ? '+' : ''}${opts.nudge}` : '自動（升降音最少）'}</span>
