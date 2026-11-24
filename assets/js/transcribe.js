@@ -55,17 +55,34 @@ function onsetPeak(onsets, f0, k) {
   for (let f = Math.max(0, f0 - 2); f <= Math.min(onsets.length - 1, f0 + 2); f++) p = Math.max(p, onsets[f][k]);
   return p;
 }
+// A light Gaussian blur along time (σ = 1 frame, 12 ms) of the model's output before notes are read: a note's onset or
+// ringing that flickers for a frame no longer makes a second note or a stray one (noise 5 → 3 %, completeness the same).
+function blurTime(m, sig = 1) {
+  const R = Math.ceil(sig * 3), k = [];
+  for (let i = -R; i <= R; i++) k.push(Math.exp(-i * i / (2 * sig * sig)));
+  const ks = k.reduce((a, b) => a + b, 0), n = m.length, w = n ? m[0].length : 0, out = new Array(n);
+  for (let t = 0; t < n; t++) {
+    const row = new Float32Array(w);
+    for (let i = -R; i <= R; i++) { const src = m[Math.min(n - 1, Math.max(0, t + i))], kk = k[i + R] / ks; for (let j = 0; j < w; j++) row[j] += src[j] * kk; }
+    out[t] = Array.from(row);
+  }
+  return out;
+}
 export async function notesFrom(out, level = 'mid', opts = {}) {
   const { outputToNotesPoly, noteFramesToTime } = await lib;
-  const read = (on, fr, len) => outputToNotesPoly(out.frames, out.onsets, on, fr, len, true, null, null, false);
   if (out.sure == null) {
-    const peaks = read(0.3, 0.3, 7).map(e => onsetPeak(out.onsets, e.startFrame, e.pitchMidi - 21)).sort((a, b) => a - b);
+    const peaks = outputToNotesPoly(out.frames, out.onsets, 0.3, 0.3, 7, true, null, null, false).map(e => onsetPeak(out.onsets, e.startFrame, e.pitchMidi - 21)).sort((a, b) => a - b);
     out.sure = peaks.length ? peaks[Math.floor(peaks.length * 0.9)] : 0.9;
   }
+  if (!out.soft) {   // blurred once; the onsets scaled back to their old peak so the thresholds keep their meaning
+    const on = blurTime(out.onsets), top = m => m.reduce((a, r) => Math.max(a, ...r), 0), g = top(out.onsets) / (top(on) || 1);
+    out.soft = { frames: blurTime(out.frames), onsets: on.map(r => r.map(v => v * g)) };
+  }
+  const read = (on, fr, len) => outputToNotesPoly(out.soft.frames, out.soft.onsets, on, fr, len, true, null, null, false);
   const L = LEVELS[level] || LEVELS.mid;
   const th = opts.onsetThresh ?? Math.max(L.lo, Math.min(L.hi, L.k * out.sure));
   const toNotes = ev => noteFramesToTime(ev).map((n, i) => ({ t: n.startTimeSeconds, d: n.durationSeconds, midi: n.pitchMidi, amp: n.amplitude,
-    on: onsetPeak(out.onsets, ev[i].startFrame, ev[i].pitchMidi - 21) })).sort((a, b) => a.t - b.t || b.midi - a.midi);
+    on: onsetPeak(out.soft.onsets, ev[i].startFrame, ev[i].pitchMidi - 21) })).sort((a, b) => a.t - b.t || b.midi - a.midi);
   const len = opts.minNoteLen ?? 5;
   const main = toNotes(read(th, opts.frameThresh ?? Math.max(0.3, th - 0.2), len));
   return tidy(opts.weak === false ? main : withWeak(main, toNotes(read(th, 0.3, len))));
@@ -308,10 +325,32 @@ export function toSky(notesIn, opts = {}) {
   let k = cost.indexOf(Math.min(...cost));
   for (let p = phrases.length - 1; p >= 0; p--) { pick[p] = OCT[k]; if (p) k = back[p - 1][k]; }
   phrases.forEach((ph, p) => ph.forEach(n => tuneSky.set(n, tuneKey(Math.round(n.midi) + shift + pick[p], sh.hist, shift, stats))));
+  // 精簡度 (opts.simplify): a Sky key always sounds at full strength, so the soft fills of a left hand — under the
+  // tune in the original — come out as loud as the tune and crowd it. 1 keeps, between two tune notes, only the one
+  // accompaniment note that mattered most there (loudest × longest × surest onset); 2 keeps none of those fills.
+  // Notes struck with a tune note (its harmony) and the bass stay at every level.
+  const simplify = opts.simplify || 0, fillKeep = new Set();
+  if (simplify) {
+    const tuneT = tuneList.map(x => x.t), gaps = new Map();
+    notes.forEach((n, i) => {
+      if (role[i] !== 'acc') return;
+      let lo = 0, hi = tuneT.length;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (tuneT[mid] <= n.t) lo = mid + 1; else hi = mid; }
+      const prev = tuneT[lo - 1], next = tuneT[lo];
+      if ((prev != null && n.t - prev <= 0.07) || (next != null && next - n.t <= 0.1)) { fillKeep.add(n); return; }   // with a tune note
+      if (simplify >= 2) return;
+      const room = (next ?? n.t + 1) - (prev ?? n.t - 1);
+      if (room < 0.3 || (prev != null && n.t - prev < 0.12) || (next != null && next - n.t < 0.12)) return;
+      const score = (n.amp ?? 0.5) * Math.min(1, n.d || 0.2) * (n.on ?? 0.7), g = gaps.get(lo);
+      if (!g || score > g.score) gaps.set(lo, { n, score });
+    });
+    gaps.forEach(g => fillKeep.add(g.n));
+  }
   tp = 0;
   const items = [];
   notes.forEach((n, i) => {
     const r = role[i];
+    if (simplify && r === 'acc' && !fillKeep.has(n)) { mark(n, 'simplified'); return; }
     if (r === 'tune') { items.push({ t: n.t, x: tuneSky.get(n), pr: 0, n }); stats.tune++; return; }
     if (fingers === 1) { mark(n, 'tune-only'); return; }
     const tn = tuneAt(n.t), m = Math.round(n.midi) + shift;
