@@ -304,12 +304,14 @@ export function toSky(notesIn, opts = {}) {
   const shift = Number.isFinite(opts.transpose) ? opts.transpose : sh.shift;
   const tuneNotes = notes.filter((n, i) => role[i] === 'tune');
   const octave = Number.isFinite(opts.octave) ? opts.octave : tuneOctave(tuneNotes.length ? tuneNotes : notes, shift);
-  // phrase by phrase (split at rests over 1.5 s), each at the octave, one down or one up: a note outside the two
+  // phrase by phrase (split at rests over 1.5 s), each at the octave or one or two up or down: a note outside the two
   // octaves costs 1, one below F4 a quarter (it would fold back and break the line), changing octave between phrases costs 1 plus the size of
   // the jump it makes — so a part of the song that climbs too high moves down as a whole
   const tuneSky = new Map(), phrases = [];
   tuneNotes.forEach((n, j) => { if (!j || n.t - tuneNotes[j - 1].t > 1.5) phrases.push([]); phrases[phrases.length - 1].push(n); });
-  const OCT = Number.isFinite(opts.octave) ? [octave] : [octave, octave - 12, octave + 12];
+  // a phrase may sit up to two octaves from the piece's octave: a piece whose tune wanders over several octaves
+  // (a high intro figure, the theme two octaves lower) keeps each part inside the two octaves of keys
+  const OCT = Number.isFinite(opts.octave) ? [octave] : [octave, octave - 12, octave + 12, octave - 24, octave + 24];
   // a tune note low in the range leaves the accompaniment no room under it: a smaller cost, so a low phrase moves up
   const LOWC = opts.lowCost ?? 0.25;
   const outside = (ph, o) => ph.reduce((c, n) => { const m = Math.round(n.midi) + shift + o; return c + (m < 60 || m > 84 ? 1 : m < 65 ? LOWC : 0); }, 0);
