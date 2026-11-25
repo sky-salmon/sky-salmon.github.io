@@ -1651,3 +1651,7 @@
 01_斗篷_Cape,CharSkyKid_Wing_FeastFurShawl,UiOutfitCapeFeastFurShawl,UIPackedAtlas21,ok,cape,,feast_26,cape,,1649,,,,,,,,cape,
 07_角_Horn,CharSkyKid_Horn_YetiEarMuffs,UiOutfitHornYetiEarMuffs,UIPackedAtlas28,ok,horn,,feast_26,head,,1650,,,,,,,,head,
 06_項鍊_Necklace,CharSkyKid_Neck_FeastWreath,UiOutfitNeckFeastWreath,UIPackedAtlas31,ok,neck,,feast_26,neck,,1651,,,,,,,,neck,
+03_髮型_Hair,CharSkyKid_Hair_StyleCurtain,UiOutfitHairStyleCurtain,UIPackedAtlas26,ok,hair,,style_26,hair,,1652,,,,,,,,hair,
+03_髮型_Hair,CharSkyKid_Hair_StyleButterflyClip,UiOutfitHairStyleButterflyClip,UIPackedAtlas26,ok,hair,,style_26,hair,,1653,,,,,,,,hair,
+01_斗篷_Cape,CharSkyKid_Wing_StyleFurCoat,UiOutfitCapeStyleFurCoat,UIPackedAtlas22,ok,cape,,style_26,cape,,1654,,,,,,,,cape,
+09_臉飾_FaceAccessory,CharSkyKid_Face_StyleBlush,UiOutfitFaceStyleBlush,UIPackedAtlas22,ok,face,,style_26,face,,1655,,,,,,,,face,
