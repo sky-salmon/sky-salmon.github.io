@@ -18,11 +18,11 @@
   // ── model ─────────────────────────────────────────────────────────────────
   const SECTIONS = {
     profile: { title: 'PROFILE', zh: t('個人資料') },
-    pass: { title: 'PASS', zh: t('季節'), picker: 'catalog', views: ['grid', 'tile'] },
+    pass: { title: 'PASS', zh: t('季節'), picker: 'catalog', views: ['season', 'grid', 'tile'] },
     pin: { title: 'PIN & STAR', zh: t('徽章'), picker: 'pins', views: ['grid', 'tile'] },
-    iap: { title: 'IAP', zh: t('內購'), picker: 'catalog', views: ['grid', 'tile', 'row'] },
+    iap: { title: 'IAP', zh: t('內購'), picker: 'catalog', views: ['grid', 'season', 'tile', 'row'] },
     spells: { title: 'SPELLS', zh: t('魔法'), picker: 'catalog', views: ['grid'] },
-    extra: { title: 'CLOSET', zh: t('衣櫃'), picker: 'catalog', views: ['grid', 'tile'] },  // was EXTRA; key kept for saved cards
+    extra: { title: 'CLOSET', zh: t('衣櫃'), picker: 'catalog', views: ['grid', 'season', 'tile'] },  // was EXTRA; key kept for saved cards
     link: { title: 'LINK', zh: t('綁定'), picker: 'links' },
     info: { title: 'INFO', zh: t('備註') }
   };
@@ -56,7 +56,7 @@
       themes: {},
       profile: { avatar: null, avatarOn: true, cur: { candle: '0', ascended: '0', heart: '0', seasonCandle: '0', seasonHeart: '0', ticket: '0' }, curOn: { ...CUR_DEFAULT_ON }, h: { now: '', tall: '', short: '' }, note: '' },
       items: { pass: [], pin: [], iap: [], spells: [], extra: [], link: [] },
-      views: { pass: 'grid', pin: 'grid', iap: 'grid', extra: 'grid' },
+      views: { pass: 'season', pin: 'grid', iap: 'grid', extra: 'grid' },
       titles: {}, linkNote: '', linkNoteOn: false, info: ''
     };
   }
@@ -236,25 +236,43 @@
     grid: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2.5" y="2.5" width="4.2" height="4.2" rx="1.2"/><rect x="9.3" y="2.5" width="4.2" height="4.2" rx="1.2"/><rect x="2.5" y="9.3" width="4.2" height="4.2" rx="1.2"/><rect x="9.3" y="9.3" width="4.2" height="4.2" rx="1.2"/></svg>',
     tile: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2.5" y="3" width="11" height="10" rx="1.6"/><path d="M5 10.5h6"/></svg>',
     row: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><rect x="2.5" y="3" width="11" height="4" rx="1.2"/><rect x="2.5" y="9" width="11" height="4" rx="1.2"/></svg>',
+    season: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><rect x="1.8" y="2.5" width="7.4" height="11" rx="1.6"/><rect x="10.8" y="2.5" width="3.4" height="11" rx="1.2"/><path d="M3.8 5h3.4"/><rect x="3.8" y="7.4" width="3.4" height="3.6" rx=".8"/></svg>',
     eye: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.5 8S4 3.6 8 3.6 14.5 8 14.5 8 12 12.4 8 12.4 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg>',
     eyeOff: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1.5 8S4 3.6 8 3.6 14.5 8 14.5 8 12 12.4 8 12.4 1.5 8 1.5 8z"/><path d="m2.5 2.5 11 11"/></svg>'
   };
-  const VIEW_LABEL = { grid: t('格狀'), tile: t('卡片'), row: t('清單') };
+  const VIEW_LABEL = { grid: t('格狀'), season: t('分季'), tile: t('卡片'), row: t('清單') };
 
   function itemsHTML(sec, s, clean) {
     const list = s.items[sec], view = sec === 'spells' || sec === 'link' ? 'grid' : (s.views[sec] || 'grid');
     // WYSIWYG: what the editor lays out is exactly what gets exported — an empty section is
     // just its title in both, and editor-only controls float on top without taking space.
     if (!list.length) return '';
-    const btns = list.map((it, i) => {
+    const one = (it, i) => {
       const info = itemInfo(it), name = it.label || info.label;
       let cap = '';
       if (sec === 'spells') cap = `<span class="item-badge">${String(clamp(parseInt(it.n, 10) || 1, 1, 9999)).padStart(2, '0')}</span>`;
-      else if (view !== 'grid') cap = `<span class="item-cap">${esc(sec === 'pass' && !it.label && info.season ? D.seasonName(info.season) : name)}</span>`;
+      else if (view !== 'grid' && view !== 'season') cap = `<span class="item-cap">${esc(sec === 'pass' && !it.label && info.season ? D.seasonName(info.season) : name)}</span>`;
       const tag = clean ? 'span' : 'button';
       return `<${tag} ${clean ? '' : 'type="button" '}class="item${it.k === 'c' ? ' is-cat' : ''}${it.dead ? ' is-dead' : ''}" data-act="item" data-sec="${sec}" data-i="${i}" title="${esc(name)}"${clean ? '' : ` aria-label="${t('{name}，點一下編輯', { name: esc(name) })}"`}><span class="item-ico">${info.html}</span>${cap}</${tag}>`;
-    }).join('');
-    return `<div class="items" data-sec="${sec}" data-view="${esc(view)}">${btns}</div>`;
+    };
+    if (view === 'season') {
+      // 分季: one box per season, oldest first, each labelled with its AP number and name; the rest in a last box
+      const groups = new Map();
+      list.forEach((it, i) => {
+        const code = (it.k === 'c' && itemInfo(it).season) || '';
+        if (!groups.has(code)) groups.set(code, []);
+        groups.get(code).push(i);
+      });
+      const order = [...groups.keys()].sort((a, b) => (a ? 0 : 1) - (b ? 0 : 1) || a.localeCompare(b));
+      const boxes = order.map(code => {
+        const head = code
+          ? `<span class="sbox-ap">AP${esc(code)}</span><span class="sbox-name">${esc(D.seasonName(code))}</span>`
+          : `<span class="sbox-name">${t('其他')}</span>`;
+        return `<div class="sbox${code ? '' : ' is-other'}"><div class="sbox-head">${head}</div><div class="sbox-items">${groups.get(code).map(i => one(list[i], i)).join('')}</div></div>`;
+      }).join('');
+      return `<div class="items" data-sec="${sec}" data-view="season">${boxes}</div>`;
+    }
+    return `<div class="items" data-sec="${sec}" data-view="${esc(view)}">${list.map(one).join('')}</div>`;
   }
   function editable(bind, ph, clean, extra = '') {
     return clean ? `data-bind="${bind}"` : `data-bind="${bind}" contenteditable="true" spellcheck="false" data-ph="${esc(ph)}" ${extra}`;
@@ -1237,7 +1255,7 @@
     $('#pop-sub').textContent = info.sub;
     $('#pop-count-row').hidden = sec !== 'spells';
     $('#pop-dead-row').hidden = sec !== 'link';
-    $('#pop-label-row').hidden = sec === 'link' || sec === 'spells' || (state.views[sec] || 'grid') === 'grid';
+    $('#pop-label-row').hidden = sec === 'link' || sec === 'spells' || ['grid', 'season'].includes(state.views[sec] || 'grid');
     $('#pop-count').value = it.n || 1;
     $('#pop-dead').checked = !!it.dead;
     $('#pop-label').value = it.label || '';
