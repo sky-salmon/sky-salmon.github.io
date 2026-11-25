@@ -282,7 +282,7 @@ export function applyPieceRules(THREE, rig, worn, index) {
   for (const x of entries) {
     const sm = slotMatrix(x.slot, A, x.e);
     if (sm && (sm.s !== 1 || len2(sm.t) > 0)) { st.slotMats[x.slot] = sm; notes.push(`${x.slot}: offset ${sm.t.map(v => v.toFixed(3))} scale ${sm.s.toFixed(3)} in ${sm.bone}`); }
-    if (x.w.obj && x.w.obj.isSkinnedMesh) hookSkeleton(THREE, st, x.w.obj, x.slot);
+    for (const o of [x.w.obj].concat(x.w.also || [])) if (o && o.isSkinnedMesh) hookSkeleton(THREE, st, o, x.slot);   // also: a mirrored pair's other side
   }
   if (len2(A.hairOff) || A.hairScale !== 1) notes.push(`hair bone offset ${A.hairOff} scale ${A.hairScale}`);
   if (len2(A.maskOff) || A.maskScale !== 1) notes.push(`mask bones offset ${A.maskOff} scale ${A.maskScale}`);

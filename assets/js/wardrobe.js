@@ -12,7 +12,9 @@
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const CATS = D.CLOSET_CATS.filter(c => D.CAT_BY_ID[c]);
-  const ui = { cat: CATS[0], q: '', season: 'all', sort: 'closet', item: null };
+  // while searching, ui.cat can be 'all' (every tab); a tab picked during a search narrows it, clearing the search
+  // goes back to the tab you were on
+  const ui = { cat: CATS[0], q: '', season: 'all', sort: 'closet', item: null, tab: CATS[0] };
   let ALL = [];
   // 3D try-on state: gate = the answer from Access.check (ok, or why not); stage = wardrobe-3d.js once mounted
   const LOOK_KEY = 'candle.wardrobe.look3d';
@@ -22,14 +24,15 @@
 
   const seasonOf = i => i.season || null;
   const priceOf = i => (i.usd && i.usd !== '?' ? 'US$' + i.usd : '');
+  const query = () => ui.q.trim().toLowerCase();
+  function matches(i, q) {   // search and season filter, any tab
+    const s = seasonOf(i);
+    if (ui.season === 'none' ? s : (ui.season !== 'all' && s !== ui.season)) return false;
+    return !q || [i.label, i.name, i.nameZh, i.nameEn, s ? D.seasonFull(s) : '', i.pack || ''].join(' ').toLowerCase().includes(q);
+  }
   function list() {
-    const q = ui.q.trim().toLowerCase();
-    const out = ALL.filter(i => {
-      if (i.cat !== ui.cat) return false;
-      const s = seasonOf(i);
-      if (ui.season === 'none' ? s : (ui.season !== 'all' && s !== ui.season)) return false;
-      return !q || [i.label, i.name, s ? D.seasonFull(s) : '', i.pack || ''].join(' ').toLowerCase().includes(q);
-    });
+    const q = query();
+    const out = ALL.filter(i => (ui.cat === 'all' || i.cat === ui.cat) && matches(i, q));
     const sk = i => seasonOf(i) || '';
     const by = {
       closet: (a, b) => a.order - b.order || a.label.localeCompare(b.label),
@@ -41,9 +44,11 @@
   }
 
   function renderSlots() {
-    $('#wd-slots').innerHTML = CATS.map(c => {
-      const n = ALL.filter(i => i.cat === c).length;
-      return n ? `<button type="button" role="tab" class="wd-slot" data-cat="${c}" aria-selected="${c === ui.cat}">${esc(D.CAT_BY_ID[c].zh)}<small>${n}</small></button>` : '';
+    const q = query(), hits = q ? ALL.filter(i => matches(i, q)) : null;
+    const all = hits ? `<button type="button" role="tab" class="wd-slot" data-cat="all" aria-selected="${ui.cat === 'all'}">${t('全部')}<small>${hits.length}</small></button>` : '';
+    $('#wd-slots').innerHTML = all + CATS.map(c => {
+      const n = ALL.filter(i => i.cat === c).length, m = hits ? hits.filter(i => i.cat === c).length : n;
+      return n ? `<button type="button" role="tab" class="wd-slot" data-cat="${c}" aria-selected="${c === ui.cat}"${hits && !m ? ' data-none' : ''}>${esc(D.CAT_BY_ID[c].zh)}<small>${m}</small></button>` : '';
     }).join('');
   }
   function renderSeasons() {
@@ -61,7 +66,7 @@
       return `<button type="button" class="wd-item" data-item="${esc(i.path)}" aria-pressed="${ui.item === i.path}">
         <span class="wd-icon"><img src="${esc(D.iconURL(i.path))}" alt="" loading="lazy" decoding="async"></span>
         <span class="wd-name">${esc(i.label)}</span>
-        <span class="wd-meta">${s ? `AP${esc(s)}` : t('常駐')}${i.ult ? ` · ${t('畢業禮')}` : ''}${priceOf(i) ? ` · ${esc(priceOf(i))}` : ''}</span></button>`;
+        <span class="wd-meta">${ui.cat === 'all' && D.CAT_BY_ID[i.cat] ? `${esc(D.CAT_BY_ID[i.cat].zh)} · ` : ''}${s ? `AP${esc(s)}` : t('常駐')}${i.ult ? ` · ${t('畢業禮')}` : ''}${priceOf(i) ? ` · ${esc(priceOf(i))}` : ''}</span></button>`;
     }).join('') || `<p class="wd-empty">${t('找不到符合的物品，換個關鍵字試試。')}</p>`;
   }
   function renderDetail() {
@@ -199,7 +204,7 @@
 
   document.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
-    if (b.dataset.cat) { ui.cat = b.dataset.cat; ui.item = null; renderGrid(); select(null); return; }
+    if (b.dataset.cat) { ui.cat = b.dataset.cat; if (ui.cat !== 'all') ui.tab = ui.cat; ui.item = null; renderGrid(); select(null); return; }
     if (b.dataset.item) {
       const again = ui.item === b.dataset.item;
       select(again ? null : b.dataset.item, { scroll: matchMedia('(max-width: 900px)').matches });
@@ -207,7 +212,7 @@
       if (i && (pieceOf(i.name) || {}).file) wearItem(i.name);
       return;
     }
-    if (b.dataset.season) { ui.season = b.dataset.season; $('#wd-season').value = ui.season; ui.q = ''; $('#wd-q').value = ''; renderGrid(); return; }
+    if (b.dataset.season) { ui.season = b.dataset.season; $('#wd-season').value = ui.season; ui.q = ''; $('#wd-q').value = ''; if (ui.cat === 'all') ui.cat = ui.tab; renderGrid(); return; }
     if (b.hasAttribute('data-close')) { select(null); return; }
     if (b.dataset.g) { if (!busyGate) gateAct(b.dataset.g); return; }
     if (!stage) return;
@@ -217,7 +222,16 @@
     if (b.hasAttribute('data-reset')) { look = defaultsLook(); dress(); }
   });
   let qT = 0;
-  $('#wd-q').addEventListener('input', e => { clearTimeout(qT); qT = setTimeout(() => { ui.q = e.target.value; renderGrid(); }, 150); });
+  $('#wd-q').addEventListener('input', e => {
+    clearTimeout(qT);
+    qT = setTimeout(() => {
+      const was = !!query();
+      ui.q = e.target.value;
+      if (query() && !was) ui.cat = 'all';          // a new search looks in every tab
+      if (!query() && ui.cat === 'all') ui.cat = ui.tab;
+      renderGrid();
+    }, 150);
+  });
   $('#wd-season').addEventListener('change', e => { ui.season = e.target.value; renderGrid(); });
   $('#wd-sort').addEventListener('change', e => { ui.sort = e.target.value; renderGrid(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && ui.item) select(null); });
@@ -235,7 +249,7 @@
       let name = '';
       try { name = decodeURIComponent(m[1]); } catch { /* a mangled link: just show the catalogue */ }
       const hit = ALL.find(i => i.name === name);
-      if (hit) { ui.cat = hit.cat; ui.item = hit.path; }
+      if (hit) { ui.cat = ui.tab = hit.cat; ui.item = hit.path; }
     } else if (/look=/.test(location.hash)) {
       const bn = $('#wd-banner');
       bn.innerHTML = t('舊版的造型連結已經不能打開了。想看自己的角色，請到 <a href="{href}">身高</a> 頁上傳服裝 QR。', { href: 'height.html' });

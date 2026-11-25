@@ -51,8 +51,11 @@ export async function createAvatar(opts = {}) {
   // side and front chains turn outward a little on top of whatever the clip keyed (fitted to an in-game shot of the
   // Robe: 15° sides, 6° front). The turn is about the body's forward axis, taken in each bone's parent frame.
   const spread = [];
+  const rest = new Map();   // bone → its rest matrix in the rig's space (the pieces are bound at this pose)
   {
     rig.updateMatrixWorld(true);
+    const toRig = rig.matrixWorld.clone().invert();
+    rig.traverse(o => { if (o !== rig && o.name) rest.set(o.name, toRig.clone().multiply(o.matrixWorld)); });
     const fwd = new THREE.Vector3(0, 0, 1), pq = new THREE.Quaternion();
     for (const [n, deg] of [['L_WingSRoot', -15], ['R_WingSRoot', 15], ['L_WingFRoot', -6], ['R_WingFRoot', 6]]) {
       const bn = rig.getObjectByName(n);
@@ -146,11 +149,48 @@ export async function createAvatar(opts = {}) {
     const view = {};
     for (const [slot, w] of Object.entries(worn)) {
       let obj = null;
+      const also = [];
       if (slot === 'prop') obj = (w.obj.userData.attached || [])[0] || null;
-      else w.obj.traverse(o => { if (!obj && o.isSkinnedMesh) obj = o; });
-      view[slot] = { name: w.name, obj };
+      else w.obj.traverse(o => { if (o.isSkinnedMesh) { if (!obj) obj = o; else also.push(o); } });
+      view[slot] = { name: w.name, obj, also };
     }
     try { rulesNotes = rules.applyPieceRules(THREE, rig, view, IDX) || []; } catch (e) { console.warn('piece rules', e); }
+  }
+  // the other side of a mirrored pair (OutfitDefs mirrorX: earrings, feathers …; the game draws the one mesh twice).
+  // A piece's bind space is its quantised mesh space, so the flip is worked out in the rig's rest pose, where the kid
+  // is symmetric about x = 0: B → rig through any bone (rest × inverse bind), flip x, back. The copy is skinned to the
+  // opposite side's bones (L_ ↔ R_), bound at their rest. Triangles are rewound so they still face out.
+  const swapSide = n => /^[LR]_/.test(n) ? (n[0] === 'L' ? 'R' : 'L') + n.slice(1) : n;
+  function mirrorPair(src) {
+    const sk = src.skeleton, j = sk.bones.findIndex(b => rest.has(b.name));
+    if (j < 0) return null;
+    const T = rest.get(sk.bones[j].name).clone().multiply(sk.boneInverses[j]).multiply(src.matrixWorld);   // mesh → rig
+    const M = T.clone().invert().multiply(new THREE.Matrix4().makeScale(-1, 1, 1)).multiply(T);           // mesh → mesh
+    const geo = src.geometry;
+    if (!geo.userData.mirrored) {
+      const g = geo.clone(), v = new THREE.Vector3(), pos = geo.attributes.position, p = new Float32Array(pos.count * 3);
+      for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i).applyMatrix4(M); p.set([v.x, v.y, v.z], i * 3); }
+      g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+      if (geo.attributes.normal) {
+        const nrm = geo.attributes.normal, q = new Float32Array(nrm.count * 3), nm = new THREE.Matrix3().getNormalMatrix(M);
+        for (let i = 0; i < nrm.count; i++) { v.fromBufferAttribute(nrm, i).applyMatrix3(nm).normalize(); q.set([v.x, v.y, v.z], i * 3); }
+        g.setAttribute('normal', new THREE.BufferAttribute(q, 3));
+      }
+      if (g.index) {
+        const a = g.index.array.slice();
+        for (let i = 0; i + 2 < a.length; i += 3) { const t = a[i + 1]; a[i + 1] = a[i + 2]; a[i + 2] = t; }
+        g.setIndex(new THREE.BufferAttribute(a, 1));
+      }
+      g.computeBoundingSphere();
+      geo.userData.mirrored = g;
+    }
+    const names = sk.bones.map(b => rest.has(swapSide(b.name)) ? swapSide(b.name) : b.name);
+    const bindT = T.clone().multiply(src.matrixWorld.clone().invert());   // bind space → rig
+    return {
+      geometry: geo.userData.mirrored,
+      bones: names.map(n => rig.getObjectByName(n) || rig.getObjectByName('M_root')),
+      inverses: names.map((n, i) => rest.has(n) ? rest.get(n).clone().invert().multiply(bindT) : sk.boneInverses[i]),
+    };
   }
   async function wear(slot, name) {
     const token = (loadToken[slot] = (loadToken[slot] || 0) + 1);
@@ -174,12 +214,18 @@ export async function createAvatar(opts = {}) {
       mat.userData.slot = slot;   // for a page that treats the pieces differently (the home stage's lighting)
       let obj;
       if (src.isSkinnedMesh) {  // rebind the piece's skin to the shared rig's bones, matched by joint name
-        obj = new THREE.SkinnedMesh(src.geometry, mat);
-        src.matrixWorld.decompose(obj.position, obj.quaternion, obj.scale);  // keeps the dequantisation transform
-        root.add(obj);
-        obj.updateMatrixWorld(true);
         const bones = src.skeleton.bones.map(b => rig.getObjectByName(b.name) || rig.getObjectByName('M_root'));
-        obj.bind(new THREE.Skeleton(bones, src.skeleton.boneInverses), obj.matrixWorld);
+        const sides = [{ geometry: src.geometry, bones, inverses: src.skeleton.boneInverses }];
+        if (info.mirrorX) { const m = mirrorPair(src); if (m) sides.push(m); }
+        sides.forEach((side, k) => {
+          const o = new THREE.SkinnedMesh(side.geometry, mat);
+          src.matrixWorld.decompose(o.position, o.quaternion, o.scale);  // keeps the dequantisation transform
+          root.add(o);
+          o.updateMatrixWorld(true);
+          o.bind(new THREE.Skeleton(side.bones, side.inverses), o.matrixWorld);
+          o.frustumCulled = false;
+          if (!k) obj = o;
+        });
       } else {  // a held (or placed) prop: parented to a bone, or to the rig
         obj = new THREE.Group();
         const m = new THREE.Mesh(src.geometry, mat);

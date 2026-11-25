@@ -12,6 +12,7 @@
 .wd-slot { border: 1px solid var(--line-strong); background: transparent; color: var(--ink-soft); border-radius: 999px;
   padding: 6px 14px; font-weight: 600; font-size: 13.5px; display: inline-flex; gap: 6px; align-items: baseline; }
 .wd-slot small { font-family: var(--font-mono); font-size: 11px; opacity: .7; }
+.wd-slot[data-none] { opacity: .45; }
 .wd-slot[aria-selected="true"] { background: var(--gold); border-color: transparent; color: #1a1408; }
 .wd-filters { display: flex; gap: 8px; flex-wrap: wrap; }
 .wd-search { flex: 1 1 240px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line-strong); background: rgba(0, 0, 0, .2); }

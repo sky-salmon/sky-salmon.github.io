@@ -809,6 +809,108 @@
    "hidden": true,
    "note": "向日葵小物裡的帽子：國際服沒有",
    "source": "站長確認（國際服沒有）2026-11-19"
+  },
+  "CharSkyKid_Neck_PresentBodyA": {
+   "name_zh": "禮物盒裝扮 A",
+   "name_en": "Present Costume A",
+   "unconfirmed": "暫定名稱：遊戲 0.35.5 已有、2026 宴會節尚未上架，名稱照物品代碼取，上架後換成官方名稱",
+   "source": "Sky 0.35.5 (431758) OutfitDefs.json, season feast_26",
+   "note": "遊戲裡還是 WIP 圖示，網站圖示是用 3D 模型渲染的"
+  },
+  "CharSkyKid_Neck_PresentBodyB": {
+   "name_zh": "禮物盒裝扮 B",
+   "name_en": "Present Costume B",
+   "unconfirmed": "暫定名稱：遊戲 0.35.5 已有、2026 宴會節尚未上架，名稱照物品代碼取，上架後換成官方名稱",
+   "source": "Sky 0.35.5 (431758) OutfitDefs.json, season feast_26",
+   "note": "遊戲裡還是 WIP 圖示，網站圖示是用 3D 模型渲染的"
+  },
+  "CharSkyKid_Hat_FeastSnowflake": {
+   "name_zh": "宴會雪花頭飾",
+   "name_en": "Feast Snowflake Hat",
+   "unconfirmed": "暫定名稱：遊戲 0.35.5 已有、2026 宴會節尚未上架，名稱照物品代碼取，上架後換成官方名稱",
+   "source": "Sky 0.35.5 (431758) OutfitDefs.json, season feast_26"
+  },
+  "CharSkyKid_Wing_FeastAttireCape": {
+   "name_zh": "宴會禮服斗篷",
+   "name_en": "Feast Attire Cape",
+   "unconfirmed": "暫定名稱：遊戲 0.35.5 已有、2026 宴會節尚未上架，名稱照物品代碼取，上架後換成官方名稱",
+   "source": "Sky 0.35.5 (431758) OutfitDefs.json, season feast_26"
+  },
+  "CharSkyKid_Body_FeastAttireTrousers": {
+   "name_zh": "宴會禮服褲裝",
+   "name_en": "Feast Attire Trousers",
+   "unconfirmed": "暫定名稱：遊戲 0.35.5 已有、2026 宴會節尚未上架，名稱照物品代碼取，上架後換成官方名稱",
+   "source": "Sky 0.35.5 (431758) OutfitDefs.json, season feast_26"
+  },
+  "CharSkyKid_Wing_FeastFurShawl": {
+   "name_zh": "宴會毛皮披肩",
+   "name_en": "Feast Fur Shawl",
+   "unconfirmed": "暫定名稱：遊戲 0.35.5 已有、2026 宴會節尚未上架，名稱照物品代碼取，上架後換成官方名稱",
+   "source": "Sky 0.35.5 (431758) OutfitDefs.json, season feast_26"
+  },
+  "CharSkyKid_Horn_YetiEarMuffs": {
+   "name_zh": "雪怪耳罩",
+   "name_en": "Yeti Earmuffs",
+   "unconfirmed": "暫定名稱：遊戲 0.35.5 已有、2026 宴會節尚未上架，名稱照物品代碼取，上架後換成官方名稱",
+   "source": "Sky 0.35.5 (431758) OutfitDefs.json, season feast_26"
+  },
+  "CharSkyKid_Neck_FeastWreath": {
+   "name_zh": "宴會花圈",
+   "name_en": "Feast Wreath",
+   "unconfirmed": "暫定名稱：遊戲 0.35.5 已有、2026 宴會節尚未上架，名稱照物品代碼取，上架後換成官方名稱",
+   "source": "Sky 0.35.5 (431758) OutfitDefs.json, season feast_26"
+  },
+  "CharSkyKid_Prop_AP03Umbrella_02": {
+   "name_zh": "大傘",
+   "name_en": "Lightseeker Umbrella",
+   "source": "交易圈暱稱（站長提供的用語表）；官方名稱待補"
+  },
+  "CharSkyKid_Prop_AP04Bonfire": {
+   "name_zh": "篝火",
+   "name_en": "Bonfire",
+   "source": "交易圈暱稱（站長提供的用語表）；官方名稱待補"
+  },
+  "CharSkyKid_Horn_AP06Tassel": {
+   "name_zh": "耳墜",
+   "name_en": "Tassel Earrings",
+   "source": "交易圈暱稱（站長提供的用語表）；官方名稱待補",
+   "group": "ear",
+   "note": "遊戲歸在頭飾（horn），名稱沒有 Earring，網站原本分到頭飾；實際是戴在耳朵上的耳墜"
+  },
+  "CharSkyKid_Mask_AP08Wolf": {
+   "name_zh": "阿努面具",
+   "name_en": "Anubis Mask",
+   "source": "交易圈暱稱（站長提供的用語表）；官方名稱待補"
+  },
+  "CharSkyKid_Wing_AP09Phoenix_01": {
+   "name_zh": "不死鳥斗篷",
+   "name_en": "Phoenix Cape",
+   "source": "交易圈暱稱（站長提供的用語表）；官方名稱待補"
+  },
+  "CharSkyKid_Mask_AP09Phoenix_01": {
+   "name_zh": "不死鳥面具",
+   "name_en": "Phoenix Mask",
+   "source": "交易圈暱稱（站長提供的用語表）；官方名稱待補"
+  },
+  "CharSkyKid_Prop_AP11Rose_01": {
+   "name_zh": "玫瑰",
+   "name_en": "Rose",
+   "source": "交易圈暱稱（站長提供的用語表）；官方名稱待補"
+  },
+  "CharSkyKid_Horn_AP12DeluxeFeather_01": {
+   "name_zh": "羽毛頭飾",
+   "name_en": "Feather Hair Accessory",
+   "source": "交易圈暱稱（站長提供的用語表）；官方名稱待補"
+  },
+  "CharSkyKid_Mask_AP14LongTufts_01": {
+   "name_zh": "白梟面具",
+   "name_en": "Owl Mask",
+   "source": "交易圈暱稱（站長提供的用語表）；官方名稱待補"
+  },
+  "CharSkyKid_Horn_AP19Glasses": {
+   "name_zh": "眼鏡",
+   "name_en": "Glasses",
+   "source": "交易圈暱稱（站長提供的用語表）；官方名稱待補"
   }
  }
 }

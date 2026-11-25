@@ -815,6 +815,20 @@
   }
   function prepareCommit(m, known, siteCSV) {
     const oldRows = parseCSV(siteCSV), newRows = parseCSV(m.csv);
+    // An item the game still shows with its WIP placeholder keeps the icon the site already has for it (one rendered
+    // from its 3D model, say) and that icon's name in icons.csv; the game's own icon replaces it once there is one.
+    const oldByName = new Map(oldRows.map(r => [r.name, r])), keep = new Map();
+    newRows.forEach(r => {
+      const o = oldByName.get(r.name), path = `${r.category}/${r.name}.png`;
+      if (r.icon === 'UiWip' && o && o.icon && o.icon !== 'UiWip' && path in (known.icons || {})) { keep.set(r.name, o); r.icon = o.icon; r.atlas = o.atlas; }
+    });
+    if (keep.size) {
+      const keptPaths = new Set(newRows.filter(r => keep.has(r.name)).map(r => `${r.category}/${r.name}.png`));
+      m.icons = m.icons.filter(i => !keptPaths.has(i.path));
+      keptPaths.forEach(p => { delete m.hashes.icons[p]; });
+      const lines = m.csv.split('\n'), head = lines[0].replace(/^\uFEFF/, '').split(','), ii = head.indexOf('icon'), ai = head.indexOf('atlas');
+      m.csv = lines.map((l, i) => { if (!i) return l; const f = l.split(','), o = keep.get(f[1]); if (o) { f[ii] = o.icon; f[ai] = o.atlas; } return f.join(','); }).join('\n');
+    }
     const oldNames = new Set(oldRows.map(r => r.name));
     const iconByPath = new Map(m.icons.map(i => [i.path, i]));
     const newItems = newRows.filter(r => !oldNames.has(r.name) && r.status === 'ok').map(r => {
