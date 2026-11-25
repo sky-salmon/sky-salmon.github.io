@@ -974,6 +974,18 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 .val-acc[hidden] { display: none; }
 .val-acc-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 10px; font-size: 13.5px; font-weight: 700; color: var(--ink); }
 .val-acc-head .hint { font-weight: 400; font-size: 12px; }
+/* 相似帳號 (card-value.js renderComps) */
+.val-comps[hidden] { display: none; }
+.val-comps-list { list-style: none; margin: 0 0 8px; padding: 0; }
+.val-comps-list li { padding: 9px 0; border-top: 1px solid var(--line); }
+.val-comps-list li:first-child { border-top: 0; padding-top: 2px; }
+.val-c-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.val-c-top b { font-size: 14px; color: var(--ink); }
+.val-c-top .hint { font-size: 12px; }
+.val-c-tag { font-size: 11.5px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.val-c-tag.is-sold { color: var(--accent); border-color: currentColor; }
+.val-c-sim { margin-left: auto; font-size: 12px; color: var(--muted); }
+.val-c-spec { margin: 4px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--ink-soft, var(--ink)); }
 .val-acc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
 .val-acc-grid > div { display: grid; gap: 2px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, .04); }
 .val-acc-grid b { font-family: var(--font-mono); font-size: 18px; color: var(--accent); }

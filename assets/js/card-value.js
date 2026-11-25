@@ -192,9 +192,68 @@
     const center = (h.value + ultVal + itemVal + badgeVal + packVal + candleVal) * mult;   // TWD, Taiwan market; money() converts
     const near = model.comparables.filter(c => Math.abs(+c.start - +h.start) <= 2);
     const rg = model.range || { low: 0.75, high: 1.3 };
-    return { h, cover, hot, ultVal, items, itemVal, badges: a.badges, badgeVal, tierCount, packVal, candles, candleVal, mult, center,
+    const e = { h, cover, hot, ultVal, items, itemVal, badges: a.badges, badgeVal, tierCount, packVal, candles, candleVal, mult, center,
       rangeLow: center * rg.low, rangeHigh: center * rg.high,          // where half of real asks for such accounts fall
       quick: center * model.spread.low, patient: center * model.spread.high, near, nSeasons: a.seasons.size };
+    e.similar = similar(e, a);
+    return e;
+  }
+
+  // ── 相似帳號: the market posts the model learned from that look most like this card ──
+  // Closeness adds up, each scaled to "one step": the start season's price level (a fifth apart in the model's base),
+  // the share of the run since the start that is held (0.2), the sought-after ultimates that differ (a quarter of their
+  // value), packs (about 3× as many), badges (12) and locked bindings (2). Models before 0.5.1 carry only start, title
+  // and ultimates, so only those count there.
+  const LOCKED = { all_free: 0, one_locked: 1, more_locked: 2 };
+  function similar(e, a) {
+    const B = model.base, codes = Object.keys(B).sort(), worth = {};
+    Object.values(model.hot_ultimates || {}).forEach(u => { worth[u.nick] = u.twd; });
+    const lv = s => Math.log(B[s] || B[codes.find(c => c >= s) || codes[codes.length - 1]] || 1000);
+    const mine = new Set(e.hot.map(u => u.nick)), myLv = lv(e.h.start), myLocked = LOCKED[answers.binding];
+    return (model.comparables || []).map(c => {
+      let d2 = ((lv(c.start) - myLv) / 0.2) ** 2;
+      if (e.cover && e.h.span && c.cov != null) d2 += ((c.cov - e.h.cov) / 0.2) ** 2;
+      const theirs = new Set(c.ults || []);
+      let diff = 0, all = 2000;
+      new Set([...mine, ...theirs]).forEach(n => { const v = worth[n] || 1000; all += v; if (mine.has(n) !== theirs.has(n)) diff += v; });
+      d2 += (diff / all / 0.25) ** 2;
+      if (c.packs != null) d2 += ((Math.log1p(c.packs) - Math.log1p(a.packs.length)) / 1.2) ** 2;
+      if (c.badges != null) d2 += ((c.badges - a.badges) / 12) ** 2;
+      if (c.locked != null && myLocked != null) d2 += ((Math.min(2, c.locked) - myLocked) / 2) ** 2;
+      return Object.assign({ dist: Math.sqrt(d2) }, c);
+    }).sort((x, y) => x.dist - y.dist).filter((c, i) => i < 3 || c.dist <= 4).slice(0, 5);   // past 4 steps only to fill three
+  }
+  // a price as the post gave it, and roughly in the currency picked here (plain exchange, no market adjustment)
+  function postPrice(c) {
+    const cur = c.cur && CUR[c.cur] ? c.cur : 'TWD', own = CUR[cur] + Math.round(c.price != null ? c.price : c.twd).toLocaleString('en-US');
+    if (cur === answers.cur) return own;
+    const v = c.twd / (model.fx[answers.cur] || 1), step = answers.cur === 'TWD' ? 100 : 10;
+    return own + ' ' + t('（約 {p}）', { p: CUR[answers.cur] + (Math.round(v / step) * step).toLocaleString('en-US') });
+  }
+  function renderComps(e) {
+    const box = $('#val-comps'), list = e.similar || [];
+    if (!list.length) { box.hidden = true; return; }
+    const KIND = { 無斷: '無斷', 偽無斷: '偽無斷', 微斷: '微斷', 斷季: '斷季', 大斷: '大斷', 簡: '簡號' };
+    const sorted = list.map(c => c.twd).sort((x, y) => x - y), h2 = sorted.length >> 1;
+    const mid = sorted.length % 2 ? sorted[h2] : (sorted[h2 - 1] + sorted[h2]) / 2;
+    const rows = list.map(c => {
+      const sim = c.dist < 1.2 ? t('很像') : c.dist < 2.5 ? t('相近') : t('參考');
+      const spec = [t('{season}起{kind}', { season: seasonName(c.start), kind: KIND[c.kind] ? t(KIND[c.kind]) : '' }) + (c.half ? t('（半季）') : '')];
+      if (c.span && (c.unknown || 0) * 2 > c.span) spec.push(t('季節沒逐一寫'));   // most seasons not named in the post
+      else if (c.span) spec.push(t('畢業 {g} / {n} 季', { g: c.grad, n: c.span }) + (c.missing ? t('，缺 {n} 季', { n: c.missing }) : ''));
+      spec.push(c.ults && c.ults.length ? c.ults.map(u => t(u)).join('、') : t('沒有老畢業禮'));
+      if (c.packs != null) spec.push(c.packs ? t('禮包約 {n} 個', { n: c.packs }) : t('沒寫禮包'));
+      if (c.badges) spec.push(t('徽章 {n}', { n: c.badges }));
+      if (c.locked) spec.push(t('{n} 個綁定不能出', { n: c.locked }));
+      return `<li><div class="val-c-top"><b class="mono">${esc(postPrice(c))}</b><span class="val-c-tag${c.sold ? ' is-sold' : ''}">${c.sold ? t('已售') : t('開價')}</span>`
+        + `${c.month ? `<span class="hint">${esc(c.month.replace('-', '/'))}</span>` : ''}<span class="val-c-sim">${sim}</span></div><p class="val-c-spec">${esc(spec.join('・'))}</p></li>`;
+    }).join('');
+    box.hidden = false;
+    const thin = list.every(c => c.dist >= 2.5);
+    box.innerHTML = `<p class="val-acc-head">${t('相似帳號')}<span class="hint">${t('資料裡配置最接近的 {n} 個（公開社團）', { n: list.length })}</span></p>
+      ${thin ? `<p class="hint">${t('資料裡沒有跟這張名片很接近的帳號，下面只能當大方向參考。')}</p>` : ''}
+      <ul class="val-comps-list">${rows}</ul>
+      <p class="hint">${t('這幾個的價格中位數 {mid}，這張名片估 {est}。開價不等於成交價；只留配置和價格，沒有賣家資料。', { mid: esc(postPrice({ twd: mid, price: mid / (model.fx[answers.cur] || 1), cur: answers.cur })), est: money(e.center) })}</p>`;
   }
 
   function money(twd) {
@@ -215,7 +274,7 @@
     $('#val-half-row').hidden = e.empty || !e.cover;
     if (e.empty) {
       range.innerHTML = `<span class="val-empty">${t('先在名片的 PASS 區加入季卡和畢業禮，就能估價。')}</span>`;
-      why.innerHTML = ''; basis.textContent = ''; $('#val-acc').hidden = true; $('#val-sg').hidden = true; last = null;
+      why.innerHTML = ''; basis.textContent = ''; $('#val-acc').hidden = true; $('#val-comps').hidden = true; $('#val-sg').hidden = true; last = null;
       return;
     }
     range.innerHTML = `<small class="val-cap">${t('常見行情')}</small><span class="val-band">${money(e.rangeLow)}<span class="val-dash" aria-hidden="true">–</span>${money(e.rangeHigh)}</span>
@@ -243,6 +302,7 @@
     basis.textContent = t('可信度：{level}。相近起點的參考貼文 {n} 筆（{from}～{to}，公開社團）。衣櫃、蠟燭和名片上沒放的東西都會讓實際價格差很多。', {
       level, n, from: model.basis.from, to: model.basis.to }) + (!h.half ? '' : ' ' + t('半季只比整季便宜一點（約 3%）；當季的熱門畢業禮（例如魔法的耳墜）有沒有拿到，照它本身的價值另外算。'));
     renderAccuracy(h.start);
+    renderComps(e);
     last = e; $('#val-sg').hidden = false;
     $('#val-sg-cur').textContent = CUR[answers.cur].trim();
   }
