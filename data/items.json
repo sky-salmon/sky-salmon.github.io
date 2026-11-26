@@ -911,6 +911,30 @@
    "name_zh": "眼鏡",
    "name_en": "Glasses",
    "source": "交易圈暱稱（站長提供的用語表）；官方名稱待補"
+  },
+  "CharSkyKid_Hair_StyleCurtain": {
+   "name_zh": "時尚中分瀏海短髮",
+   "name_en": "Style Curtain Bangs",
+   "unconfirmed": "暫定名稱：遊戲 0.35.5 已有（2026 時尚日），名稱照物品代碼與圖示取，上架後換成官方名稱",
+   "source": "Sky 0.35.5 (431758) OutfitDefs.json, season _style_26"
+  },
+  "CharSkyKid_Hair_StyleButterflyClip": {
+   "name_zh": "時尚蝴蝶夾辮子",
+   "name_en": "Style Butterfly Clip Braids",
+   "unconfirmed": "暫定名稱：遊戲 0.35.5 已有（2026 時尚日），名稱照物品代碼與圖示取，上架後換成官方名稱",
+   "source": "Sky 0.35.5 (431758) OutfitDefs.json, season _style_26"
+  },
+  "CharSkyKid_Wing_StyleFurCoat": {
+   "name_zh": "時尚毛皮大衣",
+   "name_en": "Style Fur Coat",
+   "unconfirmed": "暫定名稱：遊戲 0.35.5 已有（2026 時尚日），名稱照物品代碼與圖示取，上架後換成官方名稱",
+   "source": "Sky 0.35.5 (431758) OutfitDefs.json, season _style_26"
+  },
+  "CharSkyKid_Face_StyleBlush": {
+   "name_zh": "時尚腮紅",
+   "name_en": "Style Blush",
+   "unconfirmed": "暫定名稱：遊戲 0.35.5 已有（2026 時尚日），名稱照物品代碼與圖示取，上架後換成官方名稱",
+   "source": "Sky 0.35.5 (431758) OutfitDefs.json, season _style_26"
   }
  }
 }
