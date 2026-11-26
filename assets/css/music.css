@@ -18,7 +18,6 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
 /* ── stage ───────────────────────────────────────────────────────────── */
 .mu-stage {
   --pad: clamp(12px, 2.2vw, 26px);
-  --energy: 0;
   position: relative; z-index: 3; overflow: hidden; isolation: isolate; border-radius: 30px; /* z-index: sheets stay above later siblings */
   background:
     radial-gradient(120% 70% at 50% -10%, rgba(255, 214, 140, .07), transparent 60%),
@@ -67,9 +66,15 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
   background: radial-gradient(38% 95% at 50% 0%, rgba(255, 226, 166, .085), transparent 72%);
 }
 .mu-glow {
+  --energy: 0;
   position: absolute; left: 50%; top: 47%; width: min(880px, 130%); aspect-ratio: 1.75; transform: translate(-50%, -50%); pointer-events: none;
-  background: radial-gradient(closest-side, rgba(233, 194, 122, calc(.15 + var(--energy) * .16)), rgba(233, 194, 122, calc(.045 + var(--energy) * .05)) 55%, transparent 100%);
+  background: radial-gradient(closest-side, rgba(233, 194, 122, .15), rgba(233, 194, 122, .045) 55%, transparent 100%);
   filter: blur(6px);
+}
+/* the brightening when keys are played: a second, fixed gradient whose opacity follows the energy (compositor only) */
+.mu-glow::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: var(--energy); will-change: opacity;
+  background: radial-gradient(closest-side, rgba(233, 194, 122, .19), rgba(233, 194, 122, .052) 55%, transparent 100%);   /* over the base: .15+.16 and .045+.05 at full */
 }
 .mu-mark { position: absolute; top: 16px; font-size: 10px; letter-spacing: .2em; color: rgba(233, 194, 122, .38); }
 .mu-mark.is-left { left: calc(var(--pad) + 4px); }
@@ -78,14 +83,17 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
 .mu-motes { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .mu-mote {
   position: absolute; bottom: -6px; width: var(--s, 3px); height: var(--s, 3px); border-radius: 50%; opacity: 0;
-  background: var(--gold-hi); box-shadow: 0 0 6px rgba(255, 207, 122, .9);
+  background: rgba(255, 226, 166, var(--o, .55)); box-shadow: 0 0 6px rgba(255, 207, 122, calc(var(--o, .55) * .9));
+  rotate: var(--tilt, 0deg);   /* the drift sideways: the rise below runs along this tilt */
   animation: mu-rise var(--d, 12s) linear var(--delay, 0s) infinite;
 }
+/* plain values only, so phones can run it on the compositor (keyframes with CSS variables run on the main thread);
+   each mote's brightness is in its colour, its sideways drift in its tilt */
 @keyframes mu-rise {
-  0% { transform: translate(0, 0); opacity: 0; }
-  15% { opacity: var(--o, .55); }
-  70% { opacity: calc(var(--o, .55) * .6); }
-  100% { transform: translate(var(--dx, 18px), -460px); opacity: 0; }
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 1; }
+  70% { opacity: .6; }
+  100% { transform: translateY(-460px); opacity: 0; }
 }
 
 /* ── keys ────────────────────────────────────────────────────────────── */
@@ -96,47 +104,54 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
 }
 .mu-key {
   --cue: 0;
-  position: relative; aspect-ratio: 1; padding: 0; display: grid; place-items: center; overflow: hidden;
+  position: relative; aspect-ratio: 1; padding: 0; display: grid; place-items: center; isolation: isolate;
   border-radius: clamp(12px, 2vw, 20px); border: 1px solid var(--gold-line); color: var(--gold);
   background: linear-gradient(155deg, #201c17 0%, #121009 58%, #0d0b08 100%);
   box-shadow: 0 14px 26px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 240, 210, .06), inset 0 -12px 22px rgba(0, 0, 0, .35);
   -webkit-tap-highlight-color: transparent;
-  transition: transform .32s cubic-bezier(.2, .8, .2, 1), border-color .35s, box-shadow .45s, background .45s, color .35s;
+  /* only the scale animates on the key itself; the light fades on its own layer (::before) by opacity, which the
+     compositor does without repainting — animating shadows and gradients made phones redraw every key every frame */
+  transition: transform .32s cubic-bezier(.2, .8, .2, 1), color .35s;
 }
+/* pressed / playing light: background glow, inner and outer halo, brighter rim */
+.mu-key::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; opacity: 0; will-change: opacity;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(233, 194, 122, .4), rgba(233, 194, 122, .1) 52%, transparent 76%),
+    linear-gradient(155deg, #2b2319 0%, #16110b 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 214, 140, .72), 0 0 0 1px rgba(255, 214, 140, .22), 0 0 36px rgba(233, 194, 122, .36), inset 0 0 22px rgba(233, 194, 122, .2);
+  transition: opacity .45s;
+}
+/* clips the ripples and the upcoming-note ring to the key (the key itself no longer clips, so its halo can spill out) */
+.mu-key-fx { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
 .mu-key:hover { border-color: rgba(233, 194, 122, .34); }
 .mu-key:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .mu-key.is-root { border-color: rgba(233, 194, 122, .24); }
-.mu-glyph { width: 50%; height: 50%; overflow: visible; opacity: .78; transition: opacity .35s, filter .35s; }
+.mu-glyph { position: relative; z-index: 1; width: 50%; height: 50%; overflow: visible; opacity: .78; transition: opacity .35s; }
 .mu-glyph * { vector-effect: non-scaling-stroke; stroke-width: 1.4px; }
 .mu-key-label {
-  position: absolute; left: 0; right: 0; bottom: 7%; text-align: center; pointer-events: none;
+  position: absolute; z-index: 1; left: 0; right: 0; bottom: 7%; text-align: center; pointer-events: none;
   font-family: var(--font-mono); font-size: clamp(9px, 1.25vw, 12px); font-weight: 500; letter-spacing: .08em; color: rgba(233, 194, 122, .5);
 }
 .mu-key-label:empty { display: none; }
 
 /* upcoming-note ring, driven by --cue (0 → 1) */
-.mu-key::after {
+.mu-key-fx::after {
   content: ""; position: absolute; inset: 7%; border-radius: clamp(8px, 1.5vw, 15px); pointer-events: none;
   border: 1.5px solid #ffd892; box-shadow: 0 0 14px rgba(255, 210, 130, .55), inset 0 0 12px rgba(255, 210, 130, .22);
   opacity: var(--cue); transform: scale(calc(1.1 - .1 * var(--cue)));
 }
-.mu-key.is-target::after { opacity: max(var(--cue), .4); }
-.mu-key.is-wait::after { animation: mu-breathe 1.3s ease-in-out infinite; }
+.mu-key.is-target .mu-key-fx::after { opacity: max(var(--cue), .4); }
+.mu-key.is-wait .mu-key-fx::after { animation: mu-breathe 1.3s ease-in-out infinite; }
 @keyframes mu-breathe { 50% { box-shadow: 0 0 26px rgba(255, 210, 130, .9), inset 0 0 18px rgba(255, 210, 130, .4); } }
 
 /* pressed / now playing */
-.mu-key.is-down, .mu-key.is-lit {
-  color: var(--gold-hi); border-color: rgba(255, 214, 140, .72); transform: scale(.955);
-  background:
-    radial-gradient(circle at 50% 50%, rgba(233, 194, 122, .4), rgba(233, 194, 122, .1) 52%, transparent 76%),
-    linear-gradient(155deg, #2b2319 0%, #16110b 100%);
-  box-shadow: 0 0 0 1px rgba(255, 214, 140, .22), 0 0 36px rgba(233, 194, 122, .36), inset 0 0 22px rgba(233, 194, 122, .2);
-  transition-duration: .06s;
-}
+.mu-key.is-down, .mu-key.is-lit { color: var(--gold-hi); transform: scale(.955); transition-duration: .06s; }
+.mu-key.is-down::before, .mu-key.is-lit::before { opacity: 1; transition-duration: .06s; }
 .mu-key.is-down .mu-glyph, .mu-key.is-lit .mu-glyph { opacity: 1; filter: drop-shadow(0 0 5px rgba(255, 210, 130, .95)); transition-duration: .06s; }
 .mu-key.is-down .mu-key-label, .mu-key.is-lit .mu-key-label { color: var(--gold-hi); }
 .mu-key.is-done { border-color: rgba(255, 214, 140, .6); }
-.mu-key.is-done::after { opacity: 0; }
+.mu-key.is-done .mu-key-fx::after { opacity: 0; }
 .mu-key.is-miss { border-color: rgba(224, 87, 75, .85); box-shadow: 0 0 0 1px rgba(224, 87, 75, .35), 0 0 26px rgba(224, 87, 75, .32); animation: mu-shake .32s; }
 .mu-key.is-miss .mu-glyph { color: #ff9c8f; }
 @keyframes mu-shake { 25% { translate: -3px 0; } 60% { translate: 3px 0; } }
@@ -153,8 +168,8 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
 
 /* calm visuals: no motion, just light */
 .mu-stage.is-calm .mu-key, .mu-stage.is-calm .mu-key.is-down, .mu-stage.is-calm .mu-key.is-lit { transform: none; }
-.mu-stage.is-calm .mu-key::after { transform: none; }
-.mu-stage.is-calm .mu-key.is-wait::after, .mu-stage.is-calm .mu-key.is-miss { animation: none; }
+.mu-stage.is-calm .mu-key-fx::after { transform: none; }
+.mu-stage.is-calm .mu-key.is-wait .mu-key-fx::after, .mu-stage.is-calm .mu-key.is-miss { animation: none; }
 .mu-stage.is-calm .mu-motes, .mu-stage.is-calm .mu-ripple { display: none; }
 
 .mu-hint, .mu-hud { position: relative; margin: 14px 0 0; min-height: 28px; text-align: center; }
@@ -435,7 +450,7 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
   .mu-body { padding: 22px 12px 12px; }
   .mu-keys { width: 100%; --gap: 8px; }
   .mu-key { border-radius: 13px; }
-  .mu-key::after { border-radius: 9px; }
+  .mu-key-fx::after { border-radius: 9px; }
   .mu-hint { font-size: 19px; margin-top: 14px; }
   .mu-hud { margin-top: 14px; font-size: 11px; }
 
@@ -474,7 +489,7 @@ body[data-page="music"] main { z-index: 2; } /* keep bottom sheets above the foo
 
 @media (prefers-reduced-motion: reduce) {
   .mu-motes, .mu-ripple { display: none; }
-  .mu-key, .mu-key.is-down, .mu-key.is-lit, .mu-key::after { transform: none; }
+  .mu-key, .mu-key.is-down, .mu-key.is-lit, .mu-key-fx::after { transform: none; }
 }
 
 /* 轉譜 drawer (music-transcribe-ui.js) */
