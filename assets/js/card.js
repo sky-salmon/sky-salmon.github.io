@@ -911,7 +911,7 @@
     spells: t('點魔法選取，數量之後在名片上點它就能改。'),
     extra: t('用左邊的分類或搜尋找物品，點一下選取。'),
     pin: t('點徽章選取。'),
-    link: t('每個平台選「有綁」或「綁不出」；綁不出會在名片上畫紅線。')
+    link: t('✓ 有綁　⊘ 綁不出（名片上劃掉）')
   };
   // which catalogue categories each section offers
   const SEC_CATS = { pass: ['pass'], iap: D.CLOSET_CATS, spells: ['spell'], extra: D.CLOSET_CATS };
@@ -1136,15 +1136,15 @@
   async function renderPicker() {
     updatePickerStatus();
     if (pk.mode === 'links') {
-      // one row per platform: not shown / linked / 綁不出 (drawn crossed out on the card), set in a single tap
-      const STATES = [['off', t('不選')], ['on', t('有綁')], ['dead', t('綁不出')]];
+      // one row per platform, two icon buttons: ✓ shows the icon on the card, ⊘ shows it crossed out; tap again to clear
+      const OK = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 10.4 3.3 3.3L15 7"/></svg>';
+      const NO = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="6.4"/><path d="m5.5 14.5 9-9"/></svg>';
       pBody.innerHTML = `<div class="link-list">${D.LINKS.map(l => {
         const it = pk.sel.get('l:' + l.id), st = !it ? 'off' : it.dead ? 'dead' : 'on';
         return `<div class="link-row is-${st}"><span class="link-ico">${l.svg}</span><span class="link-name">${esc(l.name)}</span>
-          <span class="seg link-seg" role="radiogroup" aria-label="${esc(l.name)}">${STATES.map(([v, lab]) =>
-            `<button type="button" role="radio" data-ls="${l.id}:${v}" aria-checked="${st === v}">${lab}</button>`).join('')}</span></div>`;
-      }).join('')}</div>
-        <p class="hint" style="margin-top:14px">${t('「綁不出」會在名片上把那個平台畫上紅線，表示這個綁定不會跟著帳號給出去。')}</p>`;
+          <button type="button" class="link-btn is-ok" data-ls="${l.id}:on" aria-pressed="${st === 'on'}" aria-label="${esc(l.name)}：${t('有綁')}">${OK}</button>
+          <button type="button" class="link-btn is-no" data-ls="${l.id}:dead" aria-pressed="${st === 'dead'}" aria-label="${esc(l.name)}：${t('綁不出')}">${NO}</button></div>`;
+      }).join('')}</div>`;
       return;
     }
     if (pk.mode === 'pins') {
@@ -1194,7 +1194,8 @@
     if (e.target.closest('[data-upload]')) { $('#custom-input').click(); return; }
     const ls = e.target.closest('[data-ls]');
     if (ls) {
-      const [id, st] = ls.dataset.ls.split(':'), key = 'l:' + id, old = pk.sel.get(key);
+      const [id, want] = ls.dataset.ls.split(':'), key = 'l:' + id, old = pk.sel.get(key);
+      const st = ls.getAttribute('aria-pressed') === 'true' ? 'off' : want;   // the active one again: not shown
       if (st === 'off') pk.sel.delete(key);
       else {
         const it = Object.assign({}, old || keyToItem(key));   // a copy: Cancel must leave the card as it was

@@ -605,10 +605,8 @@
  "（約 {p}）": "(about {p})",
  "季節沒逐一寫": "seasons not listed one by one",
  "資料裡沒有跟這張名片很接近的帳號，下面只能當大方向參考。": "Nothing in the data is very close to this card; take these as a rough guide only.",
- "不選": "Off",
  "綁不出": "Can't transfer",
  "綁不出（畫紅線）": "Can't transfer (crossed out)",
- "「綁不出」會在名片上把那個平台畫上紅線，表示這個綁定不會跟著帳號給出去。": "“Can't transfer” crosses the platform out on the card: that link doesn't go with the account.",
  "有綁": "Linked",
- "每個平台選「有綁」或「綁不出」；綁不出會在名片上畫紅線。": "Mark each platform “Linked” or “Can't transfer”; “Can't transfer” is crossed out on the card."
+ "✓ 有綁　⊘ 綁不出（名片上劃掉）": "✓ linked  ⊘ can't transfer (crossed out on the card)"
 }
