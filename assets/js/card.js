@@ -18,7 +18,7 @@
   // ── model ─────────────────────────────────────────────────────────────────
   const SECTIONS = {
     profile: { title: 'PROFILE', zh: t('個人資料') },
-    pass: { title: 'PASS', zh: t('季節'), picker: 'catalog', views: ['season', 'grid', 'tile'] },
+    pass: { title: 'PASS', zh: t('季節'), picker: 'catalog', views: ['grid', 'season', 'tile'] },   // 格狀 → 分季 in one tap (new cards start on 分季)
     pin: { title: 'PIN & STAR', zh: t('徽章'), picker: 'pins', views: ['grid', 'tile'] },
     iap: { title: 'IAP', zh: t('內購'), picker: 'catalog', views: ['grid', 'season', 'tile', 'row'] },
     spells: { title: 'SPELLS', zh: t('魔法'), picker: 'catalog', views: ['grid'] },
