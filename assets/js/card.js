@@ -911,7 +911,7 @@
     spells: t('點魔法選取，數量之後在名片上點它就能改。'),
     extra: t('用左邊的分類或搜尋找物品，點一下選取。'),
     pin: t('點徽章選取。'),
-    link: t('點平台選取，之後在名片上點它可以標記成已失效。')
+    link: t('每個平台選「有綁」或「綁不出」；綁不出會在名片上畫紅線。')
   };
   // which catalogue categories each section offers
   const SEC_CATS = { pass: ['pass'], iap: D.CLOSET_CATS, spells: ['spell'], extra: D.CLOSET_CATS };
@@ -927,7 +927,7 @@
     pk = { sec, mode: meta.picker, sel: new Map(), cat: sec === 'iap' ? 'all' : cats.length === 1 ? cats[0] : 'all', season: 'all', q: '',
       group: 'closet', series: '__recent', only: false };
     state.items[sec].forEach(it => pk.sel.set(itemKey(it), it));
-    pk.start = [...pk.sel.keys()].join('|');
+    pk.start = pickSig();
     $('#picker-title').textContent = PICK_TITLES[sec];
     $('#picker-sub').textContent = PICK_SUBS[sec] || '';
     $('#picker-tools').hidden = pk.mode === 'links';
@@ -947,7 +947,8 @@
     renderPicker();
   }
   // leaving with picks that are not on the card yet: ask first (the footer turns into the question)
-  const pickerDirty = () => pk && [...pk.sel.keys()].join('|') !== pk.start;
+  const pickSig = () => [...pk.sel].map(([k, it]) => k + (it.dead ? '!' : '')).join('|');
+  const pickerDirty = () => pk && pickSig() !== pk.start;
   picker.beforeClose = () => {
     if (!pickerDirty() || !$('#picker-guard').hidden) return true;
     $('#picker-guard').hidden = false; $('#picker-keep').focus();
@@ -973,7 +974,7 @@
     $('#picker-guard').hidden = true;
     $('#picker-tray').innerHTML = [...pk.sel.entries()].map(([k, it]) => {
       const info = itemInfo(it);
-      return `<span class="tray-it" title="${esc(it.label || info.label)}">${info.html}<button type="button" data-unpick="${esc(k)}" aria-label="${esc(t('移除 {name}', { name: it.label || info.label }))}">×</button></span>`;
+      return `<span class="tray-it${it.dead ? ' is-dead' : ''}" title="${esc(it.label || info.label)}">${info.html}<button type="button" data-unpick="${esc(k)}" aria-label="${esc(t('移除 {name}', { name: it.label || info.label }))}">×</button></span>`;
     }).join('');
   }
   function pickBtn(key, html, label, extra = '') {
@@ -1135,8 +1136,15 @@
   async function renderPicker() {
     updatePickerStatus();
     if (pk.mode === 'links') {
-      pBody.innerHTML = `<div class="picker-grid is-links">${D.LINKS.map(l => pickBtn('l:' + l.id, `${l.svg}<span>${l.name}</span>`, l.name, ' is-link')).join('')}</div>
-        <p class="hint" style="margin-top:14px">${t('選好之後，點名片上的平台圖示可以標記成「已失效」。')}</p>`;
+      // one row per platform: not shown / linked / 綁不出 (drawn crossed out on the card), set in a single tap
+      const STATES = [['off', t('不選')], ['on', t('有綁')], ['dead', t('綁不出')]];
+      pBody.innerHTML = `<div class="link-list">${D.LINKS.map(l => {
+        const it = pk.sel.get('l:' + l.id), st = !it ? 'off' : it.dead ? 'dead' : 'on';
+        return `<div class="link-row is-${st}"><span class="link-ico">${l.svg}</span><span class="link-name">${esc(l.name)}</span>
+          <span class="seg link-seg" role="radiogroup" aria-label="${esc(l.name)}">${STATES.map(([v, lab]) =>
+            `<button type="button" role="radio" data-ls="${l.id}:${v}" aria-checked="${st === v}">${lab}</button>`).join('')}</span></div>`;
+      }).join('')}</div>
+        <p class="hint" style="margin-top:14px">${t('「綁不出」會在名片上把那個平台畫上紅線，表示這個綁定不會跟著帳號給出去。')}</p>`;
       return;
     }
     if (pk.mode === 'pins') {
@@ -1174,7 +1182,7 @@
     $$(`.pick[data-key="${CSS.escape(key)}"]`, pBody).forEach(b => b.setAttribute('aria-pressed', on));
   }
   // re-render the list; the button that had focus is rebuilt, so put focus back on its new copy (Esc and Tab keep working)
-  const FOCUS_DATA = ['key', 'pend', 'ult', 'seasonToggle', 'pack', 'series', 'rail', 'all', 'del'];
+  const FOCUS_DATA = ['key', 'pend', 'ult', 'seasonToggle', 'pack', 'series', 'rail', 'all', 'del', 'ls'];
   function refreshPicker(toTop) {
     const a = document.activeElement, inside = pBody.contains(a), top = toTop ? 0 : pBody.scrollTop;
     const k = inside && FOCUS_DATA.find(x => a.dataset[x] !== undefined);
@@ -1184,6 +1192,17 @@
   }
   pBody.addEventListener('click', e => {
     if (e.target.closest('[data-upload]')) { $('#custom-input').click(); return; }
+    const ls = e.target.closest('[data-ls]');
+    if (ls) {
+      const [id, st] = ls.dataset.ls.split(':'), key = 'l:' + id, old = pk.sel.get(key);
+      if (st === 'off') pk.sel.delete(key);
+      else {
+        const it = Object.assign({}, old || keyToItem(key));   // a copy: Cancel must leave the card as it was
+        if (st === 'dead') it.dead = true; else delete it.dead;
+        pk.sel.set(key, it);
+      }
+      updatePickerStatus(); refreshPicker(); return;
+    }
     const go = e.target.closest('[data-cat-go], [data-pick-reset]');
     if (go) {
       pk.cat = go.dataset.catGo || (pk.sec === 'pass' ? 'pass' : 'all');
@@ -1269,7 +1288,7 @@
     if (files.length) { save(); if (pk) { pk.cat = 'mine'; renderPickerChrome(); renderPicker(); } toast(t('已加入 {n} 個圖示', { n: files.length })); }
   });
   $('#picker-ok').addEventListener('click', () => {
-    const sec = pk.sec, kept = state.items[sec].filter(it => pk.sel.has(itemKey(it)));
+    const sec = pk.sec, kept = state.items[sec].filter(it => pk.sel.has(itemKey(it))).map(it => pk.sel.get(itemKey(it)));
     const keptKeys = new Set(kept.map(itemKey));
     const added = [...pk.sel.entries()].filter(([k]) => !keptKeys.has(k)).map(([, it]) => it);
     state.items[sec] = [...kept, ...added];
