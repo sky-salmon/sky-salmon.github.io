@@ -242,6 +242,12 @@
   };
   const VIEW_LABEL = { grid: t('格狀'), season: t('分季'), tile: t('卡片'), row: t('清單') };
 
+  let packIdx = null, packIdxFor = null;
+  function packIndex() {
+    const packs = D.packs();
+    if (packIdxFor !== packs) { packIdx = new Map(); packs.forEach(pk => pk.items.forEach(p => { if (!packIdx.has(p)) packIdx.set(p, pk); })); packIdxFor = packs; }
+    return packIdx;
+  }
   function itemsHTML(sec, s, clean) {
     const list = s.items[sec], view = sec === 'spells' || sec === 'link' ? 'grid' : (s.views[sec] || 'grid');
     // WYSIWYG: what the editor lays out is exactly what gets exported — an empty section is
@@ -262,19 +268,47 @@
       const sk = i => { const c = list[i].k === 'c' && itemInfo(list[i]).season; return c ? parseInt(c, 10) : Infinity; };   // no season: last
       order.sort((a, b) => (sk(a) - sk(b)) || a - b);
     }
+    if (sec === 'pass' && view === 'grid') {
+      // 格狀 for PASS: one card per season (its pendant, the season's name) with the season's 畢業禮 small underneath;
+      // items without a season follow as plain icons
+      const cards = new Map(), loose = [];
+      order.forEach(i => {
+        const it = list[i], q = it.k === 'c' ? D.parsePath(it.p) : null;
+        if (!q || !q.season) { loose.push(i); return; }
+        if (!cards.has(q.season)) cards.set(q.season, { pend: null, ults: [] });
+        const c = cards.get(q.season);
+        if (q.cat === 'pass' && !q.ult && c.pend == null) c.pend = i; else c.ults.push(i);
+      });
+      const html = [...cards].map(([code, c]) => `<div class="pcard">
+          <div class="pcard-face${c.pend == null ? ' is-empty' : ''}">${c.pend != null ? one(list[c.pend], c.pend) : ''}<span class="pcard-name">${esc(D.seasonName(code))}</span></div>
+          ${c.ults.length ? `<div class="pcard-ults">${c.ults.map(i => one(list[i], i)).join('')}</div>` : ''}
+        </div>`).join('') + loose.map(i => `<div class="pcard is-loose">${one(list[i], i)}</div>`).join('');
+      return `<div class="items pcards" data-sec="pass" data-view="grid">${html}</div>`;
+    }
     if (view === 'season') {
-      // 分季: one box per season, oldest first, each labelled with its name; the rest in a last box
+      // 分季: one box per group, labelled with its name. PASS groups by season; IAP and CLOSET by the pack an item
+      // came from: its season (AURORA's concert packs count as the AURORA season), else its event (搗蛋節, 大耳狗咖啡廳 …),
+      // else the pack itself; only items no pack knows go to 其他. Order: seasons oldest first, events by first year, packs.
+      const packOf = sec === 'pass' ? null : packIndex();
+      const groupOf = it => {
+        const q = it.k === 'c' ? D.parsePath(it.p) : null, pk = q && packOf ? packOf.get(it.p) : null;
+        let code = (q && q.season) || (pk && pk.kind === 'season' ? pk.series : '');
+        if (!code && pk && pk.kind === 'event' && pk.evKey === 'gamescom') code = '16';
+        if (code) return { key: 's' + code, label: D.seasonName(code), rank: [0, +code] };
+        if (pk && pk.kind === 'event') { const label = pk.evZh || pk.series; return { key: 'e' + label, label, rank: [1, +pk.year || 9999] }; }   // by name: events that share one merge
+        if (pk) return { key: 'p' + pk.id, label: pk.name, rank: [2, +pk.year || 9999] };
+        return { key: 'z', label: t('其他'), rank: [3, 0], other: true };
+      };
       const groups = new Map();
       order.forEach(i => {
-        const it = list[i], code = (it.k === 'c' && itemInfo(it).season) || '';
-        if (!groups.has(code)) groups.set(code, []);
-        groups.get(code).push(i);
+        const g = groupOf(list[i]);
+        if (!groups.has(g.key)) groups.set(g.key, Object.assign(g, { items: [] }));
+        const e = groups.get(g.key);
+        e.rank[1] = Math.min(e.rank[1], g.rank[1]);   // an event sorts by its earliest pack
+        e.items.push(i);
       });
-      const codes = [...groups.keys()].sort((a, b) => (a ? 0 : 1) - (b ? 0 : 1) || a.localeCompare(b));
-      const boxes = codes.map(code => {
-        const head = `<span class="sbox-name">${code ? esc(D.seasonName(code)) : t('其他')}</span>`;
-        return `<div class="sbox${code ? '' : ' is-other'}"><div class="sbox-head">${head}</div><div class="sbox-items">${groups.get(code).map(i => one(list[i], i)).join('')}</div></div>`;
-      }).join('');
+      const boxes = [...groups.values()].sort((a, b) => a.rank[0] - b.rank[0] || a.rank[1] - b.rank[1] || a.label.localeCompare(b.label))
+        .map(g => `<div class="sbox${g.other ? ' is-other' : ''}"><div class="sbox-head"><span class="sbox-name">${esc(g.label)}</span></div><div class="sbox-items">${g.items.map(i => one(list[i], i)).join('')}</div></div>`).join('');
       return `<div class="items" data-sec="${sec}" data-view="season">${boxes}</div>`;
     }
     return `<div class="items" data-sec="${sec}" data-view="${esc(view)}">${order.map(i => one(list[i], i)).join('')}</div>`;
