@@ -536,6 +536,28 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }   /* a long name wraps to two lines at most */
 .sbox-items { display: flex; flex-wrap: wrap; gap: 4px; }
 .items[data-view="season"] .item-ico { width: var(--ico-s); height: var(--ico-s); }
+/* PASS 格狀: a card per season — the pendant on the card, the season's name, its 畢業禮 small underneath */
+.items.pcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--pc-w), 1fr)); gap: 12px 8px; align-items: start;
+  --pc-w: calc(var(--ico) * 1.72); --ult: calc(var(--ico) * .5); grid-template-columns: repeat(auto-fit, var(--pc-w)); justify-content: center; }
+.card .cp .items.pcards { justify-content: center; }   /* centred in every design (some designs left-align .items) */
+.pcard { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; }
+.pcard-face {
+  width: 100%; aspect-ratio: 4 / 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  padding: 6px 4px 7px; border-radius: 12px; border: 1px solid rgba(var(--p-ink-rgb), .22);
+  background: linear-gradient(165deg, rgba(var(--p-ink-rgb), .13), rgba(var(--p-ink-rgb), .03) 70%);
+  box-shadow: inset 0 1px 0 rgba(var(--p-ink-rgb), .08);
+}
+.pcard-face.is-empty { border-style: dashed; background: none; }
+.items.pcards .pcard-face .item-ico { width: calc(var(--ico) * 1.12); height: calc(var(--ico) * 1.12); padding: 0; background: none; border: 0; }
+.pcard-name { width: 100%; font-size: 9.5px; font-weight: 700; line-height: 1.15; text-align: center; opacity: .8; overflow: hidden;
+  overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.pcard-ults { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; max-width: 100%; }
+.items.pcards .pcard-ults .item-ico { width: var(--ult); height: var(--ult); padding: 2px; border-radius: 7px; }
+.pcard.is-loose { justify-content: center; }
+/* on light paper the card itself is the dark chip */
+.card[data-pink="dark"] .pcard-face { background: rgba(24, 26, 34, .86); border-color: transparent; color: #f2ead8; }
+.card[data-pink="dark"] .items.pcards .pcard-face .item.is-cat .item-ico { padding: 0; background: none; }
+.card[data-pink="dark"] .items.pcards .pcard-ults .item.is-cat .item-ico { padding: 2px; border-radius: 6px; }
 /* game icons are white silhouettes: give them a dark chip wherever panel text is dark */
 .card[data-pink="dark"] .item.is-cat .item-ico,
 .card[data-pink="dark"] .items[data-sec="pass"] .item.is-cat .item-ico { padding: 4px; border-radius: 10px; background: rgba(24, 26, 34, .86); border: 0; }
