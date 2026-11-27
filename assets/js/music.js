@@ -96,6 +96,10 @@
   const Audio = (() => {
     let ctx = null, bus, dry, wet, master, noise = null, unlocked = false;
     const voices = new Set();
+    // How many notes may ring at once. Each piano note is ~12 audio nodes, so a phone's audio thread runs out of time
+    // (crackles, then the browser may reload the tab) long before a desktop's does.
+    const PHONE = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || (navigator.deviceMemory || 8) <= 4;
+    const MAX_VOICES = PHONE ? 24 : 40;
     const ksCache = new Map();
 
     function ensure() {
@@ -238,7 +242,8 @@
         env(gn.gain, t, 0.07, 0.001, 0.012);
         nz.connect(bp); bp.connect(gn); gn.connect(v.vca);
         v.srcs.push(o1, o2, o3, nz);
-        v.end = t + decay * 7;
+        v.end = t + decay * 6;
+        v.until(o3, t + 1.2); v.until(nz, t + 0.1);   // silent long before the note ends
       },
       harp(v, f, k) { plucked(v, f, k, 'harp', 5400, 0.8); },
       guitar(v, f, k) { plucked(v, f / 2, k, 'guitar', 3600, 0.7); },
@@ -249,7 +254,7 @@
         for (const [r, g, d] of parts) {
           const o = osc('sine', F * r), gg = amp(0);
           env(gg.gain, t, g, r > 5 ? 0.001 : 0.002, d);
-          o.connect(gg); gg.connect(out); v.srcs.push(o);
+          o.connect(gg); gg.connect(out); v.srcs.push(o); v.until(o, t + d * 7);
         }
         v.end = t + tau * 7;
       },
@@ -292,12 +297,12 @@
         for (const [r, g, d] of parts) {
           const o = osc('sine', f * r), gg = amp(0);
           env(gg.gain, t, g, 0.002, d * scale);
-          o.connect(gg); gg.connect(out); v.srcs.push(o);
+          o.connect(gg); gg.connect(out); v.srcs.push(o); v.until(o, t + d * scale * 6.2);
         }
         const nz = noiseSrc(), hp = filter('highpass', 3200), gn = amp(0);
         env(gn.gain, t, 0.05, 0.001, 0.008);
         nz.connect(hp); hp.connect(gn); gn.connect(v.vca);
-        v.srcs.push(nz);
+        v.srcs.push(nz); v.until(nz, t + 0.08);
         v.end = t + 2.4 * scale * 6.2;
       }
     };
@@ -315,7 +320,7 @@
       const o = osc('sine', f), go = amp(0); // a little body warmth under the string
       env(go.gain, t, 0.1, 0.004, 0.32);
       o.connect(go); go.connect(v.vca);
-      v.srcs.push(src, o);
+      v.srcs.push(src, o); v.until(o, t + 2);
       v.end = t + dur;
     }
 
@@ -324,18 +329,33 @@
       const t = ctx.currentTime + Math.max(0, delay || 0) + 0.004;
       const vca = ctx.createGain();
       vca.connect(bus);
+      const stopT = new Map(), early = new Map();
       const v = {
         t, k, vca, srcs: [], end: t + 4, sustain: false, released: false, dead: false, onend: null, safety: 0,
         release() {},
-        stopAt(when) { for (const s of v.srcs) { try { s.stop(when); } catch (e) { /* already stopped */ } } }
+        until(src, when) { early.set(src, when); },   // a part that falls silent before the note ends
+        // stop every source by `when` (a source already set to stop sooner keeps its time: stop() takes the last call)
+        stopAt(when) {
+          for (const s of v.srcs) {
+            const cur = stopT.has(s) ? stopT.get(s) : Infinity, w = Math.min(cur, when);
+            if (w === cur) continue;
+            try { s.stop(w); stopT.set(s, w); } catch (e) { /* already stopped */ }
+          }
+        }
       };
       (SYNTH[settings.instrument] || SYNTH.piano)(v, FREQ[k], k, hold);
       for (const s of v.srcs) s.start(t);
+      for (const [s, w] of early) { try { s.stop(w); stopT.set(s, w); } catch (e) { /* ignore */ } }
       if (!v.sustain) v.stopAt(v.end);
-      v.srcs[0].onended = () => cleanup(v);
+      // free the voice when its longest-lived source ends
+      let last = v.srcs[0];
+      for (const s of v.srcs) if ((stopT.get(s) ?? Infinity) > (stopT.get(last) ?? Infinity)) last = s;
+      last.onended = () => cleanup(v);
       voices.add(v);
       stats.notes++;
-      if (voices.size > 44) kill(voices.values().next().value);
+      // over budget: fade out the oldest notes. A faded note leaves `voices` at once, so the next one over budget
+      // takes the next oldest (it used to pick the same fading note again and again while new ones piled up).
+      while (voices.size > MAX_VOICES) kill(voices.values().next().value);
       return v;
     }
 
@@ -348,6 +368,7 @@
 
     function kill(v) {
       if (!v || v.dead || !ctx) return;
+      voices.delete(v);
       const t = ctx.currentTime;
       if (v.t > t + 0.002) { // not started yet: silence it outright
         try { v.vca.disconnect(); } catch (e) { /* ignore */ }
@@ -492,7 +513,7 @@
   // ═══════════════════════════════════════════════════════════════════════
   // DOM
   // ═══════════════════════════════════════════════════════════════════════
-  const stage = $('#stage');
+  const stage = $('#stage'), glow = stage.querySelector('.mu-glow');
   const keysEl = $('#keys');
   const hintEl = $('#hint'), hudEl = $('#hud');
   const tp = {
@@ -515,11 +536,12 @@
     b.type = 'button';
     b.className = 'mu-key' + (ROOTS.has(i) ? ' is-root' : '');
     b.dataset.i = i;
-    b.innerHTML = `<svg class="mu-glyph" viewBox="0 0 48 48" aria-hidden="true">${GLYPH[glyphOf(i)]}</svg><span class="mu-key-label" aria-hidden="true"></span>`;
+    b.innerHTML = `<span class="mu-key-fx" aria-hidden="true"></span><svg class="mu-glyph" viewBox="0 0 48 48" aria-hidden="true">${GLYPH[glyphOf(i)]}</svg><span class="mu-key-label" aria-hidden="true"></span>`;
     keysEl.append(b);
     return b;
   });
   const labelEls = keyEls.map(b => b.querySelector('.mu-key-label'));
+  const fxEls = keyEls.map(b => b.querySelector('.mu-key-fx'));   // ripples go here (clipped to the key)
 
   function labelFor(i) {
     switch (settings.labels) {
@@ -544,7 +566,7 @@
     if (isCalm()) return;
     const r = document.createElement('span');
     r.className = 'mu-ripple';
-    keyEls[k].append(r);
+    fxEls[k].append(r);
     setTimeout(() => r.remove(), 850);
   }
   function bump() { energy = Math.min(1, energy + 0.2); kick(); }
@@ -794,8 +816,9 @@
       }
       if (P.playing) render(p);
     }
-    if (energy > 0.004) { energy *= 0.93; stage.style.setProperty('--energy', energy.toFixed(3)); }
-    else if (energy) { energy = 0; stage.style.setProperty('--energy', '0'); }
+    // only the glow reacts (setting a variable on the stage restyled every element in it, every frame)
+    if (energy > 0.004) { energy *= 0.93; if (glow) glow.style.setProperty('--energy', energy.toFixed(2)); }
+    else if (energy) { energy = 0; if (glow) glow.style.setProperty('--energy', '0'); }
     if (P.playing || energy) kick();
   }
 
@@ -1265,7 +1288,7 @@
   for (let i = 0; i < 16; i++) {
     const m = document.createElement('span');
     m.className = 'mu-mote';
-    m.style.cssText = `left:${(4 + Math.random() * 92).toFixed(1)}%;--s:${(1.5 + Math.random() * 2.4).toFixed(1)}px;--d:${(11 + Math.random() * 11).toFixed(1)}s;--delay:${(-Math.random() * 22).toFixed(1)}s;--dx:${Math.round(Math.random() * 70 - 35)}px;--o:${(0.25 + Math.random() * 0.5).toFixed(2)}`;
+    m.style.cssText = `left:${(4 + Math.random() * 92).toFixed(1)}%;--s:${(1.5 + Math.random() * 2.4).toFixed(1)}px;--d:${(11 + Math.random() * 11).toFixed(1)}s;--delay:${(-Math.random() * 22).toFixed(1)}s;--tilt:${(Math.atan2(Math.random() * 70 - 35, 460) * 180 / Math.PI).toFixed(1)}deg;--o:${(0.25 + Math.random() * 0.5).toFixed(2)}`;
     motes.append(m);
   }
 

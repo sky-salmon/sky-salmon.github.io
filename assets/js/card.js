@@ -255,24 +255,29 @@
       const tag = clean ? 'span' : 'button';
       return `<${tag} ${clean ? '' : 'type="button" '}class="item${it.k === 'c' ? ' is-cat' : ''}${it.dead ? ' is-dead' : ''}" data-act="item" data-sec="${sec}" data-i="${i}" title="${esc(name)}"${clean ? '' : ` aria-label="${t('{name}，點一下編輯', { name: esc(name) })}"`}><span class="item-ico">${info.html}</span>${cap}</${tag}>`;
     };
+    // PASS reads oldest season first (top) to newest (bottom) in every view, whatever order the seasons were picked in;
+    // items keep their own index (data-i) for editing
+    const order = list.map((it, i) => i);
+    if (sec === 'pass') {
+      const sk = i => { const c = list[i].k === 'c' && itemInfo(list[i]).season; return c ? parseInt(c, 10) : Infinity; };   // no season: last
+      order.sort((a, b) => (sk(a) - sk(b)) || a - b);
+    }
     if (view === 'season') {
-      // 分季: one box per season, oldest first, each labelled with its AP number and name; the rest in a last box
+      // 分季: one box per season, oldest first, each labelled with its name; the rest in a last box
       const groups = new Map();
-      list.forEach((it, i) => {
-        const code = (it.k === 'c' && itemInfo(it).season) || '';
+      order.forEach(i => {
+        const it = list[i], code = (it.k === 'c' && itemInfo(it).season) || '';
         if (!groups.has(code)) groups.set(code, []);
         groups.get(code).push(i);
       });
-      const order = [...groups.keys()].sort((a, b) => (a ? 0 : 1) - (b ? 0 : 1) || a.localeCompare(b));
-      const boxes = order.map(code => {
-        const head = code
-          ? `<span class="sbox-ap">AP${esc(code)}</span><span class="sbox-name">${esc(D.seasonName(code))}</span>`
-          : `<span class="sbox-name">${t('其他')}</span>`;
+      const codes = [...groups.keys()].sort((a, b) => (a ? 0 : 1) - (b ? 0 : 1) || a.localeCompare(b));
+      const boxes = codes.map(code => {
+        const head = `<span class="sbox-name">${code ? esc(D.seasonName(code)) : t('其他')}</span>`;
         return `<div class="sbox${code ? '' : ' is-other'}"><div class="sbox-head">${head}</div><div class="sbox-items">${groups.get(code).map(i => one(list[i], i)).join('')}</div></div>`;
       }).join('');
       return `<div class="items" data-sec="${sec}" data-view="season">${boxes}</div>`;
     }
-    return `<div class="items" data-sec="${sec}" data-view="${esc(view)}">${list.map(one).join('')}</div>`;
+    return `<div class="items" data-sec="${sec}" data-view="${esc(view)}">${order.map(i => one(list[i], i)).join('')}</div>`;
   }
   function editable(bind, ph, clean, extra = '') {
     return clean ? `data-bind="${bind}"` : `data-bind="${bind}" contenteditable="true" spellcheck="false" data-ph="${esc(ph)}" ${extra}`;
