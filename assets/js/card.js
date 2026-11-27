@@ -137,8 +137,10 @@
   // was stored in Firestore. Nothing is saved while viewing one.
   const SHARE_ID = (new URLSearchParams(location.search).get('s') || '').replace(/[^\w-]/g, '').slice(0, 64) || null;
   const SHARE_CODE = (location.hash.match(/(?:^#|&)card=([\w-]+)/) || [])[1] || null;
-  let viewing = !!(SHARE_ID || SHARE_CODE);
-  window.addEventListener('hashchange', () => { if (/card=/.test(location.hash) || SHARE_CODE) location.reload(); });
+  // 估價挑戰 (card.html#challenge, assets/js/card-challenge.js) shows made-up accounts the same way, without saving
+  const CHALLENGE = /^#challenge\b/.test(location.hash);
+  let viewing = !!(SHARE_ID || SHARE_CODE || CHALLENGE);
+  window.addEventListener('hashchange', () => { if (/card=|challenge/.test(location.hash) || SHARE_CODE || CHALLENGE) location.reload(); });
   let state = viewing ? blank() : (normalize(store.get(KEY, null)) || fromV2() || sample());
 
   // ── history + persistence ────────────────────────────────────────────────
@@ -1799,6 +1801,7 @@
   window.CardApp = {
     data: cardData, load: loadCardData, adopt: adoptShared, openModal, closeModal,
     viewing: () => (viewing ? SHARE_ID : null),
+    readOnly: () => viewing,   // someone's shared card or 估價挑戰: never saved, never synced to the account
     shareCode: () => (viewing ? SHARE_CODE : null),
     isSample: () => isSampleState(state),
     ownIsSample: () => { const own = normalize(store.get(KEY, null)); return !own || isSampleState(own); }

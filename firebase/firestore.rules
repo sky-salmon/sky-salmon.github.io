@@ -13,7 +13,8 @@ rules_version = '2';
 //   gated/{feature} the data a restricted feature needs (e.g. the value model); readable by admins, by accounts
 //                   approved for that feature, or by anyone when the feature is public.
 //   feedback/{id}   messages from the site's feedback form: anyone can send one, only admins read them.
-//   valueSuggestions/{id}  "this account is worth X" from people who can use the 估價 tab, with what the estimate saw;
+//   valueSuggestions/{id}  "this account is worth X" from people who can use the 估價 tab, with what the estimate saw,
+//                   and 估價挑戰 answers (source 'challenge', from signed-in players allowed the "challenge" feature);
 //                   only admins read them (to refit the value model).
 // Nothing outside requests/, access/, feedback/ and valueSuggestions/ can be listed (admins only), so shared cards are only reachable
 // through their link.
@@ -149,21 +150,30 @@ service cloud.firestore {
 
     match /valueSuggestions/{id} {
       // whoever may use the estimate can say what they think the account is worth; the uid can't be someone else's
-      allow create: if (isAdmin() || hasPerm('value') || isPublic('value')) && validSuggestion(request.resource.data);
+      allow create: if validSuggestion(request.resource.data) && (request.resource.data.source == 'challenge'
+        ? request.auth != null && (isAdmin() || hasPerm('challenge') || isPublic('challenge')) && validQuiz(request.resource.data)
+        : (isAdmin() || hasPerm('value') || isPublic('value')) && !('quiz' in request.resource.data));
       allow get, list, delete: if isAdmin();
       allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
         && request.resource.data.status in ['new', 'done'];
     }
     function validSuggestion(d) {
-      return d.keys().hasOnly(['model', 'cur', 'price', 'priceTwd', 'est', 'source', 'note', 'acct', 'uid', 'lang', 'status', 'createdAt'])
+      return d.keys().hasOnly(['model', 'cur', 'price', 'priceTwd', 'est', 'source', 'note', 'acct', 'uid', 'lang', 'status', 'createdAt', 'quiz'])
         && d.model is string && d.model.size() <= 20 && d.cur in ['TWD', 'CNY', 'MYR', 'HKD']
         && d.price is number && d.price > 0 && d.price < 10000000 && d.priceTwd is number
         && d.est is map && d.est.keys().hasOnly(['center', 'low', 'high', 'quick', 'patient'])
-        && d.source in ['sold', 'ask', 'own', 'feel'] && d.note is string && d.note.size() <= 500
+        && d.source in ['sold', 'ask', 'own', 'feel', 'challenge'] && d.note is string && d.note.size() <= 500
         && d.acct is map && d.acct.seasons is list && d.acct.seasons.size() <= 80 && d.acct.items is list && d.acct.items.size() <= 3000
         && d.acct.ults is list && d.acct.ults.size() <= 200 && d.acct.packs is list && d.acct.packs.size() <= 600
         && ((request.auth == null && d.uid == '') || (request.auth != null && d.uid == request.auth.uid))
         && d.lang is string && d.lang.size() <= 20 && d.status == 'new' && d.createdAt == request.time;
+    }
+
+    // a 估價挑戰 answer: which made-up card (generator version + seed rebuild it), how sure, how long, a repeat or not
+    function validQuiz(d) {
+      return 'quiz' in d && d.quiz is map && d.quiz.keys().hasOnly(['v', 'seed', 'conf', 'ms', 'rep'])
+        && d.quiz.v is int && d.quiz.seed is int && d.quiz.conf in [1, 2, 3] && d.quiz.ms is int && d.quiz.rep is bool
+        && d.est.size() == 0;
     }
 
     // admin.html before config/: one GitHub token per admin account. Read once to move it into config/github.

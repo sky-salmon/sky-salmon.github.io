@@ -15,6 +15,8 @@
   'use strict';
   const t = window.I18N ? window.I18N.t : (s, v) => (v ? s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
   const App = window.CardApp;
+  // a shared card or 估價挑戰 on screen is not this account's card: never compare it with the cloud copy or upload it
+  const readOnly = () => (App.readOnly ? App.readOnly() : !!App.viewing());
   if (!App) return;
   const { store, toast } = window.Site;
   const CFG = window.FIREBASE_CONFIG;
@@ -82,14 +84,14 @@
     renderDialog();
   }
   function changed() {  // card.js saved the local copy
-    if (!ready || !user || conflict || App.viewing()) return;   // an open conflict waits for the user's choice
+    if (!ready || !user || conflict || readOnly()) return;   // an open conflict waits for the user's choice
     if (hash(payload()) === base(user.uid)) { if (status !== 'synced') setStatus('synced'); return; }
     if (status !== 'busy') setStatus('dirty');
     clearTimeout(pushTimer); pushTimer = setTimeout(push, PUSH_DELAY);
   }
   async function push() {
     clearTimeout(pushTimer);
-    if (!user || !ready || conflict) return;
+    if (!user || !ready || conflict || readOnly()) return;
     if (pushing) { pushTimer = setTimeout(push, PUSH_DELAY); return; }
     const d = payload(), h = hash(d), uid = user.uid;
     if (bytes(d) > MAX_BYTES) { setStatus('toobig'); return; }
@@ -110,7 +112,7 @@
   }
   let conflict = null;
   async function reconcile() {
-    if (!user || App.viewing()) return;
+    if (!user || readOnly()) return;
     ready = false; setStatus('busy');
     let snap;
     try { snap = await fb.getDoc(cardRef()); } catch (e) { console.warn('cloud read failed', e); setStatus('error'); return; }
@@ -376,6 +378,7 @@
   if (code) { openSharedCode(code); return; }
   const sid = App.viewing();
   if (sid) { openShared(sid); return; }
+  if (readOnly()) return;   // 估價挑戰: the account is only used to sign in and send answers
   $('#btn-share').addEventListener('click', e => openShare(e.currentTarget));
   if (!ENABLED) return;
   $('#btn-cloud').addEventListener('click', e => openFromToolbar('account', e.currentTarget));
