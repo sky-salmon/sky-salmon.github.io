@@ -45,7 +45,6 @@
  "全部取消": "Deselect all",
  "物品": "Item",
  "數量": "Count",
- "已失效（DEAD）": "Dead (no longer linked)",
  "顯示名稱": "Display name",
  "移除": "Remove",
  "選擇頭像要顯示的範圍": "Choose the part of the avatar to show",
@@ -180,7 +179,6 @@
  "全部": "All",
  "已選 {n} 個": "{n} selected",
  "從圖庫刪除": "Delete from library",
- "選好之後，點名片上的平台圖示可以標記成「已失效」。": "After choosing, tap a platform icon on the card to mark it as “Dead”.",
  "正在載入物品圖示…": "Loading item icons…",
  "物品清單載入失敗，請檢查網路後再試一次。": "Couldn't load the item list. Check your connection and try again.",
  "全部季節": "All seasons",
@@ -392,7 +390,6 @@
  "點魔法選取，數量之後在名片上點它就能改。": "Tap a spell to pick it; tap it on the card later to change the count.",
  "用左邊的分類或搜尋找物品，點一下選取。": "Browse the categories or search, then tap an item to pick it.",
  "點徽章選取。": "Tap a badge to pick it.",
- "點平台選取，之後在名片上點它可以標記成已失效。": "Tap a platform to pick it; tap it on the card later to mark it as gone.",
  "上傳圖片": "Upload images",
  "上傳": "Upload",
  "上傳截圖或圖片，會自動裁成正方形，之後每個區塊都能用。": "Upload screenshots or pictures. They're cropped square and can be used in every section.",
@@ -607,5 +604,9 @@
  "這幾個的價格中位數 {mid}，這張名片估 {est}。開價不等於成交價；只留配置和價格，沒有賣家資料。": "Their median price is {mid}; this card is estimated at {est}. An asking price is not a sale price. Only the setup and price are kept, nothing about the seller.",
  "（約 {p}）": "(about {p})",
  "季節沒逐一寫": "seasons not listed one by one",
- "資料裡沒有跟這張名片很接近的帳號，下面只能當大方向參考。": "Nothing in the data is very close to this card; take these as a rough guide only."
+ "資料裡沒有跟這張名片很接近的帳號，下面只能當大方向參考。": "Nothing in the data is very close to this card; take these as a rough guide only.",
+ "綁不出": "Can't transfer",
+ "綁不出（畫紅線）": "Can't transfer (crossed out)",
+ "有綁": "Linked",
+ "✓ 有綁　⊘ 綁不出（名片上劃掉）": "✓ linked  ⊘ can't transfer (crossed out on the card)"
 }
