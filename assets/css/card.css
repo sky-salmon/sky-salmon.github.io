@@ -523,17 +523,17 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 .items[data-view="row"] .item { flex-direction: row; gap: 8px; width: calc(50% - 4px); padding: 6px 8px 6px 6px; border-radius: 10px; background: rgba(var(--p-ink-rgb), .06); text-align: left; }
 .items[data-view="row"] .item-ico { width: 34px; height: 34px; flex: none; }
 .items[data-view="row"] .item-cap { max-width: none; flex: 1; text-align: left; font-size: 11.5px; }
-/* 分季: a bordered box per season, labelled with its AP number and name. Boxes pack in order and stretch to fill
+/* 分季: a bordered box per season, labelled with its name. Boxes pack in order and stretch to fill
    each row (a bento of cells); icons a little smaller than the plain grid so two or three seasons share a row */
 .items[data-view="season"] { --ico-s: calc(var(--ico) * .84); gap: 6px; align-items: stretch; justify-content: flex-start; }
 .sbox { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; padding: 5px 6px 6px; border-radius: 11px;
   border: 1px solid rgba(var(--p-ink-rgb), .22); background: rgba(var(--p-ink-rgb), .05); }
 .sbox.is-other { border-style: dashed; background: none; }
-/* the label never widens the box: it wraps (AP above the name) or ellipses inside the icons' width */
+/* the label never widens the box: it wraps inside the icons' width */
 .sbox-head { width: 0; min-width: 100%; display: flex; flex-wrap: wrap; column-gap: 4px; row-gap: 1px; font-size: 9.5px; line-height: 1.15;
   color: rgba(var(--p-ink-rgb), .82); }
-.sbox-ap { font-family: var(--font-mono, ui-monospace, monospace); font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
-.sbox-name { font-weight: 700; opacity: .72; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.sbox-name { font-weight: 700; opacity: .8; max-width: 100%; overflow: hidden; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }   /* a long name wraps to two lines at most */
 .sbox-items { display: flex; flex-wrap: wrap; gap: 4px; }
 .items[data-view="season"] .item-ico { width: var(--ico-s); height: var(--ico-s); }
 /* game icons are white silhouettes: give them a dark chip wherever panel text is dark */
