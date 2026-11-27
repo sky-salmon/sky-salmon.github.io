@@ -1043,7 +1043,7 @@
   const FEATURES = [['value', '估價分頁', '名片產生器的「估價」。核准並勾選的帳號才讀得到估價模型（gated/value）。'],
     ['wardrobe3d', '3D 圖鑑', '衣櫃圖鑑的 3D 試穿。核准並勾選的帳號、或 Email 名單上的人才看得到。'],
     ['transcribe', '音檔轉樂譜', '樂譜頁的「轉譜」：上傳鋼琴錄音，自動產生光遇樂譜（選手指數）。'],
-    ['challenge', '估價挑戰', '名片產生器的估價挑戰（card.html#challenge）：看隨機產生的帳號名片填估價，答案進「估價建議」，用來補估價模型的資料。']];
+    ['challenge', '估價挑戰', '估價挑戰（sky-salmon.github.io/card#challenge）：看隨機產生的帳號名片填估價，答案進「估價建議」，用來補估價模型的資料。']];
   const isMail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const FB_KIND = { bug: '問題回報', data: '資料有誤', idea: '建議', other: '其他' };
   let ACC = null, FBK = null, VSG = null;
