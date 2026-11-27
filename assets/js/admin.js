@@ -1042,7 +1042,8 @@
   // gated/{feature} {data, version} (what a restricted feature reads); feedback/{id} {kind, msg, page, contact, status}.
   const FEATURES = [['value', '估價分頁', '名片產生器的「估價」。核准並勾選的帳號才讀得到估價模型（gated/value）。'],
     ['wardrobe3d', '3D 圖鑑', '衣櫃圖鑑的 3D 試穿。核准並勾選的帳號、或 Email 名單上的人才看得到。'],
-    ['transcribe', '音檔轉樂譜', '樂譜頁的「轉譜」：上傳鋼琴錄音，自動產生光遇樂譜（選手指數）。']];
+    ['transcribe', '音檔轉樂譜', '樂譜頁的「轉譜」：上傳鋼琴錄音，自動產生光遇樂譜（選手指數）。'],
+    ['challenge', '估價挑戰', '名片產生器的估價挑戰（card.html#challenge）：看隨機產生的帳號名片填估價，答案進「估價建議」，用來補估價模型的資料。']];
   const isMail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const FB_KIND = { bug: '問題回報', data: '資料有誤', idea: '建議', other: '其他' };
   let ACC = null, FBK = null, VSG = null;
@@ -1126,7 +1127,8 @@
       </div>`).join('') || `<p class="empty">${only === 'new' ? '沒有未處理的回饋。' : '沒有回饋。'}</p>`}</div>`;
   }
   // 估價建議: what people think an account is worth next to what the estimate said; exported to refit the model
-  const VSG_SRC = { sold: ['實際成交價', 'gold'], ask: ['看到的開價', ''], own: ['自己的號想賣', 'new'], feel: ['憑感覺', ''] };
+  const VSG_SRC = { sold: ['實際成交價', 'gold'], ask: ['看到的開價', ''], own: ['自己的號想賣', 'new'], feel: ['憑感覺', ''], challenge: ['估價挑戰', 'new'] };
+  const VSG_CONF = { 3: '很有把握', 2: '大概', 1: '不太確定' };
   const VSG_BIND = { all_free: '綁定全可換', one_locked: '1 個綁定不能出', more_locked: '2 個以上綁定不能出', unknown: '綁定不確定' };
   const VSG_CUR = { TWD: 'NT$', CNY: 'RMB ', MYR: 'RM', HKD: 'HK$' };
   const ntd = n => 'NT$' + Math.round(n || 0).toLocaleString('en-US');
@@ -1162,7 +1164,7 @@
       return `<div class="fbk vsg" data-id="${esc(v.id)}">
         <div class="fbk-head"><span class="tag ${src[1]}">${esc(src[0])}</span><span class="note">${esc(when(v.createdAt))} · ${esc(who(v.uid))} · 模型 v${esc(v.model)}</span>
           <span class="spacer"></span>${v.status === 'new' ? '<button type="button" class="btn small" data-vsg="done">標記已處理</button>' : '<button type="button" class="btn ghost small" data-vsg="undo">改回未處理</button>'}<button type="button" class="btn ghost small" data-vsg="delete">刪除</button></div>
-        <p class="vsg-price"><span class="note">估價</span> ${ntd(e.low)}–${ntd(e.high)} <span class="note">（中間 ${ntd(e.center)}）</span> → <span class="note">建議</span> <b>${orig}</b>${diffPct !== null ? ` <span class="tag ${diffPct >= 0 ? 'new' : 'del'}">${diffPct >= 0 ? '+' : ''}${diffPct}%</span>` : ''}</p>
+        <p class="vsg-price">${e.center ? `<span class="note">估價</span> ${ntd(e.low)}–${ntd(e.high)} <span class="note">（中間 ${ntd(e.center)}）</span> → <span class="note">建議</span> ` : '<span class="note">玩家估</span> '}<b>${orig}</b>${diffPct !== null ? ` <span class="tag ${diffPct >= 0 ? 'new' : 'del'}">${diffPct >= 0 ? '+' : ''}${diffPct}%</span>` : ''}${v.quiz ? ` <span class="tag">${esc(VSG_CONF[v.quiz.conf] || '')}</span>${v.quiz.rep ? ' <span class="tag">重複題</span>' : ''} <span class="note">題號 ${esc(v.quiz.seed)}</span>` : ''}</p>
         <p class="note">${hist}${hist ? ' · ' : ''}${extra}</p>
         ${v.note ? `<p class="fbk-msg">${esc(v.note)}</p>` : ''}
       </div>`;

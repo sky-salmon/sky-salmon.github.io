@@ -1043,3 +1043,33 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
 .val-sg-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .val-sg-msg { margin: 0; }
 .val-sg-privacy { font-size: 11.5px; }
+
+/* 估價挑戰 (card.html#challenge): a compact answer bar that stays at the bottom of the screen while the card scrolls */
+.challenge { position: sticky; bottom: 10px; z-index: 6; max-width: 860px; margin: 14px auto 0; padding: 10px 12px; border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); background: var(--surface, #1a1d1c);   /* solid: the card scrolls under it */
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .45); }
+.is-challenge .actionbar, .is-challenge .stage-meta { display: none !important; }
+.chl-form { display: grid; gap: 8px; }
+.chl-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 14px; }
+.chl-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chl-price { display: flex; align-items: center; gap: 6px; flex: 1 1 150px; min-width: 130px; font-weight: 700; color: var(--ink-soft); }
+.chl-price .input { flex: 1; min-width: 0; font-size: 17px; font-weight: 700; padding-top: 8px; padding-bottom: 8px; }
+.chl-conf { flex: none; padding: 3px; }
+.chl-conf button { padding: 7px 11px; font-size: 13px; }
+.chl-conf button[aria-checked="true"] { background: var(--accent); color: #1a1408; box-shadow: none; }
+.chl-note { flex: 2 1 160px; min-width: 0; padding-top: 8px; padding-bottom: 8px; font-size: 13.5px; }
+.chl-acts { display: flex; gap: 6px; margin-left: auto; }
+.chl-note-btn { display: none; }
+.chl-msg { margin: 0; }
+.chl-msg:empty { display: none; }
+.chl-gate { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.chl-gate p { margin: 0; }
+@media (max-width: 600px) {
+  .challenge { bottom: 6px; padding: 10px; }
+  .chl-conf { order: 3; width: 100%; } .chl-conf button { flex: 1; }
+  .chl-note { display: none; order: 4; flex-basis: 100%; }
+  .chl-form.with-note .chl-note { display: block; }
+  .chl-note-btn { display: inline-flex; }
+  .chl-form.with-note .chl-note-btn { display: none; }
+  .chl-acts { order: 2; margin-left: 0; }
+}
